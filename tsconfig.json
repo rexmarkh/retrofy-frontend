@@ -1,0 +1,33 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@trungk18/*": [
+        "src/app/*"
+      ],
+      "@trungk18/interface/*": [
+        "src/app/interface/*"
+      ]
+    },
+    "outDir": "./dist/out-tsc",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "module": "es2020",
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    "useDefineForClassFields": false,
+    "skipLibCheck": true
+  },
+  "angularCompilerOptions": {
+    "fullTemplateTypeCheck": true,
+    "strictInjectionParameters": true
+  }
+}

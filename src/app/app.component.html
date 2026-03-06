@@ -1,0 +1,8 @@
+<div id="app-frame">
+    <nz-spin class="global-spinner"
+             [nzSpinning]="shouldShowLoader$ | async"
+             nzSize="large">
+        <router-outlet></router-outlet>
+    </nz-spin>
+</div>
+<!-- <j-snow></j-snow> -->

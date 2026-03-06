@@ -1,0 +1,102 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:74035) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+One or more browsers which are configured in the project's Browserslist configuration will be ignored as ES5 output is not supported by the Angular CLI.
+Ignored browsers:
+kaios 2.5, op_mini all
+One or more browsers which are configured in the project's Browserslist configuration fall outside Angular's browser support for this version.
+Unsupported browsers:
+and_qq 14.9, and_uc 15.5, android 141, kaios 3.0-3.1, op_mob 80, opera 122, opera 121, samsung 28, samsung 27
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+
+Initial chunk files                                                                                     | Names                                    |  Raw size
+vendor.js                                                                                               | vendor                                   |   6.61 MB | 
+styles.css, styles.js                                                                                   | styles                                   | 959.21 kB | 
+polyfills.js                                                                                            | polyfills                                | 241.75 kB | 
+scripts.js                                                                                              | scripts                                  | 209.31 kB | 
+main.js                                                                                                 | main                                     | 197.48 kB | 
+runtime.js                                                                                              | runtime                                  |  13.25 kB | 
+
+                                                                                                        | Initial total                            |   8.23 MB
+
+Lazy chunk files                                                                                        | Names                                    |  Raw size
+default-src_app_jira-control_jira-control_module_ts-src_app_project_auth_auth_query_ts-src_ap-db236e.js | login-login-module                       |   2.17 MB | 
+default-src_app_project_project_module_ts.js                                                            | project-project-module                   |   1.40 MB | 
+src_app_organization_organization_module_ts.js                                                          | organization-organization-module         |   1.22 MB | 
+node_modules_ngx-quill_fesm2022_ngx-quill-quill-CUw8Q_m0_mjs.js                                         | ngx-quill-quill-CUw8Q_m0-mjs             | 735.23 kB | 
+src_app_retrospective_retrospective_module_ts.js                                                        | retrospective-retrospective-module       | 413.88 kB | 
+default-src_app_organization_state_organization_query_ts-src_app_organization_state_organizat-3b3a90.js | organization-organization-module         | 149.81 kB | 
+src_app_login_login_module_ts.js                                                                        | login-login-module                       | 100.98 kB | 
+default-node_modules_ng-zorro-antd_fesm2022_ng-zorro-antd-checkbox_mjs-node_modules_ng-zorro--0e609b.js | login-login-module                       |  73.11 kB | 
+default-node_modules_ng-zorro-antd_fesm2022_ng-zorro-antd-grid_mjs.js                                   | login-login-module                       |  16.19 kB | 
+src_app_work-in-progress_work-in-progress_module_ts.js                                                  | work-in-progress-work-in-progress-module |  11.73 kB | 
+common.js                                                                                               | common                                   |   8.63 kB | 
+
+Build at: 2026-03-06T07:19:24.844Z - Hash: d70c8a25521c34cb - Time: 3327ms
+
+Warning: /Users/rexmarkh/Documents/Github/retrofy-frontend/node_modules/quill/core.js depends on 'quill-delta'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+
+
+** Angular Live Development Server is listening on localhost:4200, open your browser on http://localhost:4200/ **
+
+
+✔ Compiled successfully.
+
+warn - The `purge`/`content` options have changed in Tailwind CSS v3.0.
+warn - Update your configuration file to eliminate this warning.
+warn - https://tailwindcss.com/docs/upgrade-guide#configure-content-sources
+✔ Browser application bundle generation complete.
+
+Initial chunk files                            | Names                            | Raw size
+runtime.js                                     | runtime                          | 13.25 kB | 
+
+Lazy chunk files                               | Names                            | Raw size
+src_app_organization_organization_module_ts.js | organization-organization-module |  1.22 MB | 
+
+15 unchanged chunks
+
+Build at: 2026-03-06T07:25:08.895Z - Hash: d41d003e37595e46 - Time: 3484ms
+
+✔ Compiled successfully.
+✔ Browser application bundle generation complete.
+
+Initial chunk files                            | Names                            | Raw size
+runtime.js                                     | runtime                          | 13.25 kB | 
+
+Lazy chunk files                               | Names                            | Raw size
+src_app_organization_organization_module_ts.js | organization-organization-module |  1.22 MB | 
+
+15 unchanged chunks
+
+Build at: 2026-03-06T07:25:27.063Z - Hash: 815321e582537198 - Time: 2232ms
+
+✔ Compiled successfully.
+✔ Browser application bundle generation complete.
+
+Initial chunk files                            | Names                            | Raw size
+runtime.js                                     | runtime                          | 13.25 kB | 
+
+Lazy chunk files                               | Names                            | Raw size
+src_app_organization_organization_module_ts.js | organization-organization-module |  1.22 MB | 
+
+15 unchanged chunks
+
+Build at: 2026-03-06T07:32:27.517Z - Hash: aaa38395ff7cf108 - Time: 2549ms
+
+✔ Compiled successfully.
+✔ Browser application bundle generation complete.
+
+Initial chunk files                            | Names                            | Raw size
+runtime.js                                     | runtime                          | 13.25 kB | 
+
+Lazy chunk files                               | Names                            | Raw size
+src_app_organization_organization_module_ts.js | organization-organization-module |  1.22 MB | 
+
+15 unchanged chunks
+
+Build at: 2026-03-06T07:33:00.686Z - Hash: fab799808568fd49 - Time: 1874ms
+
+✔ Compiled successfully.

@@ -1,0 +1,10 @@
+/* Styles migrated fully to Tailwind CSS utility classes inside organization-details.component.html */
+
+::ng-deep .ant-modal-content {
+  overflow: hidden;
+}
+
+::ng-deep .ant-modal-body {
+  padding: 0;
+}
+

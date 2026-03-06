@@ -1,0 +1,66 @@
+<div 
+  class="bg-white border border-gray-200 hover:border-[#7c3aed] transition-all duration-200 cursor-pointer h-full flex flex-col"
+  (click)="onCardClick()"
+>
+  <!-- Card Body -->
+  <div class="p-6 flex flex-col flex-grow">
+    <!-- Card Header -->
+    <div class="flex items-start justify-between mb-6">
+      <!-- Avatar Block (color varies per team) -->
+      <div class="w-14 h-14 flex items-center justify-center text-[22px] font-bold" [style.background]="getAvatarBgColor()" [style.color]="getAvatarTextColor()">{{ getInitials() }}</div>
+
+      <!-- Actions (Edit / Delete) -->
+      <div class="flex items-center gap-1">
+        <button 
+          nz-button 
+          nzType="text" 
+          nzSize="small" 
+          (click)="$event.stopPropagation(); onEdit()"
+          class="text-gray-400 hover:text-[#7c3aed] transition-colors p-1"
+        >
+          <span nz-icon nzType="edit" nzTheme="outline" class="text-base text-gray-400"></span>
+        </button>
+        <button 
+          nz-button 
+          nzType="text" 
+          nzSize="small" 
+          (click)="$event.stopPropagation(); onDelete()"
+          class="text-gray-400 hover:text-red-500 transition-colors p-1"
+        >
+          <span nz-icon nzType="delete" nzTheme="outline" class="text-base text-gray-400"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card Title -->
+    <div class="mb-8 flex-grow">
+      <h3 class="text-[17px] font-bold text-gray-900 leading-tight m-0">{{ team.name }}</h3>
+    </div>
+
+    <!-- Team Metrics -->
+    <div class="flex items-center gap-8">
+      <div class="flex flex-col gap-1.5">
+        <span class="text-[10px] font-bold text-gray-400 tracking-wider">MEMBERS</span>
+        <div class="flex items-center gap-2">
+          <span nz-icon nzType="team" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+          <span class="font-bold text-gray-900 text-[15px]">{{ team.memberCount }}</span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <span class="text-[10px] font-bold text-gray-400 tracking-wider">BOARDS</span>
+        <div class="flex items-center gap-2">
+          <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+          <span class="font-bold text-gray-900 text-[15px]">{{ team.boardCount }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (Edge-to-Edge Border) -->
+  <div class="px-6 py-4 border-t border-gray-100 bg-[#fafafa]">
+    <div class="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+      <span nz-icon nzType="calendar" nzTheme="outline"></span>
+      Created {{ formatDate() }}
+    </div>
+  </div>
+</div>
