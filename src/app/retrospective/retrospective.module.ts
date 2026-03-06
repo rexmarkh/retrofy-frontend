@@ -20,6 +20,37 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
 
+// Icons
+import {
+  ProjectOutline,
+  CheckSquareOutline,
+  TeamOutline,
+  CalendarOutline,
+  EditOutline,
+  DeleteOutline,
+  FileTextOutline,
+  ClockCircleOutline,
+  AppstoreAddOutline,
+  PlusOutline,
+  AppstoreOutline,
+  DashboardOutline
+} from '@ant-design/icons-angular/icons';
+
+const icons = [
+  ProjectOutline,
+  CheckSquareOutline,
+  TeamOutline,
+  CalendarOutline,
+  EditOutline,
+  DeleteOutline,
+  FileTextOutline,
+  ClockCircleOutline,
+  AppstoreAddOutline,
+  PlusOutline,
+  AppstoreOutline,
+  DashboardOutline
+];
+
 // Routing
 import { RetrospectiveRoutingModule } from './retrospective-routing.module';
 
@@ -47,7 +78,7 @@ import { RetrospectiveQuery } from './state/retrospective.query';
     NzLayoutModule,
     NzCardModule,
     NzButtonModule,
-    NzIconModule,
+    NzIconModule.forChild(icons),
     NzInputModule,
     NzModalModule,
     NzEmptyModule,

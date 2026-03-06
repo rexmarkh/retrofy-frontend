@@ -1,219 +1,146 @@
-<div class="retrospective-landing">
+<div class="retrospective-dashboard p-8 bg-[#f8f9fa] min-h-screen">
   <!-- Hero Header -->
-  <div class="hero-header">
-    <div class="landing-container">
-      <div class="hero-content" *ngIf="{ isLoading: isLoading$ | async } as state">
-        <div class="hero-text">
-          <h1 class="hero-title">Sprint Retrospectives</h1>
-          <p class="hero-subtitle">Transform team insights into actionable improvements</p>
+  <div class="mb-8 fade-in">
+    <div class="flex items-start justify-between">
+      <div class="flex items-start gap-4" *ngIf="{ isLoading: isLoading$ | async } as state">
+        <!-- Gray Avatar Block -->
+        <div class="w-24 h-24 bg-[#e2e8f0] flex items-center justify-center text-gray-400 text-4xl">
+          <span nz-icon nzType="project" nzTheme="outline"></span>
         </div>
-        
-        <div class="hero-actions">
-
-          <button 
-            nz-button 
-            nzSize="large"
-            nzType="primary"
-            class="create-board-btn"
-            (click)="showCreateBoardModal()"
-            *ngIf="!state.isLoading && boards.length > 0"
-          >
-            <span nz-icon nzType="plus"></span>
-            <span>Create Board</span>
-          </button>
+        <div class="pt-1">
+          <h1 class="text-[32px] font-bold text-gray-900 leading-tight mb-2 tracking-tight">Sprint Retrospectives</h1>
+          <p class="text-[15px] font-medium text-gray-500">Transform team insights into actionable improvements</p>
         </div>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <button 
+          nz-button 
+          nzSize="large"
+          class="bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded shadow-sm"
+          (click)="showCreateBoardModal()"
+        >
+          <span nz-icon nzType="plus"></span>
+          <span>Create Board</span>
+        </button>
       </div>
     </div>
   </div>
+  
+  <hr class="border-gray-200 my-8 w-full border-t">
 
-  <div class="landing-container" *ngIf="{ isLoading: isLoading$ | async } as state">
-    <!-- Modern Stats Section -->
-    <div class="stats-section" *ngIf="state.isLoading || boards.length > 0">
-      <div class="stats-grid">
-        <!-- Total Boards -->
-        <div class="modern-stat-card">
-          <ng-container *ngIf="state.isLoading; else totalTotalBoardsContent">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="large" nzShape="square" style="width: 56px; height: 56px; border-radius: 12px;"></nz-skeleton-element>
-            <div class="stat-content ml-4">
-              <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 1 }" [nzTitle]="false"></nz-skeleton>
-            </div>
-          </ng-container>
-          <ng-template #totalTotalBoardsContent>
-            <div class="stat-icon-wrapper blue fade-in">
-              <span nz-icon nzType="project" nzTheme="outline"></span>
-            </div>
-            <div class="stat-content fade-in">
-              <h3 class="stat-value">{{ boards.length }}</h3>
-              <p class="stat-label">Total Boards</p>
-            </div>
-            <div class="stat-decoration blue fade-in"></div>
-          </ng-template>
-        </div>
-
-        <!-- Active Boards -->
-        <div class="modern-stat-card">
-          <ng-container *ngIf="state.isLoading; else activeBoardsContent">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="large" nzShape="square" style="width: 56px; height: 56px; border-radius: 12px;"></nz-skeleton-element>
-            <div class="stat-content ml-4">
-              <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 1 }" [nzTitle]="false"></nz-skeleton>
-            </div>
-          </ng-container>
-          <ng-template #activeBoardsContent>
-            <div class="stat-icon-wrapper green fade-in">
-              <span nz-icon nzType="check-square" nzTheme="outline"></span>
-            </div>
-            <div class="stat-content fade-in">
-              <h3 class="stat-value">{{ getActiveBoards().length }}</h3>
-              <p class="stat-label">Active Boards</p>
-            </div>
-            <div class="stat-decoration green fade-in"></div>
-          </ng-template>
-        </div>
-
-        <!-- Participants -->
-        <div class="modern-stat-card">
-          <ng-container *ngIf="state.isLoading; else participantsContent">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="large" nzShape="square" style="width: 56px; height: 56px; border-radius: 12px;"></nz-skeleton-element>
-            <div class="stat-content ml-4">
-              <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 1 }" [nzTitle]="false"></nz-skeleton>
-            </div>
-          </ng-container>
-          <ng-template #participantsContent>
-            <div class="stat-icon-wrapper purple fade-in">
-              <span nz-icon nzType="team" nzTheme="outline"></span>
-            </div>
-            <div class="stat-content fade-in">
-              <h3 class="stat-value">{{ getTotalParticipants() }}</h3>
-              <p class="stat-label">Total Members</p>
-            </div>
-            <div class="stat-decoration purple fade-in"></div>
-          </ng-template>
-        </div>
-
-        <!-- This Week -->
-        <div class="modern-stat-card">
-          <ng-container *ngIf="state.isLoading; else thisWeekContent">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="large" nzShape="square" style="width: 56px; height: 56px; border-radius: 12px;"></nz-skeleton-element>
-            <div class="stat-content ml-4">
-              <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 1 }" [nzTitle]="false"></nz-skeleton>
-            </div>
-          </ng-container>
-          <ng-template #thisWeekContent>
-            <div class="stat-icon-wrapper orange fade-in">
-              <span nz-icon nzType="calendar" nzTheme="outline"></span>
-            </div>
-            <div class="stat-content fade-in">
-              <h3 class="stat-value">{{ getThisWeekBoards() }}</h3>
-              <p class="stat-label">This Week</p>
-            </div>
-            <div class="stat-decoration orange fade-in"></div>
-          </ng-template>
-        </div>
-      </div>
-    </div>
-
-    <!-- Boards Section -->
-    <div class="boards-section">
-      <div class="section-header" *ngIf="state.isLoading || boards.length > 0">
-        <h2>Your Boards</h2>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 fade-in" *ngIf="{ isLoading: isLoading$ | async } as state">
+    
+    <!-- Left Column: Boards -->
+    <div class="lg:col-span-2">
+      
+      <!-- Boards Section Header -->
+      <div class="flex items-center gap-2 mb-6" *ngIf="state.isLoading || boards.length > 0">
+        <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7c3aed] text-[22px]"></span>
+        <h2 class="text-[22px] font-bold text-gray-900 leading-tight m-0 tracking-tight">Your Boards</h2>
       </div>
 
       <!-- Loading State: Boards Grid Skeletons -->
-      <div *ngIf="state.isLoading" class="boards-grid">
-        <div *ngFor="let _ of [1, 2, 3]" class="modern-board-card">
-          <!-- Top Row -->
-          <div class="board-card-header">
-            <div class="phase-badge bg-gray-100">
+      <div *ngIf="state.isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div *ngFor="let _ of [1, 2, 3, 4]" class="bg-white border border-gray-200 h-full flex flex-col">
+          <div class="p-6 flex flex-col flex-grow">
+            <div class="flex justify-between mb-6">
               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 80px;"></nz-skeleton-element>
             </div>
-          </div>
-
-          <!-- Middle Row -->
-          <div class="board-card-body">
             <nz-skeleton [nzActive]="true" [nzTitle]="true" [nzParagraph]="{ rows: 1 }"></nz-skeleton>
           </div>
-
-          <!-- Bottom Row -->
-          <div class="board-card-footer">
-            <div class="metrics-container">
-               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 80px;"></nz-skeleton-element>
-            </div>
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" nzShape="round" style="width: 120px;"></nz-skeleton-element>
+          <div class="px-6 py-4 border-t border-gray-100 bg-[#fafafa]">
+             <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 120px;"></nz-skeleton-element>
           </div>
         </div>
       </div>
 
       <!-- Boards Grid -->
-      <div *ngIf="!state.isLoading && boards.length > 0" class="boards-grid fade-in">
+      <div *ngIf="!state.isLoading && boards.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6 fade-in mb-8">
         <div 
           *ngFor="let board of boards; trackBy: trackByBoardId"
-          class="modern-board-card clickable"
-          [ngClass]="{
-            'phase-planning': board.currentPhase === 'brainstorming',
-            'phase-active': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-            'phase-review': board.currentPhase === 'discussion',
-            'phase-completed': board.currentPhase === 'completed'
-          }"
+          class="bg-white border border-gray-200 hover:border-[#7c3aed] transition-all duration-200 cursor-pointer h-full flex flex-col"
           (click)="openBoard(board.id)"
         >
-          <!-- Top Row: Phase Badge -->
-          <div class="board-card-header">
-            <div class="phase-badge">
-              <span class="phase-dot"></span>
-              <span class="phase-label">{{ getPhaseLabel(board.currentPhase) }}</span>
+          <!-- Card Body -->
+          <div class="p-6 flex flex-col flex-grow">
+            <!-- Card Header -->
+            <div class="flex items-start justify-between mb-6">
+              <!-- Phase Badge -->
+              <div class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold" 
+                [ngClass]="{
+                  'bg-blue-50 text-blue-600': board.currentPhase === 'brainstorming',
+                  'bg-amber-50 text-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
+                  'bg-purple-50 text-[#7c3aed]': board.currentPhase === 'discussion',
+                  'bg-green-50 text-green-600': board.currentPhase === 'completed'
+                }">
+                <div class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="{
+                    'bg-blue-600': board.currentPhase === 'brainstorming',
+                    'bg-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
+                    'bg-[#7c3aed]': board.currentPhase === 'discussion',
+                    'bg-green-600': board.currentPhase === 'completed'
+                  }"></div>
+                {{ getPhaseLabel(board.currentPhase) }}
+              </div>
+              
+              <!-- Actions (Edit / Delete) -->
+              <div class="flex items-center gap-1" (click)="$event.stopPropagation()">
+                <button 
+                  nz-button 
+                  nzType="text" 
+                  nzSize="small" 
+                  (click)="editBoard(board)"
+                  class="text-gray-400 hover:text-[#7c3aed] transition-colors p-1"
+                >
+                  <span nz-icon nzType="edit" nzTheme="outline" class="text-base text-gray-400"></span>
+                </button>
+                <button 
+                  nz-button 
+                  nzType="text" 
+                  nzSize="small" 
+                  (click)="deleteBoard(board.id)"
+                  class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                >
+                  <span nz-icon nzType="delete" nzTheme="outline" class="text-base text-gray-400"></span>
+                </button>
+              </div>
             </div>
-            
-            <div class="board-actions" (click)="$event.stopPropagation()">
-              <button 
-                nz-button 
-                nzType="text" 
-                nzSize="small"
-                (click)="editBoard(board)"
-                nz-tooltip
-                nzTooltipTitle="Edit board"
-                class="action-btn"
-              >
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-              </button>
-              <button 
-                nz-button 
-                nzType="text" 
-                nzSize="small"
-                (click)="deleteBoard(board.id)"
-                nz-tooltip
-                nzTooltipTitle="Delete board"
-                class="action-btn delete-btn"
-              >
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
-              </button>
+
+            <!-- Card Title -->
+            <div class="mb-8 flex-grow">
+              <h3 class="text-[17px] font-bold text-gray-900 leading-tight m-0">{{ board.title }}</h3>
+            </div>
+
+            <!-- Team Metrics -->
+            <div class="flex items-center gap-8">
+              <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
+                <div class="flex items-center gap-2">
+                  <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+                  <span class="font-bold text-gray-900 text-[15px]">{{ getStickyNotesCount(board.id) }}</span>
+                </div>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
+                <div class="flex items-center gap-2">
+                  <span nz-icon nzType="team" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+                  <span class="font-bold text-gray-900 text-[15px]">{{ board.participants.length }}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Middle: Title & Timestamp -->
-          <div class="board-card-body">
-            <h3 class="board-title">{{ board.title }}</h3>
-            <div class="board-timestamp">
-              <span nz-icon nzType="clock-circle" nzTheme="filled"></span>
-              <span>Updated {{ getTimeAgo(board.updatedAt) }}</span>
+          <!-- Footer (Edge-to-Edge Border) -->
+          <div class="px-6 py-4 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between">
+            <div class="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+              <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+              Updated {{ getTimeAgo(board.updatedAt) }}
             </div>
-          </div>
-
-          <!-- Bottom Row: Metrics & Button -->
-          <div class="board-card-footer">
-            <div class="metrics-container">
-              <div class="metric">
-                <span class="metric-value">{{ getStickyNotesCount(board.id) }}</span>
-                <span class="metric-label">Notes</span>
-              </div>
-              <div class="metric">
-                <span class="metric-value">{{ board.participants.length }}</span>
-                <span class="metric-label">Participants</span>
-              </div>
-            </div>
-            
             <button 
               nz-button 
-              class="join-session-btn"
+              nzType="primary"
+              class="bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white border-none text-xs font-medium rounded-full px-4 h-7"
               (click)="openBoard(board.id); $event.stopPropagation()"
             >
               {{ board.currentPhase === 'completed' ? 'View Reports' : 'Join Session' }}
@@ -223,70 +150,67 @@
       </div>
 
       <!-- Modern Empty State -->
-      <div *ngIf="!state.isLoading && boards.length === 0" class="modern-empty-state fade-in">
-        <!-- Decorative floating shapes -->
-        <div class="bg-shapes">
-          <div class="shape shape-1"></div>
-          <div class="shape shape-2"></div>
-          <div class="shape shape-3"></div>
-          <div class="shape shape-4"></div>
-          <div class="shape shape-5"></div>
+      <div *ngIf="!state.isLoading && boards.length === 0" class="flex flex-col items-center justify-center py-20 bg-white border border-gray-200 rounded-lg fade-in mb-8">
+        <div class="w-32 h-32 bg-purple-50 rounded-full flex items-center justify-center mb-6">
+          <span nz-icon nzType="appstore-add" nzTheme="outline" class="text-4xl text-[#7c3aed]"></span>
         </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">No boards yet</h2>
+        <p class="text-gray-500 text-center max-w-sm mb-8">Create your first retrospective board to start gathering team insights and drive continuous improvement.</p>
+        <button 
+          nz-button 
+          nzSize="large"
+          class="bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded shadow-sm"
+          (click)="showCreateBoardModal()"
+        >
+          <span nz-icon nzType="plus"></span>
+          <span>Create Your First Board</span>
+        </button>
+      </div>
+
+    </div> <!-- End Left Column -->
+
+    <!-- Right Column: Quick Stats -->
+    <div class="lg:col-span-1">
+      <div class="bg-white border border-gray-200 p-6 flex flex-col shadow-sm sticky top-8">
+        <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+          <div class="flex items-center gap-2">
+            <span nz-icon nzType="dashboard" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+            <h3 class="text-base font-bold text-gray-900 m-0 leading-none">Overview</h3>
+          </div>
+        </div>
+
+        <h3 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">QUICK STATS</h3>
         
-        <div class="empty-state-content">
-          <div class="empty-state-visual">
-            <div class="floating-cards">
-              <div class="mini-card card-1">
-                <span nz-icon nzType="bulb" nzTheme="outline"></span>
-              </div>
-              <div class="mini-card card-2">
-                <span nz-icon nzType="check-circle" nzTheme="outline"></span>
-              </div>
-              <div class="mini-card card-3">
-                <span nz-icon nzType="team" nzTheme="outline"></span>
-              </div>
-            </div>
-            <div class="center-icon">
-              <span nz-icon nzType="plus-circle" nzTheme="filled"></span>
-            </div>
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Total Boards -->
+          <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
+            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ boards.length | number:'2.0-0' }}</span>
+            <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Total Boards</span>
           </div>
           
-          <h2 class="empty-state-title">No boards yet</h2>
-          <p class="empty-state-description">
-            Create your first retrospective board to start gathering team insights
-            and drive continuous improvement
-          </p>
-          
-          <button 
-            nz-button 
-            nzType="primary" 
-            nzSize="large"
-            (click)="showCreateBoardModal()"
-            class="empty-state-button"
-          >
-            <span nz-icon nzType="plus"></span>
-            <span>Create Your First Board</span>
-          </button>
-          
-          <div class="empty-state-features">
-            <div class="feature-item">
-              <span nz-icon nzType="rocket" nzTheme="filled"></span>
-              <span>Quick Setup</span>
-            </div>
-            <div class="feature-item">
-              <span nz-icon nzType="team" nzTheme="filled"></span>
-              <span>Real-time Collaboration</span>
-            </div>
-            <div class="feature-item">
-              <span nz-icon nzType="dashboard" nzTheme="filled"></span>
-              <span>Interactive Boards</span>
-            </div>
+          <!-- Active Boards -->
+          <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
+            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ getActiveBoards().length | number:'2.0-0' }}</span>
+            <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Active Boards</span>
+          </div>
+
+          <!-- Total Members -->
+          <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
+            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ getTotalParticipants() | number:'2.0-0' }}</span>
+            <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Members</span>
+          </div>
+
+          <!-- This Week -->
+          <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
+            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ getThisWeekBoards() | number:'2.0-0' }}</span>
+            <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">This Week</span>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
+    </div> <!-- End Right Column -->
+
+  </div> <!-- End Grid -->
+</div> <!-- End Retrospective Dashboard -->
 
 <!-- Create Board Modal -->
 <nz-modal
