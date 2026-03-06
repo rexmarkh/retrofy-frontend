@@ -59,7 +59,8 @@
       <div *ngIf="!state.isLoading && boards.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6 fade-in mb-8">
         <div 
           *ngFor="let board of boards; trackBy: trackByBoardId"
-          class="bg-white border border-gray-200 hover:border-[#7c3aed] transition-all duration-200 cursor-pointer h-full flex flex-col"
+          class="board-card bg-white rounded-xl overflow-hidden cursor-pointer h-full flex flex-col"
+          style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
           (click)="openBoard(board.id)"
         >
           <!-- Card Body -->
