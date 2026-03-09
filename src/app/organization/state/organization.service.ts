@@ -428,6 +428,76 @@ export class OrganizationService {
     }));
   }
 
+  async addMemberToTeamSupabase(teamId: string, userId: string, userName: string, userEmail: string, role: string = 'member'): Promise<boolean> {
+    try {
+      const currentTeam = this.store.getValue().currentTeam;
+      const orgId = currentTeam?.organizationId || '';
+
+      const { error } = await this.supabaseService.client
+        .from('memberships')
+        .insert({
+          user_id: userId,
+          team_id: teamId,
+          org_id: orgId,
+          role: role
+        });
+
+      if (error) throw error;
+
+      // Optimistically update the local store
+      this.addTeamMemberDirect(teamId, orgId, userName, userEmail, role as any);
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] addMemberToTeamSupabase failed:', err);
+      return false;
+    }
+  }
+
+  async searchOrgMembers(query: string): Promise<{ userId: string; name: string; email: string; isAdded: boolean }[]> {
+    try {
+      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      const currentOrg = this.store.getValue().currentOrganization;
+      if (!currentOrg) return [];
+
+      const { data, error } = await this.supabaseService.client
+        .from('memberships')
+        .select('*')
+        .eq('org_id', currentOrg.id);
+
+      if (error) throw error;
+
+      const lq = query.toLowerCase();
+      const currentTeamMemberIds = new Set(
+        this.store.getValue().teamMembers.map(m => (m as any).userId || m.id)
+      );
+
+      // Deduplicate by user_id
+      const uniqueUsers = new Map<string, any>();
+      (data || []).forEach((m: any) => {
+        if (!uniqueUsers.has(m.user_id)) {
+          uniqueUsers.set(m.user_id, m);
+        }
+      });
+
+      return Array.from(uniqueUsers.values())
+        .map((m: any) => {
+          const isCurrentUser = m.user_id === user?.id;
+          const name = isCurrentUser
+            ? (user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me')
+            : (m.name || m.full_name || m.display_name || `Member ${m.user_id.substring(0, 5)}`);
+          const email = isCurrentUser ? (user?.email || '') : (m.email || '');
+          const isAdded = currentTeamMemberIds.has(m.user_id);
+          return { userId: m.user_id, name, email, isAdded };
+        })
+        .filter((m: any) =>
+          !lq || m.name.toLowerCase().includes(lq) || m.email.toLowerCase().includes(lq)
+        );
+    } catch (err) {
+      console.warn('[OrganizationService] searchOrgMembers failed:', err);
+      return [];
+    }
+  }
+
   removeOrganizationMember(memberId: string): void {
     const currentState = this.store.getValue();
     const member = currentState.organizationMembers.find(m => m.id === memberId);

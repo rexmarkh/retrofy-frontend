@@ -67,6 +67,14 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
 
+  // Add member panel
+  showAddMember = false;
+  memberSearchQuery = '';
+  memberSearchResults: { userId: string; name: string; email: string; isAdded?: boolean }[] = [];
+  isSearchingMembers = false;
+  isAddingMember = false;
+  addMemberSuccess: string | null = null;
+
   constructor(
     private router: Router,
     private retrospectiveService: RetrospectiveService,
@@ -227,6 +235,45 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     this.isCreateModalVisible = false;
     this.newBoardTitle = '';
     this.newBoardDescription = '';
+  }
+
+  // Add Member to Team
+  toggleAddMember() {
+    this.showAddMember = !this.showAddMember;
+    if (!this.showAddMember) {
+      this.memberSearchQuery = '';
+      this.memberSearchResults = [];
+      this.addMemberSuccess = null;
+    } else {
+      this.onMemberSearch();
+    }
+  }
+
+  async onMemberSearch() {
+    if (!this.memberSearchQuery.trim()) {
+      this.memberSearchResults = [];
+      return;
+    }
+    this.isSearchingMembers = true;
+    this.memberSearchResults = await this.organizationService.searchOrgMembers(this.memberSearchQuery);
+    this.isSearchingMembers = false;
+  }
+
+  async addMember(result: { userId: string; name: string; email: string; isAdded?: boolean }) {
+    if (result.isAdded) return;
+    const team = this.organizationQuery.getValue().currentTeam;
+    if (!team) return;
+    this.isAddingMember = true;
+    const ok = await this.organizationService.addMemberToTeamSupabase(team.id, result.userId, result.name, result.email);
+    this.isAddingMember = false;
+    if (ok) {
+      this.addMemberSuccess = result.name;
+      const index = this.memberSearchResults.findIndex(r => r.userId === result.userId);
+      if (index !== -1) {
+        this.memberSearchResults[index] = { ...this.memberSearchResults[index], isAdded: true };
+      }
+      setTimeout(() => { this.addMemberSuccess = null; }, 2500);
+    }
   }
 
   openBoard(boardId: string) {
