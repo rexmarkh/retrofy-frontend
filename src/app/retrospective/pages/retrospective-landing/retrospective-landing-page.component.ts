@@ -64,6 +64,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   newBoardDescription = '';
   favoriteBoards: Set<string> = new Set();
   isLoading$ = this.retrospectiveQuery.isLoading$;
+  activeTab: 'active' | 'completed' = 'active';
+  teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
 
   constructor(
     private router: Router,
@@ -81,6 +83,13 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(boards => {
         this.boards = boards;
+      });
+
+    // Subscribe to team members for the sidebar
+    this.organizationQuery.teamMembers$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(members => {
+        this.teamMembers = members;
       });
 
     // Always use sessionStorage as the source of truth for the selected team.
@@ -243,7 +252,67 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   getActiveBoards(): RetrospectiveBoard[] {
-    return this.boards.filter(board => board.isActive);
+    return this.boards.filter(board => board.isActive && board.currentPhase !== 'completed');
+  }
+
+  getCompletedBoards(): RetrospectiveBoard[] {
+    return this.boards.filter(board => !board.isActive || board.currentPhase === 'completed');
+  }
+
+  getFilteredBoards(): RetrospectiveBoard[] {
+    if (this.activeTab === 'completed') {
+      return this.getCompletedBoards();
+    }
+    return this.getActiveBoards();
+  }
+
+  getTeamMembers(): { id: string; name: string; role: string; color: string }[] {
+    const roleColors = ['#7954AA', '#10b981', '#f59e0b', '#3b82f6', '#ef4444'];
+    const currentTeam = this.organizationQuery.getValue().currentTeam;
+
+    // Use the reactive teamMembers store filtered by current team
+    const members = currentTeam
+      ? this.teamMembers.filter(m => m.teamId === currentTeam.id)
+      : this.teamMembers;
+
+    if (members.length > 0) {
+      return members.map((m, i) => ({
+        id: m.id,
+        name: m.name || m.email || 'Team Member',
+        role: this.formatRole(m.role),
+        color: roleColors[i % roleColors.length]
+      }));
+    }
+
+    // Last-resort fallback: use current user only
+    const team = currentTeam as any;
+    if (team?.members?.length) {
+      return team.members.map((m: any, i: number) => ({
+        id: m.id || String(i),
+        name: m.name || m.email || 'Team Member',
+        role: m.role || 'Member',
+        color: roleColors[i % roleColors.length]
+      }));
+    }
+
+    return [];
+  }
+
+  private formatRole(role: string): string {
+    const labels: Record<string, string> = {
+      team_lead: 'Team Lead',
+      senior: 'Senior Developer',
+      developer: 'Developer',
+      designer: 'Designer',
+      qa: 'QA Engineer',
+      member: 'Member'
+    };
+    return labels[role] || role;
+  }
+
+
+  getMemberInitials(name: string): string {
+    return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
   getTotalParticipants(): number {

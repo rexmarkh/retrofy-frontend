@@ -237,10 +237,58 @@ export class OrganizationService {
         ...state,
         currentTeam: team
       }));
+      // Async — fetch all members of this team with their names
+      this.loadTeamMembersFromSupabase(teamId);
     } else {
       console.error('[OrganizationService] TEAM NOT FOUND in store for id:', teamId);
     }
   }
+
+  private async loadTeamMembersFromSupabase(teamId: string): Promise<void> {
+    try {
+      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      const currentUserId = user?.id;
+
+      // Fetch all memberships for this team
+      const { data, error } = await this.supabaseService.client
+        .from('memberships')
+        .select('*')
+        .eq('team_id', teamId);
+
+      if (error) throw error;
+
+      const members: TeamMember[] = (data || []).map((m: any, i: number) => {
+        const isCurrentUser = m.user_id === currentUserId;
+        const resolvedName = isCurrentUser
+          ? (user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me')
+          : (m.name || m.full_name || m.display_name || m.user_metadata?.name || m.user_metadata?.full_name || null);
+
+        return {
+          id: m.id || `${teamId}_${m.user_id}`,
+          name: resolvedName || `Member ${i + 1}`,
+          email: m.email || (isCurrentUser ? user?.email || '' : ''),
+          avatar: m.avatar_url || m.user_metadata?.avatar_url,
+          teamId: teamId,
+          organizationId: m.org_id || '',
+          role: m.role || 'member',
+          status: 'active',
+          joinDate: new Date(m.created_at || new Date()),
+          projectIds: []
+        } as TeamMember;
+      });
+
+      this.store.update(state => ({
+        ...state,
+        teamMembers: [
+          ...state.teamMembers.filter(m => m.teamId !== teamId),
+          ...members
+        ]
+      }));
+    } catch (err) {
+      console.warn('[OrganizationService] Could not load team members:', err);
+    }
+  }
+
 
   // Team Management
   createTeam(name: string, description: string, organizationId: string): Team {
