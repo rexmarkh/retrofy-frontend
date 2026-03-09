@@ -17,7 +17,7 @@
         <button 
           nz-button 
           nzSize="large"
-          class="bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded shadow-sm"
+          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded shadow-sm"
           (click)="showCreateBoardModal()"
         >
           <span nz-icon nzType="plus"></span>
@@ -36,7 +36,7 @@
       
       <!-- Boards Section Header -->
       <div class="flex items-center gap-2 mb-6" *ngIf="state.isLoading || boards.length > 0">
-        <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7c3aed] text-[22px]"></span>
+        <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7954AA] text-[22px]"></span>
         <h2 class="text-[22px] font-bold text-gray-900 leading-tight m-0 tracking-tight">Your Boards</h2>
       </div>
 
@@ -72,14 +72,14 @@
                 [ngClass]="{
                   'bg-blue-50 text-blue-600': board.currentPhase === 'brainstorming',
                   'bg-amber-50 text-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-                  'bg-purple-50 text-[#7c3aed]': board.currentPhase === 'discussion',
+                  'bg-purple-50 text-[#7954AA]': board.currentPhase === 'discussion',
                   'bg-green-50 text-green-600': board.currentPhase === 'completed'
                 }">
                 <div class="w-1.5 h-1.5 rounded-full"
                   [ngClass]="{
                     'bg-blue-600': board.currentPhase === 'brainstorming',
                     'bg-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-                    'bg-[#7c3aed]': board.currentPhase === 'discussion',
+                    'bg-[#7954AA]': board.currentPhase === 'discussion',
                     'bg-green-600': board.currentPhase === 'completed'
                   }"></div>
                 {{ getPhaseLabel(board.currentPhase) }}
@@ -92,7 +92,7 @@
                   nzType="text" 
                   nzSize="small" 
                   (click)="editBoard(board)"
-                  class="text-gray-400 hover:text-[#7c3aed] transition-colors p-1"
+                  class="text-gray-400 hover:text-[#7954AA] transition-colors p-1"
                 >
                   <span nz-icon nzType="edit" nzTheme="outline" class="text-base text-gray-400"></span>
                 </button>
@@ -118,14 +118,14 @@
               <div class="flex flex-col gap-1.5">
                 <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
                 <div class="flex items-center gap-2">
-                  <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+                  <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
                   <span class="font-bold text-gray-900 text-[15px]">{{ getStickyNotesCount(board.id) }}</span>
                 </div>
               </div>
               <div class="flex flex-col gap-1.5">
                 <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
                 <div class="flex items-center gap-2">
-                  <span nz-icon nzType="team" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+                  <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
                   <span class="font-bold text-gray-900 text-[15px]">{{ board.participants.length }}</span>
                 </div>
               </div>
@@ -141,7 +141,7 @@
             <button 
               nz-button 
               nzType="primary"
-              class="bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white border-none text-xs font-medium rounded-full px-4 h-7"
+              class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none text-xs font-medium rounded-full px-4 h-7"
               (click)="openBoard(board.id); $event.stopPropagation()"
             >
               {{ board.currentPhase === 'completed' ? 'View Reports' : 'Join Session' }}
@@ -153,14 +153,14 @@
       <!-- Modern Empty State -->
       <div *ngIf="!state.isLoading && boards.length === 0" class="flex flex-col items-center justify-center py-20 bg-white border border-gray-200 rounded-lg fade-in mb-8">
         <div class="w-32 h-32 bg-purple-50 rounded-full flex items-center justify-center mb-6">
-          <span nz-icon nzType="appstore-add" nzTheme="outline" class="text-4xl text-[#7c3aed]"></span>
+          <span nz-icon nzType="appstore-add" nzTheme="outline" class="text-4xl text-[#7954AA]"></span>
         </div>
         <h2 class="text-xl font-bold text-gray-900 mb-2">No boards yet</h2>
         <p class="text-gray-500 text-center max-w-sm mb-8">Create your first retrospective board to start gathering team insights and drive continuous improvement.</p>
         <button 
           nz-button 
           nzSize="large"
-          class="bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded shadow-sm"
+          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded shadow-sm"
           (click)="showCreateBoardModal()"
         >
           <span nz-icon nzType="plus"></span>
@@ -175,7 +175,7 @@
       <div class="bg-white border border-gray-200 p-6 flex flex-col shadow-sm sticky top-8">
         <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
           <div class="flex items-center gap-2">
-            <span nz-icon nzType="dashboard" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+            <span nz-icon nzType="dashboard" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
             <h3 class="text-base font-bold text-gray-900 m-0 leading-none">Overview</h3>
           </div>
         </div>
@@ -185,25 +185,25 @@
         <div class="grid grid-cols-2 gap-4">
           <!-- Total Boards -->
           <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
-            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ boards.length | number:'2.0-0' }}</span>
+            <span class="text-[32px] font-extrabold text-[#7954AA] leading-none mb-1">{{ boards.length | number:'2.0-0' }}</span>
             <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Total Boards</span>
           </div>
           
           <!-- Active Boards -->
           <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
-            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ getActiveBoards().length | number:'2.0-0' }}</span>
+            <span class="text-[32px] font-extrabold text-[#7954AA] leading-none mb-1">{{ getActiveBoards().length | number:'2.0-0' }}</span>
             <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Active Boards</span>
           </div>
 
           <!-- Total Members -->
           <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
-            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ getTotalParticipants() | number:'2.0-0' }}</span>
+            <span class="text-[32px] font-extrabold text-[#7954AA] leading-none mb-1">{{ getTotalParticipants() | number:'2.0-0' }}</span>
             <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Members</span>
           </div>
 
           <!-- This Week -->
           <div class="bg-[#fafafb] p-4 flex flex-col justify-center items-center text-center">
-            <span class="text-[32px] font-extrabold text-[#7c3aed] leading-none mb-1">{{ getThisWeekBoards() | number:'2.0-0' }}</span>
+            <span class="text-[32px] font-extrabold text-[#7954AA] leading-none mb-1">{{ getThisWeekBoards() | number:'2.0-0' }}</span>
             <span class="text-[9px] font-bold text-gray-400 tracking-widest uppercase">This Week</span>
           </div>
         </div>

@@ -77,7 +77,7 @@
           nzType="primary"
           nzSize="medium"
           (click)="showCreateTeamModal()"
-          class="flex items-center h-[40px] px-6 text-[14px] font-medium text-white bg-[#7c3aed] hover:bg-[#6d28d9] border-none shadow-sm transition-colors"
+          class="flex items-center h-[40px] px-6 text-[14px] font-medium text-white bg-[#7954AA] hover:bg-[#6b4299] border-none shadow-sm transition-colors"
         >
           Create Team
         </button>
@@ -123,7 +123,7 @@
     <!-- Teams Section -->
     <nz-col [nzSpan]="16">
       <div class="flex items-center gap-2 mb-4">
-        <span nz-icon nzType="team" nzTheme="outline" class="text-[#7c3aed] text-xl"></span>
+        <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
         <h2 class="text-xl font-bold text-gray-900 m-0">Teams</h2>
       </div>
       <div class="h-full">
@@ -168,10 +168,10 @@
       <div class="bg-white border border-gray-200 !shadow-none p-6 mb-8">
         <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
           <div class="flex items-center gap-2">
-            <span nz-icon nzType="user" nzTheme="outline" class="text-[#7c3aed] text-lg"></span>
+            <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
             <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
           </div>
-          <a class="text-[#7c3aed] text-xs font-bold hover:text-[#6d28d9] transition-colors">View All</a>
+          <a class="text-[#7954AA] text-xs font-bold hover:text-[#6b4299] transition-colors">View All</a>
         </div>
 
         <div *ngIf="members.length > 0">
@@ -209,7 +209,7 @@
 
         <button 
           (click)="showInviteMemberModal()"
-          class="w-full border-2 border-dashed border-gray-200 py-4 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm hover:border-[#7c3aed] hover:text-[#7c3aed] transition-all bg-white hover:bg-purple-50"
+          class="w-full border-2 border-dashed border-gray-200 py-4 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm hover:border-[#7954AA] hover:text-[#7954AA] transition-all bg-white hover:bg-purple-50"
         >
           <span nz-icon nzType="user-add" nzTheme="outline"></span>
           Add new member
@@ -222,11 +222,11 @@
           <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">QUICK STATS</h3>
           <div class="grid grid-cols-2 gap-4">
             <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
-              <span class="text-3xl font-bold text-[#7c3aed] mb-1">{{ teams.length < 10 ? '0' + teams.length : teams.length }}</span>
+              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teams.length < 10 ? '0' + teams.length : teams.length }}</span>
               <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL TEAMS</span>
             </div>
             <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
-              <span class="text-3xl font-bold text-[#7c3aed] mb-1">{{ activeMembersCount() < 10 ? '0' + activeMembersCount() : activeMembersCount() }}</span>
+              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ activeMembersCount() < 10 ? '0' + activeMembersCount() : activeMembersCount() }}</span>
               <span class="text-[9px] font-bold text-gray-500 tracking-wider">ACTIVE USERS</span>
             </div>
           </div>

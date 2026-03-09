@@ -257,7 +257,7 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
     const textColors: { [key: string]: string } = {
       'Communication': '#0369a1',
       'Process': '#0891b2',
-      'Technical': '#7c3aed',
+      'Technical': '#7954AA',
       'Team': '#15803d',
       'Documentation': '#1e40af',
       'Time': '#c2410c',

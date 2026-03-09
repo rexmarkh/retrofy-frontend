@@ -58,11 +58,11 @@ export class TeamCardComponent {
   getAvatarBgColor(): string {
     const initial = this.getInitials();
     // Match exact colors from the mockup for 'A' and 'P'
-    if (initial === 'A') return '#7c3aed'; // Violet
+    if (initial === 'A') return '#7954AA'; // Violet
     if (initial === 'P') return '#e2e8f0'; // Light gray/blue
     
     // Fallbacks for other letters
-    const colors = ['#7c3aed', '#e2e8f0', '#0ea5e9', '#10b981', '#f59e0b'];
+    const colors = ['#7954AA', '#e2e8f0', '#0ea5e9', '#10b981', '#f59e0b'];
     const index = (this.team.name.charCodeAt(0) - 65) % colors.length;
     return colors[Math.abs(index)];
   }
