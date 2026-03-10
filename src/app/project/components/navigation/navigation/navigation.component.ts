@@ -18,12 +18,16 @@ export class NavigationComponent implements OnInit {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: any) => {
-        this.isRetrospectiveRoute = event.urlAfterRedirects.includes('/retrospective');
+        this.updateNavigationState(event.urlAfterRedirects || event.url);
       });
   }
 
   ngOnInit() {
-    this.isRetrospectiveRoute = this.router.url.includes('/retrospective');
+    this.updateNavigationState(this.router.url);
+  }
+
+  private updateNavigationState(url: string) {
+    this.isRetrospectiveRoute = url.includes('/retrospective') || url.includes('/profile');
   }
 
   toggle() {

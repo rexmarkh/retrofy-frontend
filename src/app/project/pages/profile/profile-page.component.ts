@@ -80,6 +80,10 @@ export class ProfilePageComponent implements OnInit {
     console.log('Profile saved');
   }
 
+  logout(): void {
+    this.authService.logout();
+  }
+
   cancelEdit(): void {
     this.isEditing = false;
     // Reset any changes if needed

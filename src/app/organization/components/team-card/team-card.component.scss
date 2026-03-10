@@ -10,3 +10,15 @@
     }
   }
 }
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.grayscale {
+  filter: grayscale(100%);
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}

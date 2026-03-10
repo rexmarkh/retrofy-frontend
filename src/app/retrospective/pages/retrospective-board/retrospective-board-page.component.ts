@@ -88,10 +88,10 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
+    public router: Router,
     private retrospectiveService: RetrospectiveService,
     private retrospectiveQuery: RetrospectiveQuery,
-    private authQuery: AuthQuery,
+    public authQuery: AuthQuery,
     private projectQuery: ProjectQuery,
     private modal: NzModalService
   ) {}
@@ -163,12 +163,16 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     });
     
     // Populate arrays with current notes
+    const seenIds = new Set<string>();
     this.currentBoard.stickyNotes.forEach(note => {
+      if (seenIds.has(note.id)) return;
+      seenIds.add(note.id);
+      
       if (this.columnDataArrays[note.columnId]) {
         this.columnDataArrays[note.columnId].push(note);
       }
     });
-    
+
     // Sort notes by position within each column
     Object.keys(this.columnDataArrays).forEach(columnId => {
       this.columnDataArrays[columnId].sort((a, b) => a.position.y - b.position.y);
@@ -528,18 +532,14 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   // Note event handlers
   onNoteAdd(data: { columnId: string, content: string, color: StickyNoteColor, isAnonymous: boolean }) {
     this.retrospectiveService.addStickyNote(data.columnId, data.content, data.color, data.isAnonymous);
-    // Reinitialize arrays after adding note
-    setTimeout(() => this.initializeColumnArrays(), 100);
   }
 
   onNoteChange(note: StickyNote) {
     this.retrospectiveService.updateStickyNote(note.id, note);
-    setTimeout(() => this.initializeColumnArrays(), 100);
   }
 
   onNoteDelete(noteId: string) {
     this.retrospectiveService.deleteStickyNote(noteId);
-    setTimeout(() => this.initializeColumnArrays(), 100);
   }
 
   onNoteVote(noteId: string) {

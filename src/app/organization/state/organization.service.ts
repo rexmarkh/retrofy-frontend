@@ -15,7 +15,7 @@ export class OrganizationService {
   async loadOrganizationsFromSupabase() {
     this.store.setLoading(true);
     try {
-      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      const { data: { user } } = await this.supabaseService.getUser();
       const currentUserId = user?.id;
 
       if (!currentUserId) {
@@ -104,7 +104,8 @@ export class OrganizationService {
         updatedAt: team.created_at || new Date().toISOString(),
         memberCount: (team.memberships || []).length,
         boardCount: team.retro_boards?.[0]?.count ?? 0,
-        isPrivate: true
+        isPrivate: true,
+        isMember: (team.memberships || []).length > 0
       }));
 
       // Update state with organizations, teams AND members
@@ -246,7 +247,7 @@ export class OrganizationService {
 
   private async loadTeamMembersFromSupabase(teamId: string): Promise<void> {
     try {
-      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      const { data: { user } } = await this.supabaseService.getUser();
       const currentUserId = user?.id;
 
       // Fetch all memberships for this team
@@ -455,7 +456,7 @@ export class OrganizationService {
 
   async searchOrgMembers(query: string): Promise<{ userId: string; name: string; email: string; isAdded: boolean }[]> {
     try {
-      const { data: { user } } = await this.supabaseService.client.auth.getUser();
+      const { data: { user } } = await this.supabaseService.getUser();
       const currentOrg = this.store.getValue().currentOrganization;
       if (!currentOrg) return [];
 

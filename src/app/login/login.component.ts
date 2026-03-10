@@ -43,7 +43,7 @@ export class LoginComponent implements OnInit {
     }
 
     // Check actual Supabase session
-    this.supabaseService.client.auth.getSession().then(({ data: { session } }) => {
+    this.supabaseService.getSession().then(({ data: { session } }) => {
       if (session) {
         if (session.refresh_token) {
           sessionStorage.setItem('refresh_token', session.refresh_token);
@@ -105,7 +105,7 @@ export class LoginComponent implements OnInit {
       const { data, error } = await this.supabaseService.client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${environment.appDomainUrl}/#/organization`
+          redirectTo: `${environment.appDomainUrl}`
         }
       });
 

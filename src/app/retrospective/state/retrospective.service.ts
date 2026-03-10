@@ -4,6 +4,7 @@ import { RetrospectiveBoard, StickyNote, StickyNoteColor, RetroPhase, RetroColum
 import { AuthQuery } from '../../project/auth/auth.query';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { ProjectQuery } from '../../project/state/project/project.query';
 @Injectable({ providedIn: 'root' })
 export class RetrospectiveService {
   private retroItemsChannel: RealtimeChannel | null = null;
@@ -11,7 +12,8 @@ export class RetrospectiveService {
   constructor(
     private store: RetrospectiveStore,
     private authQuery: AuthQuery,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private projectQuery: ProjectQuery
   ) {}
 
   async loadBoardsFromSupabase(orgId?: string, teamId?: string) {
@@ -210,22 +212,25 @@ export class RetrospectiveService {
 
       const mapCategoryToColumnId = this.mapCategoryToColumnId.bind(this);
 
-      const mappedNotes: StickyNote[] = (itemsData || []).map((item: any) => ({
-        id: item.id,
-        noteNumber: item.sequence_number || 1,
-        content: item.content,
-        authorId: item.user_id || '',
-        authorName: item.is_anonymous ? 'Anonymous' : 'User',
-        authorAvatar: '',
-        isAnonymous: !!item.is_anonymous,
-        columnId: mapCategoryToColumnId(item.category),
-        color: StickyNoteColor.YELLOW,
-        position: { x: 0, y: 0 },
-        votes: item.votes || 0,
-        voterIds: [],
-        createdAt: item.created_at || new Date().toISOString(),
-        updatedAt: item.updated_at || new Date().toISOString()
-      }));
+      const mappedNotes: StickyNote[] = (itemsData || []).map((item: any) => {
+        const author = this.projectQuery.getValue().users.find(u => u.id === item.user_id);
+        return {
+          id: item.id,
+          noteNumber: item.sequence_number || 1,
+          content: item.content,
+          authorId: item.user_id || '',
+          authorName: item.is_anonymous ? 'Anonymous' : (author?.name || 'User'),
+          authorAvatar: item.is_anonymous ? '' : (author?.avatarUrl || ''),
+          isAnonymous: !!item.is_anonymous,
+          columnId: mapCategoryToColumnId(item.category),
+          color: item.color_code || StickyNoteColor.YELLOW,
+          position: { x: 0, y: 0 },
+          votes: item.votes || 0,
+          voterIds: [],
+          createdAt: item.created_at || new Date().toISOString(),
+          updatedAt: item.updated_at || new Date().toISOString()
+        };
+      });
 
       const updatedBoard = {
         ...board,
@@ -308,22 +313,23 @@ export class RetrospectiveService {
        // Prevent duplicate in state if we created it
        if (currentState.currentBoard.stickyNotes.some(n => n.id === newItem.id)) return;
        
-       const mappedNote: StickyNote = {
-          id: newItem.id,
-          noteNumber: newItem.sequence_number || 1,
-          content: newItem.content,
-          authorId: newItem.user_id || '',
-          authorName: newItem.is_anonymous ? 'Anonymous' : 'User',
-          authorAvatar: '',
-          isAnonymous: !!newItem.is_anonymous,
-          columnId: this.mapCategoryToColumnId(newItem.category),
-          color: StickyNoteColor.YELLOW,
-          position: { x: 0, y: 0 },
-          votes: newItem.votes || 0,
-          voterIds: [],
-          createdAt: newItem.created_at,
-          updatedAt: newItem.updated_at
-       };
+        const author = this.projectQuery.getValue().users.find(u => u.id === newItem.user_id);
+        const mappedNote: StickyNote = {
+           id: newItem.id,
+           noteNumber: newItem.sequence_number || 1,
+           content: newItem.content,
+           authorId: newItem.user_id || '',
+           authorName: newItem.is_anonymous ? 'Anonymous' : (author?.name || 'User'),
+           authorAvatar: newItem.is_anonymous ? '' : (author?.avatarUrl || ''),
+           isAnonymous: !!newItem.is_anonymous,
+           columnId: this.mapCategoryToColumnId(newItem.category),
+           color: newItem.color_code || StickyNoteColor.YELLOW,
+           position: { x: 0, y: 0 },
+           votes: newItem.votes || 0,
+           voterIds: [],
+           createdAt: newItem.created_at,
+           updatedAt: newItem.updated_at
+        };
 
        this.store.update(state => ({
          ...state,
@@ -425,19 +431,28 @@ export class RetrospectiveService {
 
       console.log('Created new note:', newNote);
 
-      const updatedBoard = {
-        ...currentState.currentBoard,
-        stickyNotes: [...currentState.currentBoard.stickyNotes, newNote],
-        updatedAt: new Date().toISOString()
-      };
+      this.store.update(state => {
+        // Prevent duplicate if realtime event already added it
+        if (state.currentBoard?.stickyNotes.some(n => n.id === newNote.id)) {
+          console.log('Note already exists in store, skipping optimistic update');
+          return state;
+        }
 
-      this.store.update(state => ({
-        ...state,
-        currentBoard: updatedBoard,
-        boards: state.boards.map(board => 
-          board.id === updatedBoard.id ? updatedBoard : board
-        )
-      }));
+        const updatedBoard = {
+          ...state.currentBoard!,
+          stickyNotes: [...state.currentBoard!.stickyNotes, newNote],
+          notesCount: state.currentBoard!.stickyNotes.length + 1,
+          updatedAt: new Date().toISOString()
+        };
+
+        return {
+          ...state,
+          currentBoard: updatedBoard,
+          boards: state.boards.map(board => 
+            board.id === updatedBoard.id ? updatedBoard : board
+          )
+        };
+      });
 
       console.log('Store updated successfully');
     } catch (error) {

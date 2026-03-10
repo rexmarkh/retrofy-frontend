@@ -1,7 +1,15 @@
 <div 
-  class="bg-white rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col"
+  class="bg-white rounded-xl overflow-hidden transition-all duration-300 h-full flex flex-col relative"
+  [class.hover:shadow-lg]="team.isMember"
+  [class.hover:-translate-y-1]="team.isMember"
+  [class.cursor-pointer]="team.isMember"
+  [class.cursor-not-allowed]="!team.isMember"
+  [class.opacity-50]="!team.isMember"
+  [class.grayscale]="!team.isMember"
   style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
-  (click)="onCardClick()"
+  (click)="team.isMember && onCardClick()"
+  [nz-tooltip]="!team.isMember ? 'You do not have access to this team' : ''"
+  nzTooltipPlacement="top"
 >
   <!-- Card Body -->
   <div class="p-6 flex flex-col flex-grow">
@@ -11,7 +19,7 @@
       <div class="w-14 h-14 flex items-center justify-center text-[22px] font-bold" [style.background]="getAvatarBgColor()" [style.color]="getAvatarTextColor()">{{ getInitials() }}</div>
 
       <!-- Actions (Edit / Delete) -->
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1" *ngIf="team.isMember">
         <button 
           nz-button 
           nzType="text" 

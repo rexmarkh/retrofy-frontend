@@ -18,6 +18,14 @@
         (click)="toggleEditMode()">
         Edit Profile
       </j-button>
+      <j-button 
+        *ngIf="!isEditing"
+        icon="logout" 
+        [iconSize]="16"
+        className="btn-secondary"
+        (click)="logout()">
+        Logout
+      </j-button>
       <div *ngIf="isEditing" class="edit-actions">
         <j-button 
           icon="times" 
@@ -185,7 +193,7 @@
     </div>
 
     <!-- Recent Activity Section -->
-    <div class="activity-section">
+    <!-- <div class="activity-section">
       <h2 class="section-title">Recent Activity</h2>
       
       <div class="activity-list">
@@ -219,7 +227,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
     </div>
   </div>
 

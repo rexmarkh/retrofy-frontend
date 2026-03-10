@@ -38,6 +38,20 @@
                 </div>
               </div>
 
+              <!-- User Profile -->
+              <div class="flex items-center" *ngIf="authQuery.user$ | async as user">
+                <j-avatar 
+                  [avatarUrl]="user.avatarUrl"
+                  [name]="user.name"
+                  [size]="32"
+                  className="cursor-pointer border-2 border-white shadow-sm"
+                  nz-tooltip
+                  [nzTooltipTitle]="user.name"
+                  nzTooltipPlacement="bottom"
+                  (click)="router.navigate(['/project/profile'])"
+                ></j-avatar>
+              </div>
+
               <!-- Settings -->
               <button 
                 nz-button 

@@ -5,7 +5,8 @@ import {
   SearchOutline,
   CloseOutline,
   TwitterOutline,
-  EditOutline
+  EditOutline,
+  LogoutOutline
 } from '@ant-design/icons-angular/icons';
 
 export const NZ_JIRA_ICONS: IconDefinition[] = [
@@ -14,5 +15,6 @@ export const NZ_JIRA_ICONS: IconDefinition[] = [
   SearchOutline,
   CloseOutline,
   TwitterOutline,
-  EditOutline
+  EditOutline,
+  LogoutOutline
 ];

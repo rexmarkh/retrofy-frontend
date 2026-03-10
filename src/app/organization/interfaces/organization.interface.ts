@@ -32,6 +32,7 @@ export interface Team {
   status?: 'Active' | 'Inactive' | 'On Hold';
   isPrivate: boolean;
   settings?: TeamSettings;
+  isMember?: boolean;
 }
 
 export interface TeamMember {

@@ -6,6 +6,7 @@ import { ProfilePageComponent } from './pages/profile/profile-page.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { ProjectComponent } from './project.component';
 import { ProjectConst } from './config/const';
+import { TeamAccessGuard } from '../core/guards/team-access.guard';
 
 const routes: Routes = [
   {
@@ -26,6 +27,7 @@ const routes: Routes = [
       },
       {
         path: 'retrospective',
+        canActivate: [TeamAccessGuard],
         loadChildren: () => import('../retrospective/retrospective.module').then(m => m.RetrospectiveModule)
       },
       {

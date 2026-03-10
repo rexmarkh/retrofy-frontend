@@ -85,4 +85,16 @@ export class OrganizationQuery extends Query<OrganizationState> {
       map(orgId => orgId ? this.getValue().teams.filter(team => team.organizationId === orgId) : [])
     );
   }
+
+  hasTeams$ = this.getCurrentOrganizationTeams().pipe(
+    map(teams => teams.length > 0)
+  );
+
+  /**
+   * Specifically checks if the user is a member of at least one team in the current org.
+   * In our current load logic, memberCount > 0 means the current user is a member.
+   */
+  isUserInAnyTeam$ = this.getCurrentOrganizationTeams().pipe(
+    map(teams => teams.some(team => team.memberCount > 0))
+  );
 }
