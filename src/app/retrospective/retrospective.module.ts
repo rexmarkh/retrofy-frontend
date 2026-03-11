@@ -33,7 +33,9 @@ import {
   AppstoreAddOutline,
   PlusOutline,
   AppstoreOutline,
-  DashboardOutline
+  DashboardOutline,
+  LikeOutline,
+  LikeFill
 } from '@ant-design/icons-angular/icons';
 
 const icons = [
@@ -48,7 +50,9 @@ const icons = [
   AppstoreAddOutline,
   PlusOutline,
   AppstoreOutline,
-  DashboardOutline
+  DashboardOutline,
+  LikeOutline,
+  LikeFill
 ];
 
 // Routing

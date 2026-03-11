@@ -139,8 +139,8 @@
           <span class="text-xs font-semibold">{{ note.votes }}</span>
           <span 
             nz-icon 
-            nzType="up" 
-            [nzTheme]="hasUserVoted() ? 'outline' : 'outline'"
+            nzType="like" 
+            [nzTheme]="hasUserVoted() ? 'fill' : 'outline'"
             class="vote-icon"
           ></span>
         </button>

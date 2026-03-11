@@ -307,6 +307,8 @@ export class RetrospectiveService {
           position: { x: 0, y: 0 },
           votes: item.votes || 0,
           voterIds: item.voter_ids || [],
+          tags: item.tags || [],
+          groupId: item.group_id || null,
           createdAt: item.created_at || new Date().toISOString(),
           updatedAt: item.updated_at || new Date().toISOString()
         };
@@ -407,6 +409,8 @@ export class RetrospectiveService {
            position: { x: 0, y: 0 },
            votes: newItem.votes || 0,
            voterIds: newItem.voter_ids || [],
+           tags: newItem.tags || [],
+           groupId: newItem.group_id || null,
            createdAt: newItem.created_at,
            updatedAt: newItem.updated_at
         };
@@ -432,6 +436,8 @@ export class RetrospectiveService {
                     content: updatedItem.content, 
                     columnId: this.mapCategoryToColumnId(updatedItem.category),
                     votes: updatedItem.votes || 0,
+                    tags: updatedItem.tags || note.tags,
+                    groupId: updatedItem.group_id !== undefined ? updatedItem.group_id : note.groupId,
                     updatedAt: updatedItem.updated_at,
                     noteNumber: updatedItem.sequence_number || note.noteNumber
                   }
@@ -480,7 +486,9 @@ export class RetrospectiveService {
       category,
       sequence_number: nextNoteNumber,
       is_anonymous: isAnonymous,
-      color_code: color // If applicable, might be text hex
+      color_code: color, // If applicable, might be text hex
+      tags: [],
+      group_id: null
     };
 
     try {
@@ -505,6 +513,8 @@ export class RetrospectiveService {
         position: { x: 0, y: 0 },
         votes: data.votes || 0,
         voterIds: [],
+        tags: [],
+        groupId: null,
         createdAt: data.created_at,
         updatedAt: data.updated_at
       };
@@ -551,6 +561,8 @@ export class RetrospectiveService {
     if (updates.columnId !== undefined) dbUpdates.category = this.mapColumnIdToCategory(updates.columnId);
     if (updates.votes !== undefined) dbUpdates.votes = updates.votes;
     if (updates.voterIds !== undefined) dbUpdates.voter_ids = updates.voterIds;
+    if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+    if (updates.groupId !== undefined) dbUpdates.group_id = updates.groupId;
 
     // We update local state optimistically
     const updatedBoard = {
