@@ -53,7 +53,14 @@ export class OrganizationService {
       
       const { data: allMemberships, error: membershipsError } = await this.supabaseService.client
         .from('memberships')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            email,
+            avatar_url
+          )
+        `)
         .or(`org_id.in.(${orgIds.join(',')}),team_id.in.(${teamIds.join(',')})`);
 
       if (membershipsError) throw membershipsError;
@@ -62,12 +69,22 @@ export class OrganizationService {
       let allOrganizationMembers: OrganizationMember[] = [];
 
       const mappedOrgs: Organization[] = orgsData.map(org => {
-        // Get all memberships for THIS organization
-        // Use a Set to deduplicate users since a user might have multiple memberships (org-level + team-level)
-        const orgMemberships = allMemberships?.filter(m => m.org_id === org.id) || [];
+        // Get all memberships associated with THIS organization OR its teams
+        const orgTeamIds = (org.teams || []).map((t: any) => t.id);
+        
+        // Deduplicate by user_id to ensure a unique member list for the organization
+        const uniqueUserMemberships = new Map<string, any>();
+        allMemberships?.forEach(m => {
+          if (m.org_id === org.id || (m.team_id && orgTeamIds.includes(m.team_id))) {
+            if (!uniqueUserMemberships.has(m.user_id)) {
+              uniqueUserMemberships.set(m.user_id, m);
+            }
+          }
+        });
+        
+        const deduplicatedMemberships = Array.from(uniqueUserMemberships.values());
         
         // Collect teams and associate them with their memberships from the FULL list
-        // This is key: filter from allMemberships by team_id to catch mismatched org_ids
         if (org.teams && Array.isArray(org.teams)) {
           const teamsWithMembers = org.teams.map((t: any) => ({
             ...t,
@@ -77,8 +94,11 @@ export class OrganizationService {
         }
 
         // Map and collect organization members
-        const mappedMembers: OrganizationMember[] = orgMemberships.map((m: any) => {
+        const mappedMembers: OrganizationMember[] = deduplicatedMemberships.map((m: any) => {
           const isCurrentUser = m.user_id === currentUserId;
+          // Use joined profile data if available
+          const profile = m.profiles;
+          
           const userDetails = isCurrentUser ? {
             id: user.id,
             name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Me',
@@ -86,15 +106,15 @@ export class OrganizationService {
             avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatarUrl
           } : {
             id: m.user_id,
-            name: m.user_metadata?.full_name || m.user_metadata?.name || 'User ' + m.user_id.substring(0, 5),
-            email: m.user_metadata?.email || `user_${m.user_id.substring(0, 5)}@example.com`,
-            avatarUrl: m.user_metadata?.avatar_url || m.user_metadata?.picture || m.user_metadata?.avatarUrl
+            name: profile?.full_name || 'User ' + m.user_id.substring(0, 5),
+            email: profile?.email || profile?.email || `user_${m.user_id.substring(0, 5)}@example.com`,
+            avatarUrl: profile?.avatar_url
           };
 
           return {
             id: m.id || `${m.org_id}_${m.user_id}`,
             userId: m.user_id,
-            organizationId: m.org_id || org.id,
+            organizationId: org.id, // Explicitly use the org.id to ensure they filter correctly in queries
             role: m.role || OrganizationRole.MEMBER,
             joinedAt: m.created_at || org.created_at || new Date().toISOString(),
             status: MemberStatus.ACTIVE,
@@ -109,7 +129,7 @@ export class OrganizationService {
           description: org.description || '', 
           createdAt: org.created_at || new Date().toISOString(),
           updatedAt: org.created_at || new Date().toISOString(),
-          memberCount: orgMemberships.length,
+          memberCount: deduplicatedMemberships.length,
           teamCount: (org.teams || []).length,
           ownerId: org.owner_id || '',
           isPrivate: true,
