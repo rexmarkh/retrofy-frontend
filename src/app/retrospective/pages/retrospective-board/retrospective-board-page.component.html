@@ -13,29 +13,28 @@
 
             <div class="flex items-center gap-4">
               <!-- Participants -->
-              <div 
-                class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
-                (click)="showParticipantsModal()"
-                nz-tooltip
-                nzTooltipTitle="Click to view all participants"
-                nzTooltipPlacement="bottom"
-              >
-                <span class="text-sm text-gray-600">Team:</span>
-                <div class="flex items-center -space-x-2">
+              <div class="flex items-center gap-3 px-1 py-2">
+                <div class="flex items-center -space-x-3">
                   <j-avatar 
                     *ngFor="let participantId of currentBoard.participants.slice(0, 5); let i = index"
                     [avatarUrl]="getParticipantAvatar(participantId)"
                     [name]="getParticipantName(participantId)"
-                    [size]="24"
+                    [size]="32"
                     className="border-2 border-white rounded-full hover:z-10"
-                    [ngStyle]="{ zIndex: 5 - i }"
+                    [ngStyle]="{ zIndex: 10 - i }"
                     nz-tooltip
                     [nzTooltipTitle]="getParticipantName(participantId)"
                   ></j-avatar>
-                  <span *ngIf="currentBoard.participants.length > 5" 
-                        class="text-xs text-gray-500 ml-2">
-                    +{{ currentBoard.participants.length - 5 }} more
-                  </span>
+                  <div 
+                    *ngIf="currentBoard.participants.length > 5"
+                    class="relative z-0"
+                  >
+                    <div 
+                      class="w-8 h-8 rounded-full bg-[#f3f4f6] border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-400"
+                    >
+                      +{{ currentBoard.participants.length - 5 }}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -194,75 +193,6 @@
       </ng-template>
     </nz-modal>
 
-    <!-- Participants Modal -->
-    <nz-modal
-      [(nzVisible)]="isParticipantsModalVisible"
-      nzClosable="false"
-      [nzFooter]="participantsModalFooter"
-      nzWidth="600px"
-    >
-      <ng-container *nzModalContent>
-        <div class="px-8 py-5">
-          <div class="flex items-center py-3 text-textDarkest">
-            <div class="text-xl">
-              Session Participants
-            </div>
-            <div class="flex-auto"></div>
-            <j-button icon="times"
-                      [iconSize]="24"
-                      (click)="closeParticipantsModal()"
-                      [className]="'btn-empty'">
-            </j-button>
-          </div>
-          <div class="participants-list">
-            <div class="mb-4 text-sm text-gray-500">
-              {{ participantUsers.length }} participant{{ participantUsers.length !== 1 ? 's' : '' }} joined
-            </div>
-            
-            <div class="space-y-3">
-              <div 
-                *ngFor="let user of participantUsers"
-                class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <j-avatar 
-                  [avatarUrl]="user.avatarUrl"
-                  [name]="getParticipantInitials(user.id)"
-                  [size]="40"
-                  className="flex-shrink-0"
-                ></j-avatar>
-                <div class="ml-3 flex-1">
-                  <div class="font-medium text-gray-900 flex items-center gap-2">
-                    {{ user.name }}
-                    <span 
-                      *ngIf="isFacilitator(user.id)"
-                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      <span nz-icon nzType="crown" nzTheme="fill" class="mr-1"></span>
-                      Facilitator
-                    </span>
-                  </div>
-                  <div class="text-sm text-gray-500">{{ user.email }}</div>
-                </div>
-              </div>
-            </div>
-
-            <div *ngIf="participantUsers.length === 0" class="text-center py-8 text-gray-400">
-              <span nz-icon nzType="user" nzTheme="outline" class="text-3xl mb-2"></span>
-              <p>No participants yet</p>
-            </div>
-          </div>
-        </div>
-      </ng-container>
-      
-      <ng-template #participantsModalFooter>
-        <div class="modal-footer-buttons">
-          <j-button className="btn-primary"
-                    (click)="closeParticipantsModal()">
-            Close
-          </j-button>
-        </div>
-      </ng-template>
-    </nz-modal>
 
     <!-- Settings Modal -->
     <nz-modal

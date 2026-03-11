@@ -67,7 +67,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   
   isPhaseModalVisible = false;
   isSettingsModalVisible = false;
-  isParticipantsModalVisible = false;
   selectedPhase: RetroPhase = RetroPhase.BRAINSTORMING;
   settingsTitle = '';
   settingsDescription = '';
@@ -75,7 +74,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   
   // User data
   users: JUser[] = [];
-  participantUsers: JUser[] = [];
 
   phaseOptions = [
     { value: RetroPhase.BRAINSTORMING, label: 'Brainstorming', icon: 'bulb' },
@@ -113,7 +111,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(users => {
         this.users = users;
-        this.updateParticipantUsers();
       });
 
     // Subscribe to current board
@@ -128,9 +125,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
           
           // Initialize column data arrays for drag & drop
           this.initializeColumnArrays();
-          
-          // Update participant users when board changes
-          this.updateParticipantUsers();
         }
       });
   }
@@ -484,17 +478,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Participant helpers
-  updateParticipantUsers(): void {
-    if (!this.currentBoard || !this.users.length) {
-      this.participantUsers = [];
-      return;
-    }
-    
-    this.participantUsers = this.currentBoard.participants
-      .map(participantId => this.users.find(user => user.id === participantId))
-      .filter(user => user !== undefined) as JUser[];
-  }
 
   getParticipantAvatar(participantId: string): string | undefined {
     const user = this.users.find(u => u.id === participantId);
@@ -515,14 +498,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   getParticipantName(participantId: string): string {
     const user = this.users.find(u => u.id === participantId);
     return user?.name || `User ${participantId}`;
-  }
-  
-  showParticipantsModal(): void {
-    this.isParticipantsModalVisible = true;
-  }
-  
-  closeParticipantsModal(): void {
-    this.isParticipantsModalVisible = false;
   }
   
   isFacilitator(userId: string): boolean {
