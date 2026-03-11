@@ -143,6 +143,11 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     return this.authQuery.getValue()?.id || '';
   }
 
+  get uniqueParticipants(): string[] {
+    if (!this.currentBoard?.participants) return [];
+    return Array.from(new Set(this.currentBoard.participants));
+  }
+
   getStickyNotesForColumn(columnId: string): StickyNote[] {
     return this.columnDataArrays[columnId] || [];
   }
@@ -515,15 +520,20 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
   getParticipantAvatar(participantId: string): string | undefined {
     const user = this.users.find(u => u.id === participantId);
-    return user?.avatarUrl;
+    if (user?.avatarUrl) return user.avatarUrl;
+    
+    // Fallback to profile avatar joined from sticky notes
+    const note = this.currentBoard?.stickyNotes.find(n => n.authorId === participantId && n.authorAvatar);
+    return note?.authorAvatar;
   }
 
   getParticipantInitials(participantId: string): string {
-    const user = this.users.find(u => u.id === participantId);
-    if (!user?.name) return participantId.slice(0, 2).toUpperCase();
-    return user.name
+    const name = this.getParticipantName(participantId);
+    if (!name || name.startsWith('User ')) return participantId.slice(0, 2).toUpperCase();
+    
+    return name
       .split(' ')
-      .map(name => name.charAt(0))
+      .map(n => n.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -531,7 +541,13 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
   getParticipantName(participantId: string): string {
     const user = this.users.find(u => u.id === participantId);
-    return user?.name || `User ${participantId}`;
+    if (user?.name) return user.name;
+    
+    // Fallback to profile name joined from sticky notes
+    const note = this.currentBoard?.stickyNotes.find(n => n.authorId === participantId && n.authorName && n.authorName !== 'Anonymous');
+    if (note?.authorName) return note.authorName;
+
+    return `User ${participantId.substring(0, 4)}`;
   }
   
   isFacilitator(userId: string): boolean {

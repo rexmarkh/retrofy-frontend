@@ -14,26 +14,23 @@
             <div class="flex items-center gap-4">
               <!-- Participants -->
               <div class="flex items-center gap-3 px-1 py-2">
-                <div class="flex items-center -space-x-3">
+                <span class="text-sm font-medium text-gray-700">Participants</span>
+                <div class="flex items-center -space-x-2">
                   <j-avatar 
-                    *ngFor="let participantId of currentBoard.participants.slice(0, 5); let i = index"
+                    *ngFor="let participantId of uniqueParticipants.slice(0, 5); let i = index"
                     [avatarUrl]="getParticipantAvatar(participantId)"
                     [name]="getParticipantName(participantId)"
                     [size]="32"
-                    className="border-2 border-white rounded-full hover:z-10"
-                    [ngStyle]="{ zIndex: 10 - i }"
+                    className="border-2 border-white rounded-full hover:z-50 transition-transform"
+                    [ngStyle]="{ 'z-index': i + 10 }"
                     nz-tooltip
                     [nzTooltipTitle]="getParticipantName(participantId)"
                   ></j-avatar>
                   <div 
-                    *ngIf="currentBoard.participants.length > 5"
-                    class="relative z-0"
+                    *ngIf="uniqueParticipants.length > 5"
+                    class="relative z-50 flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 border-2 border-white text-xs font-medium text-white shadow-sm"
                   >
-                    <div 
-                      class="w-8 h-8 rounded-full bg-[#f3f4f6] border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-400"
-                    >
-                      +{{ currentBoard.participants.length - 5 }}
-                    </div>
+                    +{{ uniqueParticipants.length - 5 }}
                   </div>
                 </div>
               </div>

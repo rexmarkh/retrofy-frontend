@@ -314,8 +314,16 @@ export class RetrospectiveService {
         };
       });
 
+      const participantIds = [board.facilitatorId || ''];
+      mappedNotes.forEach(note => {
+        if (!note.isAnonymous && note.authorId) {
+          participantIds.push(note.authorId);
+        }
+      });
+
       const updatedBoard = {
         ...board,
+        participants: Array.from(new Set(participantIds)),
         stickyNotes: mappedNotes
       };
 
@@ -415,14 +423,32 @@ export class RetrospectiveService {
            updatedAt: newItem.updated_at
         };
 
-       this.store.update(state => ({
-         ...state,
-         currentBoard: {
+        this.store.update(state => {
+          // Prevent duplicate if realtime event already added it
+          if (state.currentBoard?.stickyNotes.some(n => n.id === mappedNote.id)) {
+            return state;
+          }
+
+          const currentParticipants = state.currentBoard!.participants || [];
+          const updatedParticipants = (!mappedNote.isAnonymous && mappedNote.authorId && !currentParticipants.includes(mappedNote.authorId)) 
+            ? [...currentParticipants, mappedNote.authorId] 
+            : currentParticipants;
+
+          const updatedBoard = {
             ...state.currentBoard!,
+            participants: updatedParticipants,
             stickyNotes: [...state.currentBoard!.stickyNotes, mappedNote],
             notesCount: state.currentBoard!.stickyNotes.length + 1
-         }
-       }));
+          };
+
+          return {
+            ...state,
+            currentBoard: updatedBoard,
+            boards: state.boards.map(board => 
+              board.id === updatedBoard.id ? updatedBoard : board
+            )
+          };
+        });
     } else if (payload.eventType === 'UPDATE') {
        const updatedItem = payload.new;
        this.store.update(state => ({
