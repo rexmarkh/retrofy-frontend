@@ -120,6 +120,21 @@
     <!-- Members Section Skeleton -->
     <nz-col [nzSpan]="8">
       <div class="bg-white border border-gray-200 p-6 mb-8">
+        <!-- Quick Stats Skeleton -->
+        <div class="mb-2">
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; margin-bottom: 12px;"></nz-skeleton-element>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+            </div>
+            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-gray-100 my-8 w-full border-t">
+
         <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
           <div class="flex items-center gap-2">
             <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
@@ -135,22 +150,9 @@
           </div>
         </div>
         <!-- Add Member Button Skeleton -->
-        <div class="w-full border-2 border-dashed border-gray-100 py-4 mb-8">
+        <div class="w-full border-2 border-dashed border-gray-100 py-4 mb-2">
           <div class="flex justify-center">
             <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px;"></nz-skeleton-element>
-          </div>
-        </div>
-        <hr class="border-gray-100 my-8 w-full border-t">
-        <!-- Quick Stats Skeleton -->
-        <div class="mb-2">
-          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; margin-bottom: 12px;"></nz-skeleton-element>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
-            </div>
-            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
-            </div>
           </div>
         </div>
       </div>
@@ -206,6 +208,23 @@
       
       <!-- Members Card -->
       <div class="bg-white border border-gray-200 !shadow-none p-6 mb-8">
+        <!-- Quick Stats -->
+        <div class="mb-2">
+          <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">QUICK STATS</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
+              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teams.length < 10 ? '0' + teams.length : teams.length }}</span>
+              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL TEAMS</span>
+            </div>
+            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
+              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ activeMembersCount() < 10 ? '0' + activeMembersCount() : activeMembersCount() }}</span>
+              <span class="text-[9px] font-bold text-gray-500 tracking-wider">ACTIVE USERS</span>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-gray-200 my-8 w-full border-t">
+
         <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
           <div class="flex items-center gap-2">
             <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
@@ -215,7 +234,7 @@
         </div>
 
         <div *ngIf="members.length > 0">
-          <div class="member-list space-y-2 mb-6">
+          <div class="member-list space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             <div 
               *ngFor="let member of members; trackBy: trackByMemberId"
               class="flex items-center justify-between p-2 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-50 mb-1"
@@ -245,30 +264,13 @@
           </div>
         </div>
 
-        <button 
+        <!-- <button 
           (click)="showInviteMemberModal()"
           class="w-full border-2 border-dashed border-gray-200 py-4 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm hover:border-[#7954AA] hover:text-[#7954AA] transition-all bg-white hover:bg-purple-50"
         >
           <span nz-icon nzType="user-add" nzTheme="outline"></span>
           Add new member
-        </button>
-
-        <hr class="border-gray-200 my-8 w-full border-t">
-
-        <!-- Quick Stats -->
-        <div class="mb-2">
-          <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">QUICK STATS</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
-              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teams.length < 10 ? '0' + teams.length : teams.length }}</span>
-              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL TEAMS</span>
-            </div>
-            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
-              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ activeMembersCount() < 10 ? '0' + activeMembersCount() : activeMembersCount() }}</span>
-              <span class="text-[9px] font-bold text-gray-500 tracking-wider">ACTIVE USERS</span>
-            </div>
-          </div>
-        </div>
+        </button> -->
       </div>
 
     </nz-col>
