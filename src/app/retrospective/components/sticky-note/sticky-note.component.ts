@@ -138,30 +138,19 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   }
 
   shouldShowAuthor(): boolean {
-    // If the system-wide anonymous flag is off, always show the real author
-    if (!environment.enableAnonymousNotes) {
+    // 1. Logged in user always sees themselves on their own notes
+    if (this.note.authorId === this.currentUserId) {
       return true;
     }
 
-    // If the note itself wasn't created anonymously, show the author according to phase
-    if (!this.note.isAnonymous) {
-      return true;
-    }
-
-    // For specifically anonymous notes, only reveal author in later phases
+    // 2. Others are ONLY revealed during Discussion Phase and beyond
     return this.currentPhase === RetroPhase.DISCUSSION || 
            this.currentPhase === RetroPhase.ACTION_ITEMS ||
            this.currentPhase === RetroPhase.COMPLETED;
   }
 
   shouldShowAnonymous(): boolean {
-    // Only show the anonymous avatar if:
-    // 1. The feature flag is enabled
-    // 2. The note was specifically marked as anonymous in the DB
-    // 3. We shouldn't show the real author yet
-    return environment.enableAnonymousNotes && 
-           this.note.isAnonymous && 
-           !this.shouldShowAuthor();
+    return !this.shouldShowAuthor();
   }
 
   getDragDisabledMessage(): string {

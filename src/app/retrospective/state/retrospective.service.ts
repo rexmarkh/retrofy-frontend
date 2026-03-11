@@ -269,10 +269,17 @@ export class RetrospectiveService {
         ];
       }
 
-      // Fetch items from retro_items
+      // Fetch items from retro_items and join with profiles
       const { data: itemsData, error: itemsError } = await this.supabaseService.client
         .from('retro_items')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            email,
+            avatar_url
+          )
+        `)
         .eq('board_id', boardId);
 
       if (itemsError) throw itemsError;
@@ -280,14 +287,20 @@ export class RetrospectiveService {
       const mapCategoryToColumnId = this.mapCategoryToColumnId.bind(this);
 
       const mappedNotes: StickyNote[] = (itemsData || []).map((item: any) => {
+        // Look up author from in-memory users list OR from the joined profiles data
         const author = this.projectQuery.getValue().users.find(u => u.id === item.user_id);
+        const profile = item.profiles;
+        
+        const fallbackName = profile?.full_name || author?.name || 'User';
+        const fallbackAvatar = profile?.avatar_url || author?.avatarUrl || '';
+
         return {
           id: item.id,
           noteNumber: item.sequence_number || 1,
           content: item.content,
           authorId: item.user_id || '',
-          authorName: item.is_anonymous ? 'Anonymous' : (author?.name || 'User'),
-          authorAvatar: item.is_anonymous ? '' : (author?.avatarUrl || ''),
+          authorName: item.is_anonymous ? 'Anonymous' : fallbackName,
+          authorAvatar: item.is_anonymous ? '' : fallbackAvatar,
           isAnonymous: !!item.is_anonymous,
           columnId: mapCategoryToColumnId(item.category),
           color: item.color_code || StickyNoteColor.YELLOW,
