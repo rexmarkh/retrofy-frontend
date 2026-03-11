@@ -395,27 +395,37 @@ export class OrganizationService {
       const { data: { user } } = await this.supabaseService.getUser();
       const currentUserId = user?.id;
 
-      // Fetch all memberships for this team
+      // Fetch all memberships for this team and join with profiles
       const { data, error } = await this.supabaseService.client
         .from('memberships')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            email,
+            avatar_url
+          )
+        `)
         .eq('team_id', teamId);
 
       if (error) throw error;
 
       const members: TeamMember[] = (data || []).map((m: any, i: number) => {
         const isCurrentUser = m.user_id === currentUserId;
+        const profile = m.profiles;
+
         const resolvedName = isCurrentUser
           ? (user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me')
-          : (m.name || m.full_name || m.display_name || m.user_metadata?.name || m.user_metadata?.full_name || null);
+          : (profile?.full_name || m.name || m.full_name || m.display_name || m.user_metadata?.name || m.user_metadata?.full_name || null);
 
         return {
           id: m.id || `${teamId}_${m.user_id}`,
+          userId: m.user_id, // Store userId for isAdded checks
           name: resolvedName || `Member ${i + 1}`,
-          email: m.email || (isCurrentUser ? user?.email || '' : ''),
+          email: m.email || profile?.email || (isCurrentUser ? user?.email || '' : ''),
           avatarUrl: isCurrentUser 
             ? (user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatarUrl)
-            : (m.avatar_url || m.user_metadata?.avatar_url || null),
+            : (profile?.avatar_url || m.avatar_url || m.user_metadata?.avatar_url || null),
           teamId: teamId,
           organizationId: m.org_id || '',
           role: m.role || 'member',
@@ -724,39 +734,49 @@ export class OrganizationService {
       const currentOrg = this.store.getValue().currentOrganization;
       if (!currentOrg) return [];
 
-      const { data, error } = await this.supabaseService.client
-        .from('memberships')
-        .select('*')
-        .eq('org_id', currentOrg.id);
-
-      if (error) throw error;
-
-      const lq = query.toLowerCase();
       const currentTeamMemberIds = new Set(
         this.store.getValue().teamMembers.map(m => (m as any).userId || m.id)
       );
 
-      // Deduplicate by user_id
-      const uniqueUsers = new Map<string, any>();
-      (data || []).forEach((m: any) => {
-        if (!uniqueUsers.has(m.user_id)) {
-          uniqueUsers.set(m.user_id, m);
+      let queryBuilder = this.supabaseService.client
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          email,
+          avatar_url,
+          memberships!inner(org_id)
+        `)
+        .eq('memberships.org_id', currentOrg.id)
+        .limit(20);
+
+      if (query && query.trim() !== '') {
+        const safeQuery = query.trim().replace(/%/g, '\\%').replace(/_/g, '\\_');
+        queryBuilder = queryBuilder.or(`full_name.ilike.%${safeQuery}%,email.ilike.%${safeQuery}%`);
+      }
+
+      const { data, error } = await queryBuilder;
+
+      if (error) throw error;
+
+      // Deduplicate by profile id
+      const uniqueProfiles = new Map<string, any>();
+      (data || []).forEach((p: any) => {
+        if (!uniqueProfiles.has(p.id)) {
+          uniqueProfiles.set(p.id, p);
         }
       });
 
-      return Array.from(uniqueUsers.values())
-        .map((m: any) => {
-          const isCurrentUser = m.user_id === user?.id;
-          const name = isCurrentUser
-            ? (user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me')
-            : (m.name || m.full_name || m.display_name || `Member ${m.user_id.substring(0, 5)}`);
-          const email = isCurrentUser ? (user?.email || '') : (m.email || '');
-          const isAdded = currentTeamMemberIds.has(m.user_id);
-          return { userId: m.user_id, name, email, isAdded };
-        })
-        .filter((m: any) =>
-          !lq || m.name.toLowerCase().includes(lq) || m.email.toLowerCase().includes(lq)
-        );
+      return Array.from(uniqueProfiles.values()).map((p: any) => {
+        const isCurrentUser = p.id === user?.id;
+        const name = isCurrentUser
+          ? (user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me')
+          : (p.full_name || `User ${p.id.substring(0, 5)}`);
+        const email = isCurrentUser ? (user?.email || '') : (p.email || '');
+        const isAdded = currentTeamMemberIds.has(p.id);
+
+        return { userId: p.id, name, email, isAdded };
+      });
     } catch (err) {
       console.warn('[OrganizationService] searchOrgMembers failed:', err);
       return [];
