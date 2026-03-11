@@ -22,64 +22,94 @@ export class OrganizationService {
         throw new Error('User not authenticated');
       }
 
-      // Step 1: Use relational queries as per Supabase select() documentation
-      // Use !inner to filter organizations based on the user's membership
+      // Step 1: Get organizations the user belongs to along with their teams
       const { data: orgsData, error: orgsError } = await this.supabaseService.client
         .from('organisations')
         .select(`
           *,
           teams (*, retro_boards(count)),
-          memberships!inner (*)
+          memberships!inner (user_id)
         `)
         .eq('memberships.user_id', currentUserId);
 
       if (orgsError) throw orgsError;
 
+      if (!orgsData || orgsData.length === 0) {
+        this.store.update(state => ({
+          ...state,
+          organizations: [],
+          teams: [],
+          organizationMembers: []
+        }));
+        return;
+      }
+
+      const orgIds = orgsData.map(o => o.id);
+
+      // Step 2: Fetch ALL memberships for these organizations and their teams
+      const teamIds = orgsData.reduce((ids, org) => {
+        return ids.concat((org.teams || []).map((t: any) => t.id));
+      }, [] as string[]);
+      
+      const { data: allMemberships, error: membershipsError } = await this.supabaseService.client
+        .from('memberships')
+        .select('*')
+        .or(`org_id.in.(${orgIds.join(',')}),team_id.in.(${teamIds.join(',')})`);
+
+      if (membershipsError) throw membershipsError;
+
       let allTeams: any[] = [];
-      let allMembers: OrganizationMember[] = [];
+      let allOrganizationMembers: OrganizationMember[] = [];
 
-      const mappedOrgs: Organization[] = (orgsData || []).map(org => {
-        // Collect teams to be used in the teams array
+      const mappedOrgs: Organization[] = orgsData.map(org => {
+        // Get all memberships for THIS organization
+        // Use a Set to deduplicate users since a user might have multiple memberships (org-level + team-level)
+        const orgMemberships = allMemberships?.filter(m => m.org_id === org.id) || [];
+        
+        // Collect teams and associate them with their memberships from the FULL list
+        // This is key: filter from allMemberships by team_id to catch mismatched org_ids
         if (org.teams && Array.isArray(org.teams)) {
-          allTeams = [...allTeams, ...org.teams.map((t: any) => ({ ...t, memberships: org.memberships?.filter((m: any) => m.team_id === t.id) || [] }))];
+          const teamsWithMembers = org.teams.map((t: any) => ({
+            ...t,
+            memberships: allMemberships?.filter((m: any) => m.team_id === t.id) || []
+          }));
+          allTeams = [...allTeams, ...teamsWithMembers];
         }
 
-        // Collect members
-        if (org.memberships && Array.isArray(org.memberships)) {
-          const orgMembers: OrganizationMember[] = org.memberships.map((m: any) => {
-            const isCurrentUser = m.user_id === currentUserId;
-            const userDetails = isCurrentUser ? {
-              id: user.id,
-              name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Me',
-              email: user.email || '',
-              avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatarUrl
-            } : {
-              id: m.user_id,
-              name: m.user_metadata?.full_name || m.user_metadata?.name || 'User ' + m.user_id.substring(0, 5),
-              email: m.user_metadata?.email || `user_${m.user_id.substring(0, 5)}@example.com`,
-              avatarUrl: m.user_metadata?.avatar_url || m.user_metadata?.picture || m.user_metadata?.avatarUrl
-            };
+        // Map and collect organization members
+        const mappedMembers: OrganizationMember[] = orgMemberships.map((m: any) => {
+          const isCurrentUser = m.user_id === currentUserId;
+          const userDetails = isCurrentUser ? {
+            id: user.id,
+            name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Me',
+            email: user.email || '',
+            avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatarUrl
+          } : {
+            id: m.user_id,
+            name: m.user_metadata?.full_name || m.user_metadata?.name || 'User ' + m.user_id.substring(0, 5),
+            email: m.user_metadata?.email || `user_${m.user_id.substring(0, 5)}@example.com`,
+            avatarUrl: m.user_metadata?.avatar_url || m.user_metadata?.picture || m.user_metadata?.avatarUrl
+          };
 
-            return {
-              id: m.id || `${m.org_id}_${m.user_id}`,
-              userId: m.user_id,
-              organizationId: m.org_id || org.id,
-              role: m.role || OrganizationRole.MEMBER,
-              joinedAt: m.created_at || org.created_at || new Date().toISOString(),
-              status: MemberStatus.ACTIVE,
-              user: userDetails
-            };
-          });
-          allMembers = [...allMembers, ...orgMembers];
-        }
+          return {
+            id: m.id || `${m.org_id}_${m.user_id}`,
+            userId: m.user_id,
+            organizationId: m.org_id || org.id,
+            role: m.role || OrganizationRole.MEMBER,
+            joinedAt: m.created_at || org.created_at || new Date().toISOString(),
+            status: MemberStatus.ACTIVE,
+            user: userDetails
+          };
+        });
+        allOrganizationMembers = [...allOrganizationMembers, ...mappedMembers];
 
         return {
           id: org.id,
           name: org.name,
-          description: '', 
+          description: org.description || '', 
           createdAt: org.created_at || new Date().toISOString(),
           updatedAt: org.created_at || new Date().toISOString(),
-          memberCount: (org.memberships || []).length,
+          memberCount: orgMemberships.length,
           teamCount: (org.teams || []).length,
           ownerId: org.owner_id || '',
           isPrivate: true,
@@ -105,7 +135,7 @@ export class OrganizationService {
         memberCount: (team.memberships || []).length,
         boardCount: team.retro_boards?.[0]?.count ?? 0,
         isPrivate: true,
-        isMember: (team.memberships || []).length > 0
+        isMember: (team.memberships || []).some((m: any) => m.user_id === currentUserId)
       }));
 
       // Update state with organizations, teams AND members
@@ -113,7 +143,7 @@ export class OrganizationService {
         ...state,
         organizations: mappedOrgs,
         teams: mappedTeams,
-        organizationMembers: allMembers
+        organizationMembers: allOrganizationMembers
       }));
 
       // Set current org to first one if none is selected
