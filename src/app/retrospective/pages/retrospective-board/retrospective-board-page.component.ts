@@ -313,6 +313,33 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     return targetPhaseIndex < currentPhaseIndex || targetPhaseIndex === currentPhaseIndex + 1;
   }
 
+  get currentPhaseIndex(): number {
+    if (!this.currentBoard) return -1;
+    return this.retroPhases.indexOf(this.currentBoard.currentPhase);
+  }
+
+  canGoToPreviousPhase(): boolean {
+    const index = this.currentPhaseIndex;
+    return index > 0 && this.isPhaseClickable(this.retroPhases[index - 1]);
+  }
+
+  canGoToNextPhase(): boolean {
+    const index = this.currentPhaseIndex;
+    return index < this.retroPhases.length - 1 && this.isPhaseClickable(this.retroPhases[index + 1]);
+  }
+
+  goToPreviousPhase(): void {
+    if (this.canGoToPreviousPhase()) {
+      this.changePhase(this.retroPhases[this.currentPhaseIndex - 1]);
+    }
+  }
+
+  goToNextPhase(): void {
+    if (this.canGoToNextPhase()) {
+      this.changePhase(this.retroPhases[this.currentPhaseIndex + 1]);
+    }
+  }
+
   changePhase(phase: RetroPhase) {
     if (!this.isPhaseClickable(phase)) {
       return;

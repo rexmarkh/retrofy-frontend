@@ -66,15 +66,25 @@
           </div>
 
           <!-- Phase Navigation -->
-          <div class="phase-navigation">
-            <div class="phase-steps">
+          <div class="phase-navigation flex items-center justify-center px-4 w-full">
+            <button 
+              nz-button 
+              nzType="text" 
+              class="phase-nav-btn flex items-center justify-center rounded-full mx-2 transition-colors"
+              [disabled]="!canGoToPreviousPhase()"
+              (click)="goToPreviousPhase()"
+            >
+              <span nz-icon nzType="left" nzTheme="outline"></span>
+            </button>
+
+            <div class="phase-steps flex-1 w-full">
               <div 
                 *ngFor="let phase of retroPhases; let i = index"
                 class="phase-step"
                 [class.active]="currentBoard.currentPhase === phase"
                 [class.completed]="isPhaseCompleted(phase)"
                 [class.clickable]="isPhaseClickable(phase)"
-                [class.disabled]="!isPhaseClickable(phase)"
+                [class.disabled]="!isPhaseClickable(phase) && currentBoard.currentPhase !== phase"
                 (click)="isPhaseClickable(phase) && changePhase(phase)"
               >
                 <!-- Step Label -->
@@ -96,6 +106,16 @@
                 <div *ngIf="i < retroPhases.length - 1" class="step-connector"></div>
               </div>
             </div>
+
+            <button 
+              nz-button 
+              nzType="text" 
+              class="phase-nav-btn flex items-center justify-center rounded-full mx-2 transition-colors"
+              [disabled]="!canGoToNextPhase()"
+              (click)="goToNextPhase()"
+            >
+              <span nz-icon nzType="right" nzTheme="outline"></span>
+            </button>
           </div>
         </nz-header>
 

@@ -89,11 +89,11 @@
 
 .phase-step.disabled {
   cursor: not-allowed;
-  opacity: 0.9;
+  opacity: 0.4;
 }
 
-.phase-step.clickable:hover .step-title {
-  color: #3b82f6;
+.phase-step.clickable:not(.completed):hover .step-title {
+  color: #7954AA;
 }
 
 .phase-step.disabled:hover .step-title {
@@ -142,7 +142,7 @@
 }
 
 .phase-step.active .step-title {
-  color: #1e40af;
+  color: #7954AA;
   font-weight: 700;
   transform: scale(1.05);
 }
@@ -161,17 +161,28 @@
   color: #9ca3af;
 }
 
-.info-icon:hover {
+.phase-step:not(.disabled):not(.completed) .info-icon:hover {
   transform: scale(1.15);
-  color: #3b82f6;
+  color: #7954AA;
 }
 
 .phase-step.active .info-icon {
-  color: #3b82f6;
+  color: #7954AA;
 }
 
 .phase-step.completed .info-icon {
-  color: #6b7280;
+  color: #059669;
+}
+
+.phase-nav-btn {
+  &[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  &:not([disabled]):hover {
+    background-color: #f5f3f7;
+    color: #7954AA;
+  }
 }
 
 /* Modal Styles */
