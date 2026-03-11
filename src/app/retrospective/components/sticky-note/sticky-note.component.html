@@ -131,15 +131,16 @@
           nz-button 
           nzType="text" 
           nzSize="small"
-          [class]="hasUserVoted() ? 'vote-button-active' : 'vote-button'"
+          [class.vote-button-active]="hasUserVoted()"
+          [class.vote-button]="!hasUserVoted()"
           (click)="onVote()"
           class="flex items-center gap-1"
         >
           <span class="text-xs font-semibold">{{ note.votes }}</span>
           <span 
             nz-icon 
-            nzType="like" 
-            [nzTheme]="hasUserVoted() ? 'fill' : 'outline'"
+            nzType="up" 
+            [nzTheme]="hasUserVoted() ? 'outline' : 'outline'"
             class="vote-icon"
           ></span>
         </button>

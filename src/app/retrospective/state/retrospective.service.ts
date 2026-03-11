@@ -306,7 +306,7 @@ export class RetrospectiveService {
           color: item.color_code || StickyNoteColor.YELLOW,
           position: { x: 0, y: 0 },
           votes: item.votes || 0,
-          voterIds: [],
+          voterIds: item.voter_ids || [],
           createdAt: item.created_at || new Date().toISOString(),
           updatedAt: item.updated_at || new Date().toISOString()
         };
@@ -406,7 +406,7 @@ export class RetrospectiveService {
            color: newItem.color_code || StickyNoteColor.YELLOW,
            position: { x: 0, y: 0 },
            votes: newItem.votes || 0,
-           voterIds: [],
+           voterIds: newItem.voter_ids || [],
            createdAt: newItem.created_at,
            updatedAt: newItem.updated_at
         };
@@ -550,7 +550,8 @@ export class RetrospectiveService {
     if (updates.content !== undefined) dbUpdates.content = updates.content;
     if (updates.columnId !== undefined) dbUpdates.category = this.mapColumnIdToCategory(updates.columnId);
     if (updates.votes !== undefined) dbUpdates.votes = updates.votes;
-    
+    if (updates.voterIds !== undefined) dbUpdates.voter_ids = updates.voterIds;
+
     // We update local state optimistically
     const updatedBoard = {
       ...currentState.currentBoard,

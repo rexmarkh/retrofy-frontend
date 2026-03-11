@@ -205,11 +205,20 @@ export class RetroColumnComponent {
   }
 
   canAddNotes(): boolean {
-    // Notes can only be added during brainstorming phase
+    if (this.column.id === 'action-items') {
+      return this.currentPhase === RetroPhase.DISCUSSION || this.currentPhase === RetroPhase.ACTION_ITEMS;
+    }
+    // Other notes can only be added during brainstorming phase
     return this.currentPhase === RetroPhase.BRAINSTORMING;
   }
 
   getAddNoteDisabledMessage(): string {
+    if (this.column.id === 'action-items') {
+      if (this.currentPhase !== RetroPhase.DISCUSSION && this.currentPhase !== RetroPhase.ACTION_ITEMS) {
+        return 'Action items can only be created during Discussion or Action Items phase';
+      }
+    }
+    
     if (this.currentPhase === RetroPhase.GROUPING) {
       return 'Notes cannot be added during grouping phase - only moved and grouped';
     } else if (this.currentPhase === RetroPhase.VOTING) {
