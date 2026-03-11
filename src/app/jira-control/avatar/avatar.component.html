@@ -1,4 +1,14 @@
-<div *ngIf="avatarUrl"
-     [ngClass]="['avatar-container', className]"
-     [ngStyle]="style">
+<div [ngClass]="['avatar-wrapper', className]" [ngStyle]="containerStyle">
+  <!-- Avatar Image -->
+  <div *ngIf="avatarUrl" class="avatar-image" [ngStyle]="imageStyle"></div>
+  
+  <!-- Initials Fallback -->
+  <div *ngIf="!avatarUrl && initials" class="avatar-initials">
+    {{ initials }}
+  </div>
+
+  <!-- Final Icon Fallback (Low priority) -->
+  <div *ngIf="!avatarUrl && !initials" class="avatar-icon">
+    <span nz-icon nzType="user" nzTheme="outline"></span>
+  </div>
 </div>

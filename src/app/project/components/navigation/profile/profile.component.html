@@ -8,6 +8,7 @@
     <j-avatar 
       class="flex"
       [avatarUrl]="(user$ | async)?.avatarUrl || user?.avatarUrl"
+      [name]="(user$ | async)?.name || user?.name"
       [size]="size">
     </j-avatar>
   </div>
@@ -32,6 +33,7 @@
       <div class="profile-header">
         <j-avatar 
           [avatarUrl]="currentUser.avatarUrl"
+          [name]="currentUser.name"
           [size]="40"
           class="profile-large-avatar">
         </j-avatar>
@@ -66,6 +68,7 @@
     <div class="profile-card-header">
       <j-avatar 
         [avatarUrl]="currentUser.avatarUrl"
+        [name]="currentUser.name"
         [size]="60"
         class="profile-card-avatar">
       </j-avatar>

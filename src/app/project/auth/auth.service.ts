@@ -15,26 +15,36 @@ export class AuthService {
   ) {
     // Listen for auth state changes to keep store in sync
     this.supabaseService.client.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         this.updateStoreFromUser(session.user);
         
         // Proactively navigate to organization if we are on the login page or root
-        // This is especially helpful for OAuth redirects that land on the root of the app
         const currentUrl = this._router.url;
-        if (currentUrl.includes('/login') || currentUrl === '/' || currentUrl === '/#/') {
+        if (event === 'SIGNED_IN' && (currentUrl.includes('/login') || currentUrl === '/' || currentUrl === '/#/')) {
           this._router.navigate(['/organization']);
         }
       } else if (event === 'SIGNED_OUT') {
-        this._store.update((state) => ({
-          ...state,
-          id: undefined,
-          email: undefined,
-          name: undefined,
-          avatarUrl: undefined,
-          token: undefined
-        }));
+        this.clearStore();
       }
     });
+
+    // Check current session immediately on service initialization
+    this.supabaseService.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        this.updateStoreFromUser(session.user);
+      }
+    });
+  }
+
+  private clearStore() {
+    this._store.update((state) => ({
+      ...state,
+      id: undefined,
+      email: undefined,
+      name: undefined,
+      avatarUrl: undefined,
+      token: undefined
+    }));
   }
 
   async login({ email = '', password = '' }: LoginPayload) {
@@ -87,7 +97,7 @@ export class AuthService {
       id: user.id || state.id,
       email: user.email || state.email,
       name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || state.name,
-      avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.avatarUrl || state.avatarUrl
+      avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatarUrl || state.avatarUrl
     }));
   }
 }

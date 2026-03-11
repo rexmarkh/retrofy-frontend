@@ -5,5 +5,6 @@ export const environment: EnvironmentModel = {
   apiUrl: '/assets/data',
   supabaseUrl: 'https://cjoigydcgkkmlikacmtt.supabase.co',
   supabaseAnonKey: 'sb_publishable_FDkMz16sBU3z4AN-Ks6lZQ_dcGqkDqP',
-  appDomainUrl: 'https://retrofy.in'
+  appDomainUrl: 'https://retrofy.in',
+  enableAnonymousNotes: true
 };

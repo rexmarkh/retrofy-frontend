@@ -107,7 +107,7 @@
         <ng-container *ngIf="shouldShowAuthor()">
           <j-avatar 
             [avatarUrl]="note.authorAvatar" 
-            [name]="getInitials(note.authorName)"
+            [name]="note.authorName"
             [size]="18"
             className="avatar-small"
             nz-tooltip

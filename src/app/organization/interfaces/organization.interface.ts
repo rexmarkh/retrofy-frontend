@@ -39,7 +39,7 @@ export interface TeamMember {
   id: string;
   name: string;
   email: string;
-  avatar?: string;
+  avatarUrl?: string;
   teamId: string;
   organizationId: string;
   role: 'team_lead' | 'senior' | 'developer' | 'designer' | 'qa' | 'member';

@@ -25,11 +25,12 @@
                   <j-avatar 
                     *ngFor="let participantId of currentBoard.participants.slice(0, 5); let i = index"
                     [avatarUrl]="getParticipantAvatar(participantId)"
-                    [name]="getParticipantInitials(participantId)"
+                    [name]="getParticipantName(participantId)"
                     [size]="24"
                     className="border-2 border-white rounded-full hover:z-10"
                     [ngStyle]="{ zIndex: 5 - i }"
-                    [title]="getParticipantName(participantId)"
+                    nz-tooltip
+                    [nzTooltipTitle]="getParticipantName(participantId)"
                   ></j-avatar>
                   <span *ngIf="currentBoard.participants.length > 5" 
                         class="text-xs text-gray-500 ml-2">
@@ -42,11 +43,11 @@
               <div class="flex items-center" *ngIf="authQuery.user$ | async as user">
                 <j-avatar 
                   [avatarUrl]="user.avatarUrl"
-                  [name]="user.name"
+                  [name]="user.name || 'User'"
                   [size]="32"
                   className="cursor-pointer border-2 border-white shadow-sm"
                   nz-tooltip
-                  [nzTooltipTitle]="user.name"
+                  [nzTooltipTitle]="user.name || 'User'"
                   nzTooltipPlacement="bottom"
                   (click)="router.navigate(['/project/profile'])"
                 ></j-avatar>

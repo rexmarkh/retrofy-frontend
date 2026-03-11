@@ -88,6 +88,10 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   newTeamName = '';
   newTeamDescription = '';
 
+  isCreateOrgModalVisible = false;
+  newOrgName = '';
+  newOrgDescription = '';
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -276,6 +280,33 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Organization Management
+  showCreateOrgModal() {
+    this.isCreateOrgModalVisible = true;
+    this.newOrgName = '';
+    this.newOrgDescription = '';
+  }
+
+  cancelCreateOrg() {
+    this.isCreateOrgModalVisible = false;
+    this.newOrgName = '';
+    this.newOrgDescription = '';
+  }
+
+  async createOrganization() {
+    if (this.newOrgName.trim()) {
+      const org = await this.organizationService.createOrganizationSupabase(
+        this.newOrgName.trim(),
+        this.newOrgDescription.trim()
+      );
+      if (org) {
+        this.cancelCreateOrg();
+        this.message.success(`Organization "${org.name}" created successfully!`);
+      } else {
+        this.message.error('Failed to create organization. Please try again.');
+      }
+    }
+  }
+
   showInviteMemberModal() {
     // TODO: Implement invite member modal
     console.log('Invite member modal');
@@ -297,15 +328,21 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.newTeamDescription = '';
   }
 
-  createTeam() {
+  async createTeam() {
     if (this.newTeamName.trim() && this.currentOrganization) {
-      this.organizationService.createTeam(
+      const team = await this.organizationService.createTeamSupabase(
         this.newTeamName.trim(),
         this.newTeamDescription.trim(),
         this.currentOrganization.id
       );
-      this.cancelCreateTeam();
-      this.router.navigate(['/project/retrospective']);
+      
+      if (team) {
+        this.cancelCreateTeam();
+        this.message.success(`Team "${team.name}" created successfully!`);
+        this.router.navigate(['/project/retrospective']);
+      } else {
+        this.message.error('Failed to create team. Please try again.');
+      }
     }
   }
 

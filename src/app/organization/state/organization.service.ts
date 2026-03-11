@@ -50,14 +50,14 @@ export class OrganizationService {
             const isCurrentUser = m.user_id === currentUserId;
             const userDetails = isCurrentUser ? {
               id: user.id,
-              name: user.user_metadata?.name || user.email?.split('@')[0] || 'Me',
+              name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Me',
               email: user.email || '',
-              avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.avatarUrl
+              avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatarUrl
             } : {
               id: m.user_id,
-              name: 'User ' + m.user_id.substring(0, 5),
-              email: `user_${m.user_id.substring(0, 5)}@example.com`,
-              avatarUrl: undefined
+              name: m.user_metadata?.full_name || m.user_metadata?.name || 'User ' + m.user_id.substring(0, 5),
+              email: m.user_metadata?.email || `user_${m.user_id.substring(0, 5)}@example.com`,
+              avatarUrl: m.user_metadata?.avatar_url || m.user_metadata?.picture || m.user_metadata?.avatarUrl
             };
 
             return {
@@ -138,6 +138,100 @@ export class OrganizationService {
   }
 
   // Organization Management
+  async createOrganizationSupabase(name: string, description: string): Promise<Organization | null> {
+    try {
+      this.store.setLoading(true);
+      const { data: { user } } = await this.supabaseService.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const uniqueSlug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+
+      // 1. Create the organization
+      const { data: orgData, error: orgError } = await this.supabaseService.client
+        .from('organisations')
+        .insert({
+          name,
+          slug: uniqueSlug,
+          owner_id: user.id
+        })
+        .select()
+        .single();
+
+      if (orgError) throw orgError;
+
+      // 2. Create the initial membership (owner)
+      const { error: memberError } = await this.supabaseService.client
+        .from('memberships')
+        .insert({
+          user_id: user.id,
+          org_id: orgData.id,
+          role: OrganizationRole.OWNER
+        });
+
+      if (memberError) throw memberError;
+
+      // 3. Update local store
+      const newOrganization: Organization = {
+        id: orgData.id,
+        name: orgData.name,
+        description: description,
+        avatarUrl: undefined,
+        createdAt: orgData.created_at,
+        updatedAt: orgData.created_at,
+        memberCount: 1,
+        teamCount: 0,
+        ownerId: user.id,
+        isPrivate: true,
+        settings: {
+          visibility: 'private',
+          allowMemberInvites: true,
+          requireApprovalForJoining: false,
+          defaultRole: OrganizationRole.MEMBER,
+          allowPublicTeams: false,
+          requireApprovalForMembers: true,
+          defaultTeamVisibility: 'private'
+        }
+      };
+
+      this.store.update(state => ({
+        ...state,
+        organizations: [...state.organizations, newOrganization],
+        currentOrganization: newOrganization
+      }));
+
+      // 4. Add owner to organizationMembers state
+      const memberId = this.generateId();
+      const newMember: OrganizationMember = {
+        id: memberId,
+        userId: user.id,
+        organizationId: orgData.id,
+        role: OrganizationRole.OWNER,
+        joinedAt: orgData.created_at,
+        status: MemberStatus.ACTIVE,
+        user: {
+          id: user.id,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Me',
+          email: user.email || '',
+          avatarUrl: user.user_metadata?.picture || user.user_metadata?.avatar_url
+        }
+      };
+
+      this.store.update(state => ({
+        ...state,
+        organizationMembers: [...state.organizationMembers, newMember]
+      }));
+
+      return newOrganization;
+    } catch (error) {
+      console.error('[OrganizationService] createOrganizationSupabase failed:', error);
+      this.store.setError(error);
+      return null;
+    } finally {
+      this.store.setLoading(false);
+    }
+  }
+
   createOrganization(name: string, description: string): Organization {
     const user = this.authQuery.getValue();
     const organizationId = this.generateId();
@@ -268,7 +362,9 @@ export class OrganizationService {
           id: m.id || `${teamId}_${m.user_id}`,
           name: resolvedName || `Member ${i + 1}`,
           email: m.email || (isCurrentUser ? user?.email || '' : ''),
-          avatar: m.avatar_url || m.user_metadata?.avatar_url,
+          avatarUrl: isCurrentUser 
+            ? (user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatarUrl)
+            : (m.avatar_url || m.user_metadata?.avatar_url || null),
           teamId: teamId,
           organizationId: m.org_id || '',
           role: m.role || 'member',
@@ -292,6 +388,82 @@ export class OrganizationService {
 
 
   // Team Management
+  async createTeamSupabase(name: string, description: string, organizationId: string): Promise<Team | null> {
+    try {
+      this.store.setLoading(true);
+      const { data: { user } } = await this.supabaseService.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // 1. Create the team
+      const { data: teamData, error: teamError } = await this.supabaseService.client
+        .from('teams')
+        .insert({
+          name,
+          org_id: organizationId
+        })
+        .select()
+        .single();
+
+      if (teamError) throw teamError;
+
+      // 2. Create the initial membership (team lead)
+      const { error: memberError } = await this.supabaseService.client
+        .from('memberships')
+        .insert({
+          user_id: user.id,
+          org_id: organizationId,
+          team_id: teamData.id,
+          role: 'team_lead'
+        });
+
+      if (memberError) throw memberError;
+
+      // 3. Update local store
+      const newTeam: Team = {
+        id: teamData.id,
+        name: teamData.name,
+        description: description,
+        organizationId: teamData.org_id,
+        avatarUrl: undefined,
+        createdAt: teamData.created_at,
+        updatedAt: teamData.created_at,
+        memberCount: 1,
+        boardCount: 0,
+        leadId: user.id,
+        isPrivate: true,
+        settings: {
+          visibility: 'private',
+          allowMemberInvites: true,
+          projectAccess: 'selected',
+          allowExternalCollaborators: false,
+          requireApprovalForProjects: true,
+          defaultProjectVisibility: 'private'
+        }
+      };
+
+      this.store.update(state => ({
+        ...state,
+        teams: [...state.teams, newTeam],
+        organizations: state.organizations.map(org =>
+          org.id === organizationId
+            ? { ...org, teamCount: org.teamCount + 1, updatedAt: new Date().toISOString() }
+            : org
+        )
+      }));
+
+      // 4. Add creator as team member locally
+      this.addTeamMemberDirect(teamData.id, organizationId, user.user_metadata?.full_name || user.user_metadata?.name || 'Me', user.email || '', 'team_lead');
+
+      return newTeam;
+    } catch (error) {
+      console.error('[OrganizationService] createTeamSupabase failed:', error);
+      this.store.setError(error);
+      return null;
+    } finally {
+      this.store.setLoading(false);
+    }
+  }
+
   createTeam(name: string, description: string, organizationId: string): Team {
     const user = this.authQuery.getValue();
     const teamId = this.generateId();
@@ -408,7 +580,7 @@ export class OrganizationService {
       id: memberId,
       name,
       email,
-      avatar: undefined,
+      avatarUrl: undefined,
       teamId,
       organizationId,
       role,

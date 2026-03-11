@@ -13,7 +13,8 @@
                           [nzTooltipMouseEnterDelay]="0.3"
                           nzTooltipTitle="Assignee: {{ user.name }}"
                           nzTooltipPlacement="bottom"
-                          [avatarUrl]="user.avatarUrl">
+                          [avatarUrl]="user.avatarUrl"
+                          [name]="user.name">
                 </j-avatar>                
                 <span [class.ml-3]="assignees?.length" class="uppercase">
                     {{issue.type}}-{{issue.id}}

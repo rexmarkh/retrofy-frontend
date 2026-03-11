@@ -181,14 +181,12 @@
               class="flex items-center justify-between p-2 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-50 mb-1"
             >
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#e9d5ff] rounded-sm flex items-center justify-center text-[#7e22ce] font-bold">
-                  <span *ngIf="member.user.avatarUrl; else noAvatar">
-                     <img [src]="member.user.avatarUrl" alt="" class="w-full h-full rounded-sm object-cover" />
-                  </span>
-                  <ng-template #noAvatar>
-                     <img src="assets/images/user.png" alt="" class="w-6 h-6 opacity-60" />
-                  </ng-template>
-                </div>
+                <j-avatar 
+                  [avatarUrl]="member.user.avatarUrl"
+                  [name]="member.user.name"
+                  [size]="40"
+                  className="rounded-sm">
+                </j-avatar>
                 <div>
                   <div class="font-bold text-gray-900 text-sm flex items-center gap-2">
                     {{ member.user.name }}
@@ -251,10 +249,86 @@
     <div class="mb-4">
       <span nz-icon nzType="apartment" nzTheme="outline" class="text-6xl text-gray-300"></span>
     </div>
-    <h3 class="text-lg font-medium text-gray-900 mb-2">Setting up your organization</h3>
-    <p class="text-gray-500 mb-6">Please wait while we create your workspace...</p>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No workspace found</h3>
+    <p class="text-gray-500 mb-6">Create your first organization to get started</p>
+    <button 
+      nz-button 
+      nzType="primary"
+      nzSize="large"
+      (click)="showCreateOrgModal()"
+      class="flex items-center gap-2 mx-auto bg-[#7954AA] hover:bg-[#6b4299] border-none"
+    >
+      <span nz-icon nzType="plus" nzTheme="outline"></span>
+      Create First Organization
+    </button>
   </div>
 </ng-template>
+
+<!-- Create Organization Modal -->
+<nz-modal
+  [(nzVisible)]="isCreateOrgModalVisible"
+  nzClosable="false"
+  nzFooter="null"
+  nzWidth="700px"
+>
+  <ng-container *nzModalContent>
+    <div class="px-8 py-5">
+      <div class="flex items-center py-3 text-textDarkest">
+        <div class="text-xl">
+          Create New Organization
+        </div>
+        <div class="flex-auto"></div>
+        <j-button icon="times"
+                  [iconSize]="24"
+                  (click)="cancelCreateOrg()"
+                  [className]="'btn-empty'">
+        </j-button>
+      </div>
+      <form class="org-form modal-form">
+        <div class="form-group">
+          <label class="label">
+            Organization Name *
+          </label>
+          <input
+            [(ngModel)]="newOrgName"
+            name="orgName"
+            class="form-input"
+            placeholder="e.g., Acme Corp"
+            #orgNameInput
+          />
+        </div>
+        
+        <div class="mt-3 form-group">
+          <label class="label">
+            Description
+          </label>
+          <textarea
+            [(ngModel)]="newOrgDescription"
+            name="orgDescription"
+            class="form-input"
+            cdkTextareaAutosize
+            [cdkAutosizeMinRows]="3"
+            [cdkAutosizeMaxRows]="6"
+            placeholder="Describe your organization workspace"
+          ></textarea>
+        </div>
+
+        <div class="mt-5 form-group form-action">
+          <j-button className="btn-primary mr-2"
+                    type="button"
+                    [disabled]="!newOrgName.trim()"
+                    (click)="createOrganization()">
+            Create Organization
+          </j-button>
+          <j-button className="btn-empty"
+                    (click)="cancelCreateOrg()">
+            Cancel
+          </j-button>
+        </div>
+      </form>
+    </div>
+  </ng-container>
+</nz-modal>
 
 <!-- Create Team Modal -->
 <nz-modal

@@ -313,7 +313,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     return this.getActiveBoards();
   }
 
-  getTeamMembers(): { id: string; name: string; role: string; color: string }[] {
+  getTeamMembers(): { id: string; name: string; role: string; color: string; avatarUrl?: string }[] {
     const roleColors = ['#7954AA', '#10b981', '#f59e0b', '#3b82f6', '#ef4444'];
     const currentTeam = this.organizationQuery.getValue().currentTeam;
 
@@ -327,7 +327,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
         id: m.id,
         name: m.name || m.email || 'Team Member',
         role: this.formatRole(m.role),
-        color: roleColors[i % roleColors.length]
+        color: roleColors[i % roleColors.length],
+        avatarUrl: m.avatarUrl
       }));
     }
 
@@ -338,7 +339,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
         id: m.id || String(i),
         name: m.name || m.email || 'Team Member',
         role: m.role || 'Member',
-        color: roleColors[i % roleColors.length]
+        color: roleColors[i % roleColors.length],
+        avatarUrl: m.avatarUrl
       }));
     }
 

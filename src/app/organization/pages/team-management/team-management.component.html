@@ -182,7 +182,7 @@
             <tr *ngFor="let member of membersTable.data">
               <td>
                 <div class="flex items-center gap-3">
-                  <nz-avatar [nzSrc]="member.avatar" [nzSize]="32">
+                  <nz-avatar [nzSrc]="member.avatarUrl" [nzSize]="32">
                     {{ getInitials(member.name) }}
                   </nz-avatar>
                   <div>
