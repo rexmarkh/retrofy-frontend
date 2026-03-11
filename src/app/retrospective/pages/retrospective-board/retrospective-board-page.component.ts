@@ -167,10 +167,17 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Sort notes by position within each column
+    // Sort notes by position within each column initially
     Object.keys(this.columnDataArrays).forEach(columnId => {
       this.columnDataArrays[columnId].sort((a, b) => a.position.y - b.position.y);
     });
+
+    // If beyond BRAINSTORMING phase, sort by vote count descending instead
+    if (this.currentBoard.currentPhase !== RetroPhase.BRAINSTORMING) {
+      Object.keys(this.columnDataArrays).forEach(columnId => {
+        this.columnDataArrays[columnId].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      });
+    }
   }
 
   trackByColumnId(index: number, column: RetroColumn): string {

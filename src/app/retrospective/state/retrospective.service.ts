@@ -640,24 +640,12 @@ export class RetrospectiveService {
     await this.updateStickyNote(noteId, { votes: updatedNote.votes, voterIds: updatedNote.voterIds });
   }
 
-  updatePhase(phase: RetroPhase): void {
+  async updatePhase(phase: RetroPhase): Promise<void> {
     const currentState = this.store.getValue();
     
     if (!currentState.currentBoard) return;
 
-    const updatedBoard = {
-      ...currentState.currentBoard,
-      currentPhase: phase,
-      updatedAt: new Date().toISOString()
-    };
-
-    this.store.update(state => ({
-      ...state,
-      currentBoard: updatedBoard,
-      boards: state.boards.map(board => 
-        board.id === updatedBoard.id ? updatedBoard : board
-      )
-    }));
+    await this.updateBoardSupabase(currentState.currentBoard.id, { currentPhase: phase });
   }
 
   private createDemoBoard(): void {
