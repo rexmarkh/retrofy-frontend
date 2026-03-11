@@ -1,20 +1,50 @@
 <nz-card 
-  [nzActions]="[settingsAction, deleteAction]"
-  class="organization-card hover:shadow-lg transition-shadow cursor-pointer"
+  class="organization-card hover:shadow-lg transition-shadow cursor-pointer relative"
   (click)="onCardClick()"
 >
+  <!-- Actions (Settings / Delete) - Top Right Corner -->
+  <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;">
+    <button 
+      nz-button 
+      nzType="text" 
+      nzSize="small" 
+      (click)="$event.stopPropagation(); onSettings()"
+      class="text-gray-400 hover:text-[#7954AA] transition-colors p-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+      nz-tooltip
+      nzTooltipTitle="Organization Settings"
+    >
+      <span nz-icon nzType="setting" nzTheme="outline" class="text-base"></span>
+    </button>
+    <button 
+      nz-button 
+      nzType="text" 
+      nzSize="small" 
+      (click)="$event.stopPropagation(); onDelete()"
+      class="text-gray-400 hover:text-red-500 transition-colors p-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+      nz-tooltip
+      nzTooltipTitle="Delete Organization"
+    >
+      <span nz-icon nzType="delete" nzTheme="outline" class="text-base"></span>
+    </button>
+  </div>
+
   <nz-card-meta
-    [nzTitle]="organization.name"
+    [nzTitle]="titleTemplate"
     [nzDescription]="organization.description"
-    [nzAvatar]="avatarTemplate"
   ></nz-card-meta>
+
+  <ng-template #titleTemplate>
+    <div class="pr-24">
+      {{ organization.name }}
+    </div>
+  </ng-template>
   
   <div class="mt-4 space-y-3">
     <!-- Organization Stats -->
     <div class="flex items-center justify-between">
       <nz-tag [nzColor]="getVisibilityColor()">
-        <span nz-icon [nzType]="getVisibilityIcon()" nzTheme="outline"></span>
         {{ getVisibilityLabel() }}
+        <span nz-icon [nzType]="getVisibilityIcon()" nzTheme="outline"></span>
       </nz-tag>
       <span class="text-xs text-gray-500">
         {{ getTimeAgo() }}
@@ -41,33 +71,8 @@
     </div>
   </div>
 
-  <ng-template #avatarTemplate>
-    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-lg font-bold">
-      {{ getInitials() }}
-    </div>
-  </ng-template>
 
-  <ng-template #settingsAction>
-    <span 
-      nz-icon 
-      nzType="setting" 
-      nzTheme="outline"
-      (click)="$event.stopPropagation(); onSettings()"
-      class="action-icon"
-      nz-tooltip
-      nzTooltipTitle="Organization Settings"
-    ></span>
-  </ng-template>
 
-  <ng-template #deleteAction>
-    <span 
-      nz-icon 
-      nzType="delete" 
-      nzTheme="outline"
-      (click)="$event.stopPropagation(); onDelete()"
-      class="action-icon text-red-500 hover:text-red-600"
-      nz-tooltip
-      nzTooltipTitle="Delete Organization"
-    ></span>
-  </ng-template>
+
+
 </nz-card>

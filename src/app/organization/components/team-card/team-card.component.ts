@@ -51,29 +51,6 @@ export class TeamCardComponent {
     this.delete.emit(this.team);
   }
 
-  getInitials(): string {
-    return this.team.name.charAt(0).toUpperCase();
-  }
-
-  getAvatarBgColor(): string {
-    const initial = this.getInitials();
-    // Match exact colors from the mockup for 'A' and 'P'
-    if (initial === 'A') return '#7954AA'; // Violet
-    if (initial === 'P') return '#e2e8f0'; // Light gray/blue
-    
-    // Fallbacks for other letters
-    const colors = ['#7954AA', '#e2e8f0', '#0ea5e9', '#10b981', '#f59e0b'];
-    const index = (this.team.name.charCodeAt(0) - 65) % colors.length;
-    return colors[Math.abs(index)];
-  }
-
-  getAvatarTextColor(): string {
-    const bg = this.getAvatarBgColor();
-    // If it's the light gray background (like 'P' in mockup), use dark text
-    if (bg === '#e2e8f0') return '#475569'; // slate-600
-    return '#ffffff';
-  }
-
   getStatusColor(): string {
     if (!this.team.status) return 'default';
     

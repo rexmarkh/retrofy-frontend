@@ -135,13 +135,13 @@
           (click)="onVote()"
           class="flex items-center gap-1"
         >
+          <span class="text-xs font-semibold">{{ note.votes }}</span>
           <span 
             nz-icon 
             nzType="like" 
             [nzTheme]="hasUserVoted() ? 'fill' : 'outline'"
             class="vote-icon"
           ></span>
-          <span class="text-xs font-semibold">{{ note.votes }}</span>
         </button>
       </div>
     </div>

@@ -12,9 +12,6 @@
     <div class="mb-8">
       <div class="flex items-start justify-between">
         <div class="flex items-start gap-4">
-          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
-            {{ getOrganizationInitials() }}
-          </div>
           <div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ organization.name }}</h1>
             <p class="text-lg text-gray-600 mb-4">{{ organization.description }}</p>
@@ -41,8 +38,8 @@
             class="flex items-center gap-2 jira-link-button"
             [class.linked]="organization.jiraIntegration?.isConnected"
           >
-            <span nz-icon nzType="link" nzTheme="outline"></span>
             {{ organization.jiraIntegration?.isConnected ? 'Manage Jira' : 'Link Jira' }}
+            <span nz-icon nzType="link" nzTheme="outline"></span>
           </button>
           <button 
             nz-button 
@@ -51,8 +48,8 @@
             (click)="showInviteMemberModal()"
             class="flex items-center gap-2"
           >
-            <span nz-icon nzType="user-add" nzTheme="outline"></span>
             Invite Members
+            <span nz-icon nzType="user-add" nzTheme="outline"></span>
           </button>
           <button 
             nz-button 
@@ -61,8 +58,8 @@
             (click)="showCreateTeamModal()"
             class="flex items-center gap-2"
           >
-            <span nz-icon nzType="plus" nzTheme="outline"></span>
             Create Team
+            <span nz-icon nzType="plus" nzTheme="outline"></span>
           </button>
         </div>
       </div>
@@ -99,8 +96,8 @@
                   (click)="showCreateTeamModal()"
                   class="flex items-center gap-2 mx-auto"
                 >
-                  <span nz-icon nzType="plus" nzTheme="outline"></span>
                   Create First Team
+                  <span nz-icon nzType="plus" nzTheme="outline"></span>
                 </button>
               </div>
             </nz-empty>
@@ -156,8 +153,8 @@
                   (click)="showInviteMemberModal()"
                   class="flex items-center gap-2 mx-auto"
                 >
-                  <span nz-icon nzType="user-add" nzTheme="outline"></span>
                   Invite Members
+                  <span nz-icon nzType="user-add" nzTheme="outline"></span>
                 </button>
               </div>
             </nz-empty>
@@ -218,9 +215,6 @@
           
           <div class="org-card selected" *ngIf="organization">
             <div class="org-card-content">
-              <div class="org-avatar">
-                {{ getOrganizationInitials() }}
-              </div>
               <div class="org-info">
                 <h4 class="org-name">{{ organization.name }}</h4>
                 <p class="org-description">{{ organization.description }}</p>
@@ -243,9 +237,6 @@
         <div class="config-section">
           <div class="config-header">
             <div class="selected-org">
-              <div class="selected-org-avatar">
-                {{ getOrganizationInitials() }}
-              </div>
               <div class="selected-org-info">
                 <h3 class="selected-org-name">{{ organization?.name }}</h3>
                 <div class="connection-status" [class.connected]="organization?.jiraIntegration?.isConnected">
@@ -283,8 +274,8 @@
                   [disabled]="!jiraConfig.siteUrl?.trim()"
                   class="action-btn primary"
                 >
-                  <span nz-icon nzType="thunderbolt" nzTheme="outline" *ngIf="!isConnecting"></span>
                   {{ isConnecting ? 'Connecting...' : 'Connect to Jira' }}
+                  <span nz-icon nzType="thunderbolt" nzTheme="outline" *ngIf="!isConnecting"></span>
                 </button>
               </div>
             </form>
@@ -319,8 +310,8 @@
                 [nzLoading]="isDisconnecting"
                 class="action-btn danger"
               >
-                <span nz-icon nzType="disconnect" nzTheme="outline" *ngIf="!isDisconnecting"></span>
                 {{ isDisconnecting ? 'Disconnecting...' : 'Disconnect' }}
+                <span nz-icon nzType="disconnect" nzTheme="outline" *ngIf="!isDisconnecting"></span>
               </button>
             </div>
           </div>

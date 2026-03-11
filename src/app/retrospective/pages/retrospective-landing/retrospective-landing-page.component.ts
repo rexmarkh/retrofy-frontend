@@ -75,6 +75,12 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   isAddingMember = false;
   addMemberSuccess: string | null = null;
 
+  // Board Edit Modal
+  isEditBoardModalVisible = false;
+  editingBoard: RetrospectiveBoard | null = null;
+  editBoardTitle = '';
+  editBoardDescription = '';
+
   constructor(
     private router: Router,
     private retrospectiveService: RetrospectiveService,
@@ -281,14 +287,33 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   editBoard(board: RetrospectiveBoard) {
-    // Implement edit functionality
-    console.log('Edit board:', board);
+    this.editingBoard = board;
+    this.editBoardTitle = board.title;
+    this.editBoardDescription = board.description || '';
+    this.isEditBoardModalVisible = true;
   }
 
-  deleteBoard(boardId: string) {
+  cancelEditBoard() {
+    this.isEditBoardModalVisible = false;
+    this.editingBoard = null;
+  }
+
+  async updateBoard() {
+    if (!this.editingBoard || !this.editBoardTitle.trim()) return;
+
+    const success = await this.retrospectiveService.updateBoardSupabase(this.editingBoard.id, {
+      title: this.editBoardTitle,
+      description: this.editBoardDescription
+    });
+
+    if (success) {
+      this.cancelEditBoard();
+    }
+  }
+
+  async deleteBoard(boardId: string) {
     if (confirm('Are you sure you want to delete this board? This action cannot be undone.')) {
-      // Implement delete functionality
-      console.log('Delete board:', boardId);
+      await this.retrospectiveService.deleteBoardSupabase(boardId);
     }
   }
 

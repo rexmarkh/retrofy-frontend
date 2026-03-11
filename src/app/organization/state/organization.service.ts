@@ -98,7 +98,7 @@ export class OrganizationService {
       const mappedTeams: Team[] = allTeams.map(team => ({
         id: team.id,
         name: team.name,
-        description: '',
+        description: team.description || '',
         organizationId: team.org_id || '',
         createdAt: team.created_at || new Date().toISOString(),
         updatedAt: team.created_at || new Date().toISOString(),
@@ -152,6 +152,7 @@ export class OrganizationService {
         .from('organisations')
         .insert({
           name,
+          description,
           slug: uniqueSlug,
           owner_id: user.id
         })
@@ -399,6 +400,7 @@ export class OrganizationService {
         .from('teams')
         .insert({
           name,
+          description,
           org_id: organizationId
         })
         .select()
@@ -507,6 +509,27 @@ export class OrganizationService {
     return newTeam;
   }
 
+  async updateTeamSupabase(teamId: string, updates: Partial<Team>): Promise<boolean> {
+    try {
+      const { error } = await this.supabaseService.client
+        .from('teams')
+        .update({
+          name: updates.name,
+          description: updates.description,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', teamId);
+
+      if (error) throw error;
+
+      this.updateTeam(teamId, updates);
+      return true;
+    } catch (error) {
+      console.error('Error updating team in Supabase:', error);
+      return false;
+    }
+  }
+
   updateTeam(teamId: string, updates: Partial<Team>): void {
     const currentState = this.store.getValue();
     
@@ -520,6 +543,25 @@ export class OrganizationService {
       ...state,
       teams: updatedTeams
     }));
+  }
+
+  async deleteTeamSupabase(teamId: string): Promise<boolean> {
+    try {
+      // Memberships and boards should be deleted by cascade or handled specifically if needed
+      // For now, we assume simple team deletion
+      const { error } = await this.supabaseService.client
+        .from('teams')
+        .delete()
+        .eq('id', teamId);
+
+      if (error) throw error;
+
+      this.deleteTeam(teamId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting team from Supabase:', error);
+      return false;
+    }
   }
 
   deleteTeam(teamId: string): void {

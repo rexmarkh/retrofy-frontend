@@ -138,6 +138,73 @@ export class RetrospectiveService {
     }
   }
 
+  async updateBoardSupabase(boardId: string, updates: Partial<RetrospectiveBoard>): Promise<boolean> {
+    try {
+      const dbUpdates: any = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.currentPhase !== undefined) dbUpdates.current_stage = this.mapPhaseToDb(updates.currentPhase);
+      
+      dbUpdates.updated_at = new Date().toISOString();
+
+      const { error } = await this.supabaseService.client
+        .from('retro_boards')
+        .update(dbUpdates)
+        .eq('id', boardId);
+
+      if (error) throw error;
+
+      this.store.update(state => ({
+        ...state,
+        boards: state.boards.map(board => 
+          board.id === boardId ? { ...board, ...updates, updatedAt: dbUpdates.updated_at } : board
+        ),
+        currentBoard: state.currentBoard && state.currentBoard.id === boardId 
+          ? { ...state.currentBoard, ...updates, updatedAt: dbUpdates.updated_at }
+          : state.currentBoard
+      }));
+
+      return true;
+    } catch (error) {
+      console.error('Error updating board in Supabase:', error);
+      return false;
+    }
+  }
+
+  async deleteBoardSupabase(boardId: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabaseService.client
+        .from('retro_boards')
+        .delete()
+        .eq('id', boardId);
+
+      if (error) throw error;
+
+      this.store.update(state => ({
+        ...state,
+        boards: state.boards.filter(board => board.id !== boardId),
+        currentBoard: state.currentBoard && state.currentBoard.id === boardId ? null : state.currentBoard
+      }));
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting board from Supabase:', error);
+      return false;
+    }
+  }
+
+  private mapPhaseToDb(phase: RetroPhase): string {
+    switch (phase) {
+      case RetroPhase.BRAINSTORMING: return 'Brainstorming';
+      case RetroPhase.GROUPING: return 'Grouping';
+      case RetroPhase.VOTING: return 'Voting';
+      case RetroPhase.DISCUSSION: return 'Discussion';
+      case RetroPhase.ACTION_ITEMS: return 'Action Items';
+      case RetroPhase.COMPLETED: return 'Completed';
+      default: return 'Brainstorming';
+    }
+  }
+
   async loadBoard(boardId: string) {
     // Clear out the current board before fetching the next one
     this.store.update({ currentBoard: null });

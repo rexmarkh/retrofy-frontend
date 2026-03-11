@@ -41,15 +41,6 @@ export class OrganizationCardComponent {
     this.delete.emit(this.organization);
   }
 
-  getInitials(): string {
-    return this.organization.name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
   getVisibilityColor(): string {
     return this.organization.settings.visibility === 'public' ? 'green' : 'blue';
   }

@@ -20,8 +20,8 @@
           class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded-lg shadow-sm"
           (click)="showCreateBoardModal()"
         >
-          <span nz-icon nzType="plus"></span>
           <span>Create Board</span>
+          <span nz-icon nzType="plus"></span>
         </button>
       </div>
     </div>
@@ -77,60 +77,67 @@
 
       <!-- Boards Grid -->
       <div *ngIf="!state.isLoading && getFilteredBoards().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5 fade-in">
-        <div
-          *ngFor="let board of getFilteredBoards(); trackBy: trackByBoardId"
-          class="board-card bg-white rounded-xl cursor-pointer h-full flex flex-col"
-          style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
-          (click)="openBoard(board.id)"
-        >
-          <!-- Card Body -->
-          <div class="p-5 flex flex-col flex-grow">
-            <!-- Card Header -->
-            <div class="flex items-start justify-between mb-4">
-              <!-- Phase Badge -->
-              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                [ngClass]="{
-                  'bg-blue-50 text-blue-600': board.currentPhase === 'brainstorming',
-                  'bg-amber-50 text-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-                  'bg-purple-50 text-[#7954AA]': board.currentPhase === 'discussion',
-                  'bg-green-50 text-green-600': board.currentPhase === 'completed'
-                }">
-                <div class="w-1.5 h-1.5 rounded-full"
-                  [ngClass]="{
-                    'bg-blue-500': board.currentPhase === 'brainstorming',
-                    'bg-amber-500': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-                    'bg-[#7954AA]': board.currentPhase === 'discussion',
-                    'bg-green-500': board.currentPhase === 'completed'
-                  }"></div>
-                {{ getPhaseLabel(board.currentPhase) }}
-              </div>
-
-              <!-- Actions (Edit / Delete) -->
-              <div class="flex items-center gap-1" (click)="$event.stopPropagation()">
-                <button
-                  nz-button
-                  nzType="text"
-                  nzSize="small"
-                  (click)="editBoard(board)"
-                  class="text-gray-300 hover:text-[#7954AA] transition-colors"
-                >
-                  <span nz-icon nzType="edit" nzTheme="outline"></span>
-                </button>
-                <button
-                  nz-button
-                  nzType="text"
-                  nzSize="small"
-                  (click)="deleteBoard(board.id)"
-                  class="text-gray-300 hover:text-red-500 transition-colors"
-                >
-                  <span nz-icon nzType="delete" nzTheme="outline"></span>
-                </button>
-              </div>
+          <div
+            *ngFor="let board of getFilteredBoards(); trackBy: trackByBoardId"
+            class="board-card bg-white rounded-xl cursor-pointer h-full flex flex-col relative"
+            style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
+            (click)="openBoard(board.id)"
+          >
+            <!-- Actions (Edit / Delete) - Top Right Corner -->
+            <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()">
+              <button
+                nz-button
+                nzType="text"
+                nzSize="small"
+                (click)="editBoard(board)"
+                class="text-gray-300 hover:text-[#7954AA] transition-colors p-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+              >
+                <span nz-icon nzType="edit" nzTheme="outline" class="text-base"></span>
+              </button>
+              <button
+                nz-button
+                nzType="text"
+                nzSize="small"
+                (click)="deleteBoard(board.id)"
+                class="text-gray-300 hover:text-red-500 transition-colors p-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
+              >
+                <span nz-icon nzType="delete" nzTheme="outline" class="text-base"></span>
+              </button>
             </div>
 
+            <!-- Card Body -->
+            <div class="p-5 flex flex-col flex-grow">
+              <!-- Card Header -->
+              <div class="flex items-start justify-between mb-4">
+                <!-- Phase Badge -->
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  [ngClass]="{
+                    'bg-blue-50 text-blue-600': board.currentPhase === 'brainstorming',
+                    'bg-amber-50 text-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
+                    'bg-purple-50 text-[#7954AA]': board.currentPhase === 'discussion',
+                    'bg-green-50 text-green-600': board.currentPhase === 'completed'
+                  }">
+                  <div class="w-1.5 h-1.5 rounded-full"
+                    [ngClass]="{
+                      'bg-blue-500': board.currentPhase === 'brainstorming',
+                      'bg-amber-500': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
+                      'bg-[#7954AA]': board.currentPhase === 'discussion',
+                      'bg-green-500': board.currentPhase === 'completed'
+                    }"></div>
+                  {{ getPhaseLabel(board.currentPhase) }}
+                </div>
+              </div>
+
             <!-- Card Title -->
+            <div class="mb-1">
+              <h3 class="text-[16px] font-bold text-gray-900 leading-tight m-0 pr-24">{{ board.title }}</h3>
+            </div>
+
+            <!-- Board Description -->
             <div class="mb-5 flex-grow">
-              <h3 class="text-[16px] font-bold text-gray-900 leading-tight m-0">{{ board.title }}</h3>
+              <p class="text-[13px] text-gray-500 line-clamp-2 m-0 leading-relaxed pr-8" [nz-tooltip]="(board.description?.length || 0) > 80 ? board.description : ''">
+                {{ board.description || 'No description provided' }}
+              </p>
             </div>
 
             <!-- Board Metrics -->
@@ -188,8 +195,8 @@
           class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-5 h-9 rounded-lg"
           (click)="showCreateBoardModal()"
         >
-          <span nz-icon nzType="plus"></span>
           <span>Create Board</span>
+          <span nz-icon nzType="plus"></span>
         </button>
       </div>
 
@@ -366,8 +373,64 @@
           (click)="createBoard()"
           [disabled]="!newBoardTitle.trim()"
         >
-          <span nz-icon nzType="plus" nzTheme="outline"></span>
           Create Board
+          <span nz-icon nzType="plus" nzTheme="outline"></span>
+        </button>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>
+<!-- Edit Board Modal -->
+<nz-modal
+  [(nzVisible)]="isEditBoardModalVisible"
+  nzTitle="Edit Board"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelEditBoard()"
+  nzWidth="520px"
+  nzWrapClassName="edit-board-modal"
+>
+  <ng-container *nzModalContent>
+    <form class="board-form">
+      <div class="form-group">
+        <label class="label">Board Title *</label>
+        <input
+          nz-input
+          [(ngModel)]="editBoardTitle"
+          name="editTitle"
+          placeholder="e.g., Sprint 23 Retrospective"
+          class="form-input"
+          (keyup.enter)="updateBoard()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="label">Description</label>
+        <textarea
+          nz-input
+          [(ngModel)]="editBoardDescription"
+          name="editDescription"
+          placeholder="What is the goal of this retrospective?"
+          [nzAutosize]="{ minRows: 3, maxRows: 6 }"
+          class="form-input"
+          cdkTextareaAutosize
+        ></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+        <button
+          nz-button
+          nzType="default"
+          (click)="cancelEditBoard()"
+        >
+          Cancel
+        </button>
+        <button
+          nz-button
+          nzType="primary"
+          (click)="updateBoard()"
+          [disabled]="!editBoardTitle.trim()"
+        >
+          Save Changes
         </button>
       </div>
     </form>

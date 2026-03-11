@@ -92,6 +92,12 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   newOrgName = '';
   newOrgDescription = '';
 
+  // Team Edit Modal
+  isEditTeamModalVisible = false;
+  editingTeam: Team | null = null;
+  editTeamName = '';
+  editTeamDescription = '';
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -363,13 +369,41 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   }
 
   showTeamSettings(team: Team) {
-    // TODO: Implement team settings modal
-    console.log('Show team settings:', team);
+    this.editingTeam = team;
+    this.editTeamName = team.name;
+    this.editTeamDescription = team.description || '';
+    this.isEditTeamModalVisible = true;
   }
 
-  deleteTeam(team: Team) {
+  cancelEditTeam() {
+    this.isEditTeamModalVisible = false;
+    this.editingTeam = null;
+  }
+
+  async editTeam() {
+    if (!this.editingTeam || !this.editTeamName.trim()) return;
+
+    const success = await this.organizationService.updateTeamSupabase(this.editingTeam.id, {
+      name: this.editTeamName,
+      description: this.editTeamDescription
+    });
+
+    if (success) {
+      this.message.success('Team updated successfully');
+      this.cancelEditTeam();
+    } else {
+      this.message.error('Failed to update team');
+    }
+  }
+
+  async deleteTeam(team: Team) {
     if (confirm(`Are you sure you want to delete "${team.name}"? This action cannot be undone.`)) {
-      this.organizationService.deleteTeam(team.id);
+      const success = await this.organizationService.deleteTeamSupabase(team.id);
+      if (success) {
+        this.message.success('Team deleted successfully');
+      } else {
+        this.message.error('Failed to delete team');
+      }
     }
   }
 
@@ -386,16 +420,6 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     return member.id;
   }
 
-  getOrganizationInitials(): string {
-    if (!this.currentOrganization) return '';
-    return this.currentOrganization.name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  
   getInitials(name: string): string {
     return name
       .split(' ')
