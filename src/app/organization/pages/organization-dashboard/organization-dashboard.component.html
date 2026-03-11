@@ -3,16 +3,20 @@
   <div *ngIf="isLoading$ | async" class="mb-8">
     <div class="flex items-start justify-between">
       <div class="flex items-start gap-4 w-full">
-        <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="large" nzShape="square" style="width: 64px; height: 64px; border-radius: 12px;"></nz-skeleton-element>
-        <div class="w-1/2 pt-2">
-          <nz-skeleton [nzActive]="true" [nzTitle]="{ width: '250px' }" [nzParagraph]="{ rows: 2, width: ['400px', '300px'] }"></nz-skeleton>
+        <div class="pt-1">
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 300px; height: 40px; margin-bottom: 8px;"></nz-skeleton-element>
+          <div class="flex flex-col gap-1">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 200px; height: 15px;"></nz-skeleton-element>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 150px; height: 15px;"></nz-skeleton-element>
+          </div>
         </div>
       </div>
       <div class="flex items-center gap-3 pt-2">
-        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px;"></nz-skeleton-element>
-        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px;"></nz-skeleton-element>
+        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px; height: 40px;"></nz-skeleton-element>
+        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px; height: 40px;"></nz-skeleton-element>
       </div>
     </div>
+    <hr class="border-gray-200 my-8 w-full border-t">
   </div>
 
   <!-- Organization Header -->
@@ -88,29 +92,68 @@
   <nz-row [nzGutter]="[24, 24]" *ngIf="isLoading$ | async">
     <!-- Teams Section Skeleton -->
     <nz-col [nzSpan]="16">
-      <nz-card nzTitle="Teams" class="h-full">
-        <div class="teams-grid">
-          <div *ngFor="let _ of [1, 2, 3, 4]">
-            <nz-card class="h-full border border-gray-100 shadow-sm rounded-lg" [nzBodyStyle]="{ padding: '20px' }">
-              <nz-skeleton [nzActive]="true" [nzAvatar]="{ size: 'default', shape: 'square' }" [nzTitle]="true" [nzParagraph]="{ rows: 2 }"></nz-skeleton>
-            </nz-card>
+      <div class="flex items-center gap-2 mb-4">
+        <h2 class="text-xl font-bold text-gray-900 m-0">Teams</h2>
+        <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
+      </div>
+      <div class="grid grid-cols-2 gap-6">
+        <div *ngFor="let _ of [1, 2, 3, 4]">
+          <div class="bg-white rounded-xl p-6 flex flex-col h-full" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+            <!-- Title -->
+            <div class="mb-2">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 20px;"></nz-skeleton-element>
+            </div>
+            <!-- Description -->
+            <div class="mb-8 flex-grow">
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100%', '80%'] }"></nz-skeleton>
+            </div>
+            <!-- Metrics -->
+            <div class="flex items-center gap-8">
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['60px'] }"></nz-skeleton>
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['60px'] }"></nz-skeleton>
+            </div>
           </div>
         </div>
-      </nz-card>
+      </div>
     </nz-col>
 
     <!-- Members Section Skeleton -->
     <nz-col [nzSpan]="8">
-      <nz-card nzTitle="Members" class="h-full">
-        <div class="member-list space-y-3">
-          <div *ngFor="let _ of [1, 2, 3, 4, 5]" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="circle"></nz-skeleton-element>
-            <div class="flex-1 w-full pt-1">
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['120px', '80px'] }"></nz-skeleton>
+      <div class="bg-white border border-gray-200 p-6 mb-8">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+          <div class="flex items-center gap-2">
+            <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
+            <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
+          </div>
+        </div>
+        <div class="member-list space-y-2 mb-6">
+          <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-50">
+            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="square" style="width: 40px; height: 40px;"></nz-skeleton-element>
+            <div class="flex-1">
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['120px', '180px'] }"></nz-skeleton>
             </div>
           </div>
         </div>
-      </nz-card>
+        <!-- Add Member Button Skeleton -->
+        <div class="w-full border-2 border-dashed border-gray-100 py-4 mb-8">
+          <div class="flex justify-center">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px;"></nz-skeleton-element>
+          </div>
+        </div>
+        <hr class="border-gray-100 my-8 w-full border-t">
+        <!-- Quick Stats Skeleton -->
+        <div class="mb-2">
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; margin-bottom: 12px;"></nz-skeleton-element>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+            </div>
+            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+            </div>
+          </div>
+        </div>
+      </div>
     </nz-col>
   </nz-row>
 

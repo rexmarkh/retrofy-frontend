@@ -64,13 +64,28 @@
       <div *ngIf="state.isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div *ngFor="let _ of [1, 2, 3, 4]" class="bg-white rounded-xl h-full flex flex-col" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
           <div class="p-5 flex flex-col flex-grow">
+            <!-- Phase Badge -->
             <div class="flex justify-between mb-4">
               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 80px;"></nz-skeleton-element>
             </div>
-            <nz-skeleton [nzActive]="true" [nzTitle]="true" [nzParagraph]="{ rows: 1 }"></nz-skeleton>
+            <!-- Title -->
+            <div class="mb-1">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 160px; height: 18px;"></nz-skeleton-element>
+            </div>
+            <!-- Description -->
+            <div class="mb-5 flex-grow">
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['90%', '75%'] }"></nz-skeleton>
+            </div>
+            <!-- Metrics -->
+            <div class="flex items-center gap-6">
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['50px'] }"></nz-skeleton>
+              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['50px'] }"></nz-skeleton>
+            </div>
           </div>
-          <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa]">
-             <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 120px;"></nz-skeleton-element>
+          <!-- Footer -->
+          <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px;"></nz-skeleton-element>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px;"></nz-skeleton-element>
           </div>
         </div>
       </div>
@@ -285,7 +300,17 @@
 
         <!-- Member List -->
         <div style="min-height: 200px;">
-          <ng-container *ngIf="getTeamMembers().length > 0; else noMembers">
+          <!-- Skeleton Loading -->
+          <div *ngIf="state.isLoading" class="flex flex-col gap-4">
+            <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3">
+              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="circle" style="width: 38px; height: 38px;"></nz-skeleton-element>
+              <div class="flex-1">
+                <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100px', '60px'] }"></nz-skeleton>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="!state.isLoading && getTeamMembers().length > 0; else noMembers">
             <div class="flex flex-col gap-4">
               <div *ngFor="let member of getTeamMembers()" class="flex items-center gap-3">
                 <!-- Avatar with j-avatar -->
