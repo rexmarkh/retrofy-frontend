@@ -45,7 +45,7 @@ export class RetrospectiveService {
         title: row.title,
         description: row.description || '',
         facilitatorId: row.created_by || '',
-        participants: [row.created_by || ''], // Simple fallback, should ideally query active members
+        participants: row.participants || [row.created_by || ''], 
         columns: [], // We can load columns/sticky notes lazily later
         stickyNotes: [],
         notesCount: row.retro_items?.[0]?.count || 0,
@@ -144,6 +144,7 @@ export class RetrospectiveService {
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.currentPhase !== undefined) dbUpdates.current_stage = this.mapPhaseToDb(updates.currentPhase);
+      if (updates.participants !== undefined) dbUpdates.participants = updates.participants;
       
       dbUpdates.updated_at = new Date().toISOString();
 
@@ -229,7 +230,7 @@ export class RetrospectiveService {
             title: boardData.title,
             description: boardData.description || '',
             facilitatorId: boardData.created_by || '',
-            participants: [boardData.created_by || ''],
+            participants: boardData.participants || [boardData.created_by || ''],
             columns: [],
             stickyNotes: [],
             isActive: boardData.status === 'active',
@@ -684,7 +685,14 @@ export class RetrospectiveService {
     
     if (!currentState.currentBoard) return;
 
-    await this.updateBoardSupabase(currentState.currentBoard.id, { currentPhase: phase });
+    const updates: Partial<RetrospectiveBoard> = { currentPhase: phase };
+
+    // If moving to completed, also save the current participants list
+    if (phase === RetroPhase.COMPLETED) {
+      updates.participants = currentState.currentBoard.participants || [];
+    }
+
+    await this.updateBoardSupabase(currentState.currentBoard.id, updates);
   }
 
   private createDemoBoard(): void {
