@@ -8,7 +8,9 @@
           <span nz-icon nzType="project" nzTheme="outline"></span>
         </div>
         <div class="pt-1">
-          <h1 class="text-[28px] font-bold text-gray-900 leading-tight mb-1 tracking-tight">Sprint Retrospectives</h1>
+          <h1 class="text-[28px] font-bold text-gray-900 leading-tight mb-1 tracking-tight">
+            {{ (currentTeam$ | async)?.name || 'Sprint' }} Retrospectives
+          </h1>
           <p class="text-[14px] font-medium text-gray-500">Transform team insights into actionable improvements</p>
         </div>
       </div>
@@ -217,9 +219,23 @@
 
     </div> <!-- End Left Column -->
 
-    <!-- Right Column: Team Members -->
     <div class="lg:col-span-1">
       <div class="bg-white rounded-xl p-5 flex flex-col sticky top-8" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+        <!-- Quick Stats -->
+        <div class="border-b border-gray-100">
+          <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">Quick Stats</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100 rounded-lg">
+              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ totalBoardsCount }}</span>
+              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL BOARDS</span>
+            </div>
+            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100 rounded-lg">
+              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teamMembersCount }}</span>
+              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TEAM MEMBERS</span>
+            </div>
+          </div>
+        </div>
+        <hr class="border-gray-200 my-8 w-full border-t">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
           <div class="flex items-center gap-2">

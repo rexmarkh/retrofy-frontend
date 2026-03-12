@@ -66,6 +66,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   isLoading$ = this.retrospectiveQuery.isLoading$;
   activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
+  currentTeam$ = this.organizationQuery.currentTeam$;
 
   // Add member panel
   showAddMember = false;
@@ -491,5 +492,15 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
 
   isBoardFavorite(boardId: string): boolean {
     return this.favoriteBoards.has(boardId);
+  }
+
+  get totalBoardsCount(): string {
+    const count = this.boards.length;
+    return count < 10 ? `0${count}` : `${count}`;
+  }
+
+  get teamMembersCount(): string {
+    const count = this.getTeamMembers().length;
+    return count < 10 ? `0${count}` : `${count}`;
   }
 }
