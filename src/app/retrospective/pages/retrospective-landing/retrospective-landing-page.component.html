@@ -342,7 +342,12 @@
                 </div>
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-gray-900 m-0 leading-tight truncate">{{ member.name }}</p>
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="text-sm font-semibold text-gray-900 m-0 leading-tight truncate">{{ member.name }}</p>
+                    <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                      {{ member.contributionRate }}%
+                    </span>
+                  </div>
                   <p class="text-[11px] text-[#7954AA] m-0 mt-0.5 leading-tight capitalize">{{ member.role }}</p>
                 </div>
               </div>

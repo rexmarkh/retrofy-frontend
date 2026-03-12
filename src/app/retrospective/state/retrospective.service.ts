@@ -848,6 +848,23 @@ export class RetrospectiveService {
     this.updateNotePosition(noteId, position, toColumnId);
   }
 
+  async getRetroItemsForBoards(boardIds: string[]) {
+    if (!boardIds || boardIds.length === 0) return [];
+    
+    try {
+      const { data, error } = await this.supabaseService.client
+        .from('retro_items')
+        .select('id, board_id, user_id, voter_ids')
+        .in('board_id', boardIds);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching retro items for boards:', error);
+      return [];
+    }
+  }
+
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }

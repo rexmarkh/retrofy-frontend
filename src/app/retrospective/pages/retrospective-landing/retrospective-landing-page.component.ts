@@ -67,6 +67,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
   currentTeam$ = this.organizationQuery.currentTeam$;
+  memberContributionStats: Map<string, number> = new Map();
 
   // Add member panel
   showAddMember = false;
@@ -98,6 +99,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(boards => {
         this.boards = boards;
+        this.calculateContributionStats();
       });
 
     // Subscribe to team members for the sidebar
@@ -105,6 +107,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(members => {
         this.teamMembers = members;
+        this.calculateContributionStats();
       });
 
     // Always use sessionStorage as the source of truth for the selected team.
@@ -354,7 +357,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
         name: m.name || m.email || 'Team Member',
         role: this.formatRole(m.role),
         color: roleColors[i % roleColors.length],
-        avatarUrl: m.avatarUrl
+        avatarUrl: m.avatarUrl,
+        contributionRate: this.memberContributionStats.get((m as any).userId || m.id) || 0
       }));
     }
 
@@ -366,7 +370,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
         name: m.name || m.email || 'Team Member',
         role: m.role || 'Member',
         color: roleColors[i % roleColors.length],
-        avatarUrl: m.avatarUrl
+        avatarUrl: m.avatarUrl,
+        contributionRate: this.memberContributionStats.get(m.user_id || m.id) || 0
       }));
     }
 
@@ -502,5 +507,69 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   get teamMembersCount(): string {
     const count = this.getTeamMembers().length;
     return count < 10 ? `0${count}` : `${count}`;
+  }
+
+  async calculateContributionStats() {
+    const boardIds = this.boards.map(b => b.id);
+    if (boardIds.length === 0) {
+      this.memberContributionStats.clear();
+      return;
+    }
+
+    const allItems = await this.retrospectiveService.getRetroItemsForBoards(boardIds);
+    const stats = new Map<string, { user: number; total: number }>();
+
+    // Get current team members to initialize stats
+    const currentTeam = this.organizationQuery.getValue().currentTeam;
+    const members = currentTeam
+      ? this.teamMembers.filter(m => m.teamId === currentTeam.id)
+      : this.teamMembers;
+    
+    members.forEach(m => {
+      const userId = (m as any).userId || m.id;
+      stats.set(userId, { user: 0, total: 0 });
+    });
+
+    // Calculate totals per board
+    const boardTotals = new Map<string, number>();
+    this.boards.forEach(board => {
+      const boardItems = allItems.filter(item => item.board_id === board.id);
+      const notesCount = boardItems.length;
+      const votesCount = boardItems.reduce((acc, item) => acc + (item.voter_ids?.length || 0), 0);
+      boardTotals.set(board.id, notesCount + votesCount);
+    });
+
+    // Calculate user contributions
+    allItems.forEach(item => {
+      // Note contribution
+      if (item.user_id && stats.has(item.user_id)) {
+        stats.get(item.user_id)!.user += 1;
+      }
+      // Vote contributions
+      if (item.voter_ids) {
+        item.voter_ids.forEach((voterId: string) => {
+          if (stats.has(voterId)) {
+            stats.get(voterId)!.user += 1;
+          }
+        });
+      }
+    });
+
+    // Calculate total contributions for retros joined by each user
+    this.boards.forEach(board => {
+      const totalInBoard = boardTotals.get(board.id) || 0;
+      board.participants.forEach(participantId => {
+        if (stats.has(participantId)) {
+          stats.get(participantId)!.total += totalInBoard;
+        }
+      });
+    });
+
+    // Calculate final percentage
+    this.memberContributionStats.clear();
+    stats.forEach((val, userId) => {
+      const rate = val.total > 0 ? (val.user / val.total) * 100 : 0;
+      this.memberContributionStats.set(userId, Math.round(rate));
+    });
   }
 }
