@@ -350,10 +350,11 @@
                 <!-- Progress / Contribution Section -->
                 <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0 pt-2">
                   <div class="flex items-center justify-end w-full gap-2">
-                    <span *ngIf="member.contributionRate === 0" class="text-[12px] font-bold text-gray-400 opacity-60">No activity yet</span>
+                    <span *ngIf="member.contributionRate === 0" class="text-[12px] font-bold text-gray-500">No activity yet</span>
                     <span
                       class="text-[13px] font-extrabold"
-                      [style.color]="member.contributionRate === 0 ? '#cbd5e1' : getContributionColor(member.contributionRate)"
+                      [style.color]="getContributionColor(member.contributionRate)"
+                      style="opacity: 1 !important;"
                     >{{ member.contributionRate }}%</span>
                   </div>
                   <!-- Progress Bar Track -->
@@ -363,7 +364,6 @@
                       class="h-full rounded-full transition-all duration-500 ease-out"
                       [style.width.%]="member.contributionRate"
                       [style.background-color]="getContributionColor(member.contributionRate)"
-                      [style.opacity]="member.contributionRate === 0 ? '0.2' : '1'"
                     ></div>
                   </div>
                 </div>

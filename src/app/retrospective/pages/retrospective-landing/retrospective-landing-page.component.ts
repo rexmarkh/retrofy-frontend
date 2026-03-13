@@ -344,7 +344,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     return this.getActiveBoards();
   }
 
-  getTeamMembers(): { id: string; name: string; role: string; color: string; avatarUrl?: string }[] {
+  getTeamMembers(): (import('../../../organization/interfaces/organization.interface').TeamMember & { contributionRate: number, color: string, role: string })[] {
     const roleColors = ['#7954AA', '#10b981', '#f59e0b', '#3b82f6', '#ef4444'];
     const currentTeam = this.organizationQuery.getValue().currentTeam;
 
@@ -353,8 +353,10 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       ? this.teamMembers.filter(m => m.teamId === currentTeam.id)
       : this.teamMembers;
 
+    let result: any[] = [];
     if (members.length > 0) {
-      return members.map((m, i) => ({
+      result = members.map((m, i) => ({
+        ...m,
         id: m.id,
         name: m.name || m.email || 'Team Member',
         role: this.formatRole(m.role),
@@ -362,22 +364,24 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
         avatarUrl: m.avatarUrl,
         contributionRate: this.memberContributionStats.get((m as any).userId || m.id) || 0
       }));
+    } else {
+      // Last-resort fallback: use current user only
+      const team = currentTeam as any;
+      if (team?.members?.length) {
+        result = team.members.map((m: any, i: number) => ({
+          ...m,
+          id: m.id || String(i),
+          name: m.name || m.email || 'Team Member',
+          role: m.role || 'Member',
+          color: roleColors[i % roleColors.length],
+          avatarUrl: m.avatarUrl,
+          contributionRate: this.memberContributionStats.get(m.user_id || m.id) || 0
+        }));
+      }
     }
 
-    // Last-resort fallback: use current user only
-    const team = currentTeam as any;
-    if (team?.members?.length) {
-      return team.members.map((m: any, i: number) => ({
-        id: m.id || String(i),
-        name: m.name || m.email || 'Team Member',
-        role: m.role || 'Member',
-        color: roleColors[i % roleColors.length],
-        avatarUrl: m.avatarUrl,
-        contributionRate: this.memberContributionStats.get(m.user_id || m.id) || 0
-      }));
-    }
-
-    return [];
+    // Sort by contributionRate high to low
+    return result.sort((a, b) => (b.contributionRate || 0) - (a.contributionRate || 0));
   }
 
   private formatRole(role: string): string {
@@ -590,19 +594,10 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   getContributionColor(percentage: number): string {
-    if (this.maxContribution === this.minContribution) {
-      // If all are the same, use the high-activity color (Teal/Green) or gray if zero
-      return percentage > 0 ? `hsl(150, 75%, 45%)` : `hsl(0, 0%, 50%)`;
-    }
-
-    const relativeFactor = (percentage - this.minContribution) / (this.maxContribution - this.minContribution);
-
-    // Brand Purple #7954AA (HSL: 266, 34%, 50%)
-    const hue = 266;
-    const saturation = 34;
-    // Map relative factor to lightness: 0.0 (Low -> Light 85%) to 1.0 (High -> Brand 50%)
-    const lightness = 85 - (relativeFactor * 35);
-    
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    if (percentage <= 10) return '#DECFF0';
+    if (percentage <= 20) return '#CDB7E8';
+    if (percentage <= 30) return '#BA9BDE';
+    if (percentage <= 40) return '#A67FD2';
+    return '#7954AA';
   }
 }
