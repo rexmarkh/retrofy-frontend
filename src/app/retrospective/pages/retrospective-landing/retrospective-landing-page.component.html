@@ -236,119 +236,136 @@
           </div>
         </div>
         <hr class="border-gray-200 my-8 w-full border-t">
+
         <!-- Header -->
-        <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+        <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-2">
             <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
             <h3 class="text-base font-bold text-gray-900 m-0 leading-none">Team Members</h3>
           </div>
           <button
             (click)="toggleAddMember()"
-            class="text-xs font-semibold transition-colors"
-            [style.color]="showAddMember ? '#6b7280' : '#7954AA'"
-          >{{ showAddMember ? '✕ Close' : '+ Add' }}</button>
+            class="text-sm font-bold text-[#7954AA] hover:opacity-75 transition-colors flex items-center gap-1.5"
+          >
+            <span>{{ showAddMember ? '✕' : '+ Add' }}</span>
+          </button>
         </div>
 
-        <!-- Inline Add Member Search -->
-        <div *ngIf="showAddMember" class="mb-4">
+        <!-- Inline Add Member Search (Moved below header based on image context) -->
+        <div *ngIf="showAddMember" class="mb-8 bg-purple-50 p-6 rounded-2xl border border-purple-100 fade-in shadow-sm">
           <div class="relative">
             <span nz-icon nzType="search" nzTheme="outline"
-              style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px; z-index: 1;"
+              style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 16px; z-index: 1;"
             ></span>
             <input
               type="text"
               [(ngModel)]="memberSearchQuery"
               (ngModelChange)="onMemberSearch()"
               placeholder="Search by name or email…"
-              class="w-full text-sm rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:border-[#7954AA] transition-colors"
-              style="padding: 8px 10px 8px 32px;"
+              class="w-full text-[14px] rounded-xl border border-gray-100 bg-white focus:outline-none focus:border-[#7954AA] transition-all"
+              style="padding: 10px 10px 10px 42px;"
               autofocus
             />
           </div>
 
           <!-- Success toast -->
-          <div *ngIf="addMemberSuccess" class="mt-2 px-3 py-1.5 bg-green-50 text-green-700 text-xs rounded-lg font-medium">
+          <div *ngIf="addMemberSuccess" class="mt-3 px-3 py-2 bg-green-50 text-green-700 text-xs rounded-xl font-bold border border-green-100">
             ✓ {{ addMemberSuccess }} added to team
           </div>
 
           <!-- Search results -->
-          <div class="mt-2" *ngIf="!isSearchingMembers">
-            <div *ngIf="memberSearchQuery && memberSearchResults.length === 0" class="text-xs text-gray-400 text-center py-3">
+          <div class="mt-4" *ngIf="!isSearchingMembers">
+            <div *ngIf="memberSearchQuery && memberSearchResults.length === 0" class="text-xs text-gray-400 text-center py-4 font-medium">
               No matching members found
             </div>
-            <div *ngIf="!memberSearchQuery" class="text-xs text-gray-400 text-center py-2">
+            <div *ngIf="!memberSearchQuery" class="text-xs text-gray-400 text-center py-4 font-medium">
               Type a name or email to search
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-2">
               <div
                 *ngFor="let result of memberSearchResults"
-                class="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
-                [class.cursor-pointer]="!result.isAdded"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer hover:bg-white hover:shadow-sm"
                 [class.opacity-60]="result.isAdded"
-                (mouseenter)="!result.isAdded && ($any($event.currentTarget).style.background='#f5f3ff')"
-                (mouseleave)="!result.isAdded && ($any($event.currentTarget).style.background='')"
+                [class.pointer-events-none]="result.isAdded"
                 (click)="!result.isAdded && addMember(result)"
               >
                 <div
-                  class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
                   style="background: #7954AA;"
                 >{{ getMemberInitials(result.name) }}</div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-gray-800 m-0 truncate">{{ result.name }}</p>
-                  <p class="text-[10px] text-gray-400 m-0 truncate">{{ result.email }}</p>
+                  <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
+                  <p class="text-[10px] text-gray-400 m-0 truncate font-semibold">{{ result.email }}</p>
                 </div>
-                <!-- Action / Badge -->
-                <span *ngIf="!result.isAdded" class="text-[10px] font-bold text-[#7954AA] flex-shrink-0">+ Add</span>
-                <span *ngIf="result.isAdded" class="text-[9px] font-bold text-gray-500 bg-gray-100 flex-shrink-0 px-2 py-0.5 rounded uppercase tracking-wider">Added</span>
+                <span *ngIf="!result.isAdded" class="text-[11px] font-bold text-[#7954AA]">+ Add</span>
+                <span *ngIf="result.isAdded" class="text-[9px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Added</span>
               </div>
             </div>
 
-            <!-- Spinner -->
-            <div *ngIf="isAddingMember" class="text-center py-2">
-              <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA]"></span>
+            <div *ngIf="isAddingMember" class="text-center py-4">
+              <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
             </div>
           </div>
 
-          <div *ngIf="isSearchingMembers" class="text-center py-3">
-            <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA]"></span>
+          <div *ngIf="isSearchingMembers" class="text-center py-4">
+            <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
           </div>
         </div>
 
         <!-- Member List -->
         <div style="min-height: 200px;">
           <!-- Skeleton Loading -->
-          <div *ngIf="state.isLoading" class="flex flex-col gap-4">
-            <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3">
-              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="circle" style="width: 38px; height: 38px;"></nz-skeleton-element>
-              <div class="flex-1">
-                <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100px', '60px'] }"></nz-skeleton>
+          <div *ngIf="state.isLoading" class="flex flex-col gap-8">
+            <div *ngFor="let _ of [1, 2, 3]" class="flex items-center justify-between gap-6">
+              <div class="flex items-center gap-4 flex-1">
+                <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="circle" style="width: 44px; height: 44px;"></nz-skeleton-element>
+                <div class="flex-1">
+                  <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100px', '60px'] }"></nz-skeleton>
+                </div>
               </div>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 120px; height: 6px;"></nz-skeleton-element>
             </div>
           </div>
 
           <ng-container *ngIf="!state.isLoading && getTeamMembers().length > 0; else noMembers">
-            <div class="flex flex-col gap-4">
-              <div *ngFor="let member of getTeamMembers()" class="flex items-center gap-3">
-                <!-- Avatar with j-avatar -->
-                <div class="relative flex-shrink-0">
-                  <j-avatar
-                    [avatarUrl]="member.avatarUrl"
-                    [name]="member.name"
-                    [size]="38"
-                    [rounded]="true"
-                  ></j-avatar>
-                  <!-- Online dot -->
-                  <span style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #22c55e; border-radius: 9999px; border: 2px solid white;"></span>
-                </div>
-                <!-- Info -->
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2">
-                    <p class="text-sm font-semibold text-gray-900 m-0 leading-tight truncate">{{ member.name }}</p>
-                    <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                      {{ member.contributionRate }}%
-                    </span>
+            <div class="flex flex-col gap-8">
+              <div *ngFor="let member of getTeamMembers()" class="flex items-center justify-between gap-6">
+                <!-- Member Base Info -->
+                <div class="flex items-center gap-4 min-w-0 flex-1">
+                  <div class="relative flex-shrink-0">
+                    <j-avatar
+                      [avatarUrl]="member.avatarUrl"
+                      [name]="member.name"
+                      [size]="44"
+                      [rounded]="true"
+                    ></j-avatar>
+                    <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white;"></span>
                   </div>
-                  <p class="text-[11px] text-[#7954AA] m-0 mt-0.5 leading-tight capitalize">{{ member.role }}</p>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-900 m-0 leading-tight truncate mb-0.5">{{ member.name }}</p>
+                    <p class="text-[12px] text-[#7954AA] m-0 leading-tight capitalize font-semibold opacity-70">{{ member.role }}</p>
+                  </div>
+                </div>
+
+                <!-- Progress / Contribution Section -->
+                <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0 pt-2">
+                  <div class="flex items-center justify-end w-full gap-2">
+                    <span *ngIf="member.contributionRate === 0" class="text-[12px] font-bold text-gray-400 opacity-60">No activity yet</span>
+                    <span
+                      class="text-[13px] font-extrabold"
+                      [style.color]="member.contributionRate === 0 ? '#cbd5e1' : getContributionColor(member.contributionRate)"
+                    >{{ member.contributionRate }}%</span>
+                  </div>
+                  <!-- Progress Bar Track -->
+                  <div class="w-full h-[6px] bg-gray-100 rounded-full overflow-hidden">
+                    <!-- Progress Bar Fill -->
+                    <div
+                      class="h-full rounded-full transition-all duration-500 ease-out"
+                      [style.width.%]="member.contributionRate"
+                      [style.background-color]="getContributionColor(member.contributionRate)"
+                      [style.opacity]="member.contributionRate === 0 ? '0.2' : '1'"
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -68,6 +68,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
   currentTeam$ = this.organizationQuery.currentTeam$;
   memberContributionStats: Map<string, number> = new Map();
+  minContribution = 0;
+  maxContribution = 0;
 
   // Add member panel
   showAddMember = false;
@@ -567,9 +569,40 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
 
     // Calculate final percentage
     this.memberContributionStats.clear();
+    let min = 100;
+    let max = 0;
+    const rates: number[] = [];
+
     stats.forEach((val, userId) => {
       const rate = val.total > 0 ? (val.user / val.total) * 100 : 0;
-      this.memberContributionStats.set(userId, Math.round(rate));
+      const roundedRate = Math.round(rate);
+      this.memberContributionStats.set(userId, roundedRate);
+      rates.push(roundedRate);
     });
+
+    if (rates.length > 0) {
+      this.minContribution = Math.min(...rates);
+      this.maxContribution = Math.max(...rates);
+    } else {
+      this.minContribution = 0;
+      this.maxContribution = 0;
+    }
+  }
+
+  getContributionColor(percentage: number): string {
+    if (this.maxContribution === this.minContribution) {
+      // If all are the same, use the high-activity color (Teal/Green) or gray if zero
+      return percentage > 0 ? `hsl(150, 75%, 45%)` : `hsl(0, 0%, 50%)`;
+    }
+
+    const relativeFactor = (percentage - this.minContribution) / (this.maxContribution - this.minContribution);
+
+    // Brand Purple #7954AA (HSL: 266, 34%, 50%)
+    const hue = 266;
+    const saturation = 34;
+    // Map relative factor to lightness: 0.0 (Low -> Light 85%) to 1.0 (High -> Brand 50%)
+    const lightness = 85 - (relativeFactor * 35);
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }
 }
