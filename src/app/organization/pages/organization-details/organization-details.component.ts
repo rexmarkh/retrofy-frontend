@@ -19,6 +19,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { FormsModule } from '@angular/forms';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 // Components
 import { TeamCardComponent } from '../../components/team-card/team-card.component';
@@ -64,6 +65,11 @@ export class OrganizationDetailsComponent implements OnInit, OnDestroy {
   isConnecting = false;
   isDisconnecting = false;
   
+  // Invite Member Modal
+  isInviteMemberModalVisible = false;
+  inviteEmail = '';
+  isInviting = false;
+
   jiraConfig = {
     siteUrl: '',
     email: '',
@@ -74,7 +80,8 @@ export class OrganizationDetailsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private organizationService: OrganizationService,
-    private organizationQuery: OrganizationQuery
+    private organizationQuery: OrganizationQuery,
+    private message: NzMessageService
   ) {}
 
   ngOnInit() {
@@ -104,7 +111,18 @@ export class OrganizationDetailsComponent implements OnInit, OnDestroy {
     this.organizationQuery.getTeamsByOrganization(orgId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(teams => {
-        this.teams = teams;
+        this.teams = [...teams].sort((a, b) => {
+          if ((b.boardCount || 0) !== (a.boardCount || 0)) {
+            return (b.boardCount || 0) - (a.boardCount || 0);
+          }
+          if ((b.memberCount || 0) !== (a.memberCount || 0)) {
+            return (b.memberCount || 0) - (a.memberCount || 0);
+          }
+          if (a.isMember !== b.isMember) {
+            return a.isMember ? -1 : 1;
+          }
+          return 0;
+        });
       });
 
     // Subscribe to members for this organization
@@ -125,8 +143,34 @@ export class OrganizationDetailsComponent implements OnInit, OnDestroy {
   }
 
   showInviteMemberModal() {
-    // Implementation for inviting member modal
-    console.log('Invite member modal');
+    if (!this.organization) return;
+    this.isInviteMemberModalVisible = true;
+    this.inviteEmail = '';
+  }
+
+  cancelInviteMember() {
+    this.isInviteMemberModalVisible = false;
+    this.inviteEmail = '';
+    this.isInviting = false;
+  }
+
+  async inviteMember() {
+    if (!this.inviteEmail.trim() || !this.organization) return;
+
+    this.isInviting = true;
+    const result = await this.organizationService.inviteMember(
+      this.inviteEmail.trim(),
+      this.organization.id,
+      this.organization.name
+    );
+
+    this.isInviting = false;
+    if (result.success) {
+      this.message.success(`Invitation sent to ${this.inviteEmail}`);
+      this.cancelInviteMember();
+    } else {
+      this.message.error('Failed to send invitation. Please try again.');
+    }
   }
 
   onTeamClick(team: Team) {

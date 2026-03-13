@@ -92,6 +92,11 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   newOrgName = '';
   newOrgDescription = '';
 
+  // Invite Member Modal
+  isInviteMemberModalVisible = false;
+  inviteEmail = '';
+  isInviting = false;
+
   // Team Edit Modal
   isEditTeamModalVisible = false;
   editingTeam: Team | null = null;
@@ -158,7 +163,18 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.organizationQuery.getTeamsByOrganization(orgId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(teams => {
-        this.teams = teams;
+        this.teams = [...teams].sort((a, b) => {
+          if ((b.boardCount || 0) !== (a.boardCount || 0)) {
+            return (b.boardCount || 0) - (a.boardCount || 0);
+          }
+          if ((b.memberCount || 0) !== (a.memberCount || 0)) {
+            return (b.memberCount || 0) - (a.memberCount || 0);
+          }
+          if (a.isMember !== b.isMember) {
+            return a.isMember ? -1 : 1;
+          }
+          return 0;
+        });
       });
 
     // Subscribe to members for this organization  
@@ -314,8 +330,37 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   }
 
   showInviteMemberModal() {
-    // TODO: Implement invite member modal
-    console.log('Invite member modal');
+    if (!this.currentOrganization) {
+      this.message.warning('Please select an organization first');
+      return;
+    }
+    this.isInviteMemberModalVisible = true;
+    this.inviteEmail = '';
+  }
+
+  cancelInviteMember() {
+    this.isInviteMemberModalVisible = false;
+    this.inviteEmail = '';
+    this.isInviting = false;
+  }
+
+  async inviteMember() {
+    if (!this.inviteEmail.trim() || !this.currentOrganization) return;
+
+    this.isInviting = true;
+    const result = await this.organizationService.inviteMember(
+      this.inviteEmail.trim(),
+      this.currentOrganization.id,
+      this.currentOrganization.name
+    );
+
+    this.isInviting = false;
+    if (result.success) {
+      this.message.success(`Invitation sent to ${this.inviteEmail}`);
+      this.cancelInviteMember();
+    } else {
+      this.message.error('Failed to send invitation. Please try again.');
+    }
   }
 
   deleteOrganization(organization: Organization) {

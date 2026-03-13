@@ -12,6 +12,20 @@ export class OrganizationService {
     private supabaseService: SupabaseService
   ) {}
 
+  async inviteMember(email: string, orgId: string, orgName: string): Promise<{ success: boolean; error?: any }> {
+    try {
+      const { data, error } = await this.supabaseService.client.functions.invoke('invite-member', {
+        body: { email, orgId, orgName }
+      });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('[OrganizationService] inviteMember failed:', error);
+      return { success: false, error };
+    }
+  }
+
   async loadOrganizationsFromSupabase() {
     this.store.setLoading(true);
     try {

@@ -641,3 +641,58 @@
     </div>
   </ng-container>
 </nz-modal>
+<!-- Invite Member Modal -->
+<nz-modal
+  [(nzVisible)]="isInviteMemberModalVisible"
+  nzClosable="false"
+  nzFooter="null"
+  nzWidth="600px"
+>
+  <ng-container *nzModalContent>
+    <div class="px-8 py-5">
+      <div class="flex items-center py-3 text-textDarkest">
+        <div class="text-xl">
+          Invite Member to {{ currentOrganization?.name }}
+        </div>
+        <div class="flex-auto"></div>
+        <j-button icon="times"
+                  [iconSize]="24"
+                  (click)="cancelInviteMember()"
+                  [className]="'btn-empty'">
+        </j-button>
+      </div>
+      <form class="invite-form modal-form" (submit)="inviteMember()">
+        <div class="form-group">
+          <label class="label">
+            Email Address *
+          </label>
+          <input
+            [(ngModel)]="inviteEmail"
+            name="inviteEmail"
+            type="email"
+            class="form-input"
+            placeholder="e.g., colleague@example.com"
+            required
+          />
+          <p class="text-xs text-gray-400 mt-2">
+            An invitation will be sent to this email address with instructions to join the organization.
+          </p>
+        </div>
+
+        <div class="mt-8 form-group form-action">
+          <j-button className="btn-primary mr-2"
+                    type="submit"
+                    [disabled]="!inviteEmail.trim() || isInviting"
+                    [isWorking]="isInviting">
+            Send Invitation
+          </j-button>
+          <j-button className="btn-empty"
+                    (click)="cancelInviteMember()"
+                    [disabled]="isInviting">
+            Cancel
+          </j-button>
+        </div>
+      </form>
+    </div>
+  </ng-container>
+</nz-modal>
