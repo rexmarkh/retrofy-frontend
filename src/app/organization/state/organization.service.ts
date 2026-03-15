@@ -14,8 +14,14 @@ export class OrganizationService {
 
   async inviteMember(email: string, orgId: string, orgName: string): Promise<{ success: boolean; error?: any }> {
     try {
+      const { data: { session } } = await this.supabaseService.getSession();
+      const jwt = session?.access_token;
+
       const { data, error } = await this.supabaseService.client.functions.invoke('invite-member', {
-        body: { email, orgId, orgName }
+        body: { email, orgId, orgName },
+        headers: {
+          'apikey': jwt || ''
+        }
       });
 
       if (error) throw error;
