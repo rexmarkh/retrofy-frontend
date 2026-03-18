@@ -359,17 +359,9 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
     // Special handling for GROUPING phase - offer AI assistance
     if (phase === RetroPhase.GROUPING && this.currentBoard?.currentPhase === RetroPhase.BRAINSTORMING) {
-      this.modal.confirm({
+      const modal = this.modal.create({
         nzTitle: `Switch to ${this.getPhaseTitle(phase)} Phase?`,
-        nzContent: `
-          <div style="margin-bottom: 12px;">
-            <strong>Switching to Grouping phase will:</strong>
-            <ul style="margin-top: 8px; padding-left: 20px;">
-              <li>Disable adding new notes</li>
-              <li>Allow moving notes between columns</li>
-              <li>Keep author information hidden</li>
-            </ul>
-          </div>
+        nzContent: this.getPhaseChangeWarning(phase) + `
           <div style="margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #7954AA 0%, #5a3d82 100%); border-radius: 8px; color: white;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 18px;">💡</span>
@@ -380,30 +372,43 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
             </p>
           </div>
         `,
-        nzOkText: '✨ Use AI Grouping',
-        nzOkType: 'primary',
-        nzCancelText: 'Switch Without AI',
-        nzOnOk: () => {
-          this.retrospectiveService.updatePhase(phase);
-          setTimeout(() => this.performAIGrouping(), 500);
-        },
-        nzOnCancel: () => {
-          this.retrospectiveService.updatePhase(phase);
-        }
+        nzFooter: [
+          {
+            label: 'Cancel',
+            onClick: () => modal.destroy()
+          },
+          {
+            label: '✨ Use AI Grouping',
+            type: 'primary',
+            onClick: () => {
+              this.retrospectiveService.updatePhase(phase);
+              modal.destroy();
+              setTimeout(() => this.performAIGrouping(), 500);
+            }
+          }
+        ]
       });
       return;
     }
 
     // Show confirmation modal for other phases
-    this.modal.confirm({
+    const modal = this.modal.create({
       nzTitle: `Switch to ${this.getPhaseTitle(phase)} Phase?`,
       nzContent: this.getPhaseChangeWarning(phase),
-      nzOkText: 'Yes, Switch Phase',
-      nzOkType: 'primary',
-      nzCancelText: 'Cancel',
-      nzOnOk: () => {
-        this.retrospectiveService.updatePhase(phase);
-      }
+      nzFooter: [
+        {
+          label: 'Cancel',
+          onClick: () => modal.destroy()
+        },
+        {
+          label: 'Yes, Switch Phase',
+          type: 'primary',
+          onClick: () => {
+            this.retrospectiveService.updatePhase(phase);
+            modal.destroy();
+          }
+        }
+      ]
     });
   }
 
@@ -415,7 +420,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.BRAINSTORMING]: `
         <div style="margin-bottom: 12px;">
           <strong>Switching to Brainstorming phase will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px;">
+          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
             <li>Allow adding and editing notes</li>
             <li>Enable note deletion</li>
             <li>Disable voting functionality</li>
@@ -426,7 +431,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: `
         <div style="margin-bottom: 12px;">
           <strong>Switching to Grouping phase will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px;">
+          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
             <li>Disable adding new notes</li>
             <li>Disable editing and deleting notes</li>
             <li>Allow moving notes between columns</li>
@@ -437,7 +442,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.VOTING]: `
         <div style="margin-bottom: 12px;">
           <strong>Switching to Voting phase will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px;">
+          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
             <li>Disable editing and moving notes</li>
             <li>Enable voting on notes</li>
             <li>Keep author information hidden</li>
@@ -448,7 +453,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.DISCUSSION]: `
         <div style="margin-bottom: 12px;">
           <strong>Switching to Discussion phase will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px;">
+          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
             <li>Disable all note modifications</li>
             <li>Reveal author information</li>
             <li>Show voting results</li>
@@ -459,7 +464,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.ACTION_ITEMS]: `
         <div style="margin-bottom: 12px;">
           <strong>Switching to Action Items phase will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px;">
+          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
             <li>Disable all note modifications</li>
             <li>Show all author information</li>
             <li>Focus on creating action plans</li>
@@ -470,7 +475,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.COMPLETED]: `
         <div style="margin-bottom: 12px;">
           <strong>Completing this retrospective will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px;">
+          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
             <li>Lock all modifications</li>
             <li>Make the board read-only</li>
             <li>Preserve all data for review</li>

@@ -1,6 +1,6 @@
 <div class="retrospective-dashboard p-8 bg-[#f8f9fa] min-h-screen">
   <!-- Hero Header -->
-  <div class="mb-8 fade-in">
+  <div class="mb-8 fade-in relative z-[60]">
     <div class="flex items-start justify-between">
       <div class="flex items-start gap-4">
         <!-- Gray Avatar Block -->
@@ -25,6 +25,80 @@
           <span>Create Board</span>
           <span nz-icon nzType="plus"></span>
         </button>
+
+        <div class="relative">
+          <button
+            nz-button
+            nzType="default"
+            nzSize="large"
+            class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 font-medium px-6 h-10 rounded-lg shadow-sm"
+            (click)="toggleAddMember()"
+          >
+            <span nz-icon nzType="plus" nzTheme="outline" *ngIf="!showAddMember"></span>
+            <span>{{ showAddMember ? '✕' : 'Add member' }}</span>
+          </button>
+
+          <!-- Add Member Dropdown Panel -->
+          <div *ngIf="showAddMember" class="add-member-dropdown bg-white p-6 rounded-2xl border border-gray-100 fade-in shadow-xl animate-in zoom-in duration-200">
+            <div class="relative">
+              <span nz-icon nzType="search" nzTheme="outline"
+                style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 16px; z-index: 1;"
+              ></span>
+              <input
+                type="text"
+                [(ngModel)]="memberSearchQuery"
+                (ngModelChange)="onMemberSearch()"
+                placeholder="Search by name or email…"
+                class="w-full text-[14px] rounded-xl border border-gray-100 bg-white focus:outline-none focus:border-[#7954AA] transition-all"
+                style="padding: 10px 10px 10px 42px;"
+                autofocus
+              />
+            </div>
+
+            <!-- Success toast -->
+            <div *ngIf="addMemberSuccess" class="mt-3 px-3 py-2 bg-green-50 text-green-700 text-xs rounded-xl font-bold border border-green-100">
+              ✓ {{ addMemberSuccess }} added to team
+            </div>
+
+            <!-- Search results -->
+            <div class="mt-4" *ngIf="!isSearchingMembers">
+              <div *ngIf="memberSearchQuery && memberSearchResults.length === 0" class="text-xs text-gray-400 text-center py-4 font-medium">
+                No matching members found
+              </div>
+              <div *ngIf="!memberSearchQuery" class="text-xs text-gray-400 text-center py-4 font-medium">
+                Type a name or email to search
+              </div>
+              <div class="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                <div
+                  *ngFor="let result of memberSearchResults"
+                  class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer hover:bg-gray-50 hover:shadow-sm"
+                  [class.opacity-60]="result.isAdded"
+                  [class.pointer-events-none]="result.isAdded"
+                  (click)="!result.isAdded && addMember(result)"
+                >
+                  <div
+                    class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
+                    style="background: #7954AA;"
+                  >{{ getMemberInitials(result.name) }}</div>
+                  <div class="flex-1 min-w-0 text-left">
+                    <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
+                    <p class="text-[10px] text-gray-400 m-0 truncate font-semibold">{{ result.email }}</p>
+                  </div>
+                  <span *ngIf="!result.isAdded" class="text-[11px] font-bold text-[#7954AA]">+ Add</span>
+                  <span *ngIf="result.isAdded" class="text-[9px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Added</span>
+                </div>
+              </div>
+
+              <div *ngIf="isAddingMember" class="text-center py-4">
+                <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
+              </div>
+            </div>
+
+            <div *ngIf="isSearchingMembers" class="text-center py-4">
+              <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -243,74 +317,10 @@
             <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
             <h3 class="text-base font-bold text-gray-900 m-0 leading-none">Team Members</h3>
           </div>
-          <button
-            (click)="toggleAddMember()"
-            class="text-sm font-bold text-[#7954AA] hover:opacity-75 transition-colors flex items-center gap-1.5"
-          >
-            <span>{{ showAddMember ? '✕' : '+ Add' }}</span>
-          </button>
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">CONTRIBUTIONS</span>
         </div>
 
         <!-- Inline Add Member Search (Moved below header based on image context) -->
-        <div *ngIf="showAddMember" class="mb-8 bg-purple-50 p-6 rounded-2xl border border-purple-100 fade-in shadow-sm">
-          <div class="relative">
-            <span nz-icon nzType="search" nzTheme="outline"
-              style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 16px; z-index: 1;"
-            ></span>
-            <input
-              type="text"
-              [(ngModel)]="memberSearchQuery"
-              (ngModelChange)="onMemberSearch()"
-              placeholder="Search by name or email…"
-              class="w-full text-[14px] rounded-xl border border-gray-100 bg-white focus:outline-none focus:border-[#7954AA] transition-all"
-              style="padding: 10px 10px 10px 42px;"
-              autofocus
-            />
-          </div>
-
-          <!-- Success toast -->
-          <div *ngIf="addMemberSuccess" class="mt-3 px-3 py-2 bg-green-50 text-green-700 text-xs rounded-xl font-bold border border-green-100">
-            ✓ {{ addMemberSuccess }} added to team
-          </div>
-
-          <!-- Search results -->
-          <div class="mt-4" *ngIf="!isSearchingMembers">
-            <div *ngIf="memberSearchQuery && memberSearchResults.length === 0" class="text-xs text-gray-400 text-center py-4 font-medium">
-              No matching members found
-            </div>
-            <div *ngIf="!memberSearchQuery" class="text-xs text-gray-400 text-center py-4 font-medium">
-              Type a name or email to search
-            </div>
-            <div class="flex flex-col gap-2">
-              <div
-                *ngFor="let result of memberSearchResults"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer hover:bg-white hover:shadow-sm"
-                [class.opacity-60]="result.isAdded"
-                [class.pointer-events-none]="result.isAdded"
-                (click)="!result.isAdded && addMember(result)"
-              >
-                <div
-                  class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
-                  style="background: #7954AA;"
-                >{{ getMemberInitials(result.name) }}</div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
-                  <p class="text-[10px] text-gray-400 m-0 truncate font-semibold">{{ result.email }}</p>
-                </div>
-                <span *ngIf="!result.isAdded" class="text-[11px] font-bold text-[#7954AA]">+ Add</span>
-                <span *ngIf="result.isAdded" class="text-[9px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Added</span>
-              </div>
-            </div>
-
-            <div *ngIf="isAddingMember" class="text-center py-4">
-              <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
-            </div>
-          </div>
-
-          <div *ngIf="isSearchingMembers" class="text-center py-4">
-            <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
-          </div>
-        </div>
 
         <!-- Member List -->
         <div style="min-height: 200px;">
