@@ -386,6 +386,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
 
   private formatRole(role: string): string {
     const labels: Record<string, string> = {
+      owner: 'Owner',
+      admin: 'Admin',
       team_lead: 'Team Lead',
       senior: 'Senior Developer',
       developer: 'Developer',
@@ -398,7 +400,11 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
 
 
   getMemberInitials(name: string): string {
-    return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+    const words = name.trim().split(' ');
+    if (words.length === 1) {
+      return words[0].slice(0, 2).toUpperCase();
+    }
+    return words.map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
   getTotalParticipants(): number {

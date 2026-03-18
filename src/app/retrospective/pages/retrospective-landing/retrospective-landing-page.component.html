@@ -4,8 +4,13 @@
     <div class="flex items-start justify-between">
       <div class="flex items-start gap-4">
         <!-- Gray Avatar Block -->
-        <div class="w-16 h-16 bg-[#e2e8f0] flex items-center justify-center text-gray-400 text-3xl rounded-lg">
-          <span nz-icon nzType="project" nzTheme="outline"></span>
+        <div class="w-16 h-16 bg-[#e2e8f0] flex items-center justify-center text-[#7954aa] text-2xl font-bold rounded-sm uppercase">
+          <ng-container *ngIf="currentTeam$ | async as team; else defaultHeader">
+            {{ getMemberInitials(team.name) }}
+          </ng-container>
+          <ng-template #defaultHeader>
+            <span nz-icon nzType="project" nzTheme="outline"></span>
+          </ng-template>
         </div>
         <div class="pt-1">
           <h1 class="text-[28px] font-bold text-gray-900 leading-tight mb-1 tracking-tight">
@@ -19,11 +24,11 @@
         <button
           nz-button
           nzSize="large"
-          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-6 h-10 rounded-lg shadow-sm"
+          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm"
           (click)="showCreateBoardModal()"
         >
-          <span>Create Board</span>
           <span nz-icon nzType="plus"></span>
+          <span>Create Board</span>
         </button>
 
         <div class="relative">
@@ -31,7 +36,7 @@
             nz-button
             nzType="default"
             nzSize="large"
-            class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 font-medium px-6 h-10 rounded-lg shadow-sm"
+            class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm"
             (click)="toggleAddMember()"
           >
             <span nz-icon nzType="plus" nzTheme="outline" *ngIf="!showAddMember"></span>
@@ -267,7 +272,7 @@
             </div>
             <button
               nz-button
-              class="text-white border-none text-xs font-semibold rounded-lg px-4 h-8"
+              class="text-white border-none text-xs font-semibold rounded-sm px-4 h-8"
               style="background: #7954AA;"
               (click)="openBoard(board.id); $event.stopPropagation()"
             >
@@ -292,11 +297,11 @@
           *ngIf="activeTab === 'active'"
           nz-button
           nzSize="large"
-          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-5 h-9 rounded-lg"
+          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-5 h-9 rounded-sm"
           (click)="showCreateBoardModal()"
         >
-          <span>Create Board</span>
           <span nz-icon nzType="plus"></span>
+          <span>Create Board</span>
         </button>
       </div>
 
@@ -458,8 +463,8 @@
           (click)="createBoard()"
           [disabled]="!newBoardTitle.trim()"
         >
-          Create Board
           <span nz-icon nzType="plus" nzTheme="outline"></span>
+          Create Board
         </button>
       </div>
     </form>

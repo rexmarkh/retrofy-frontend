@@ -95,6 +95,8 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   // Invite Member Modal
   isInviteMemberModalVisible = false;
   inviteEmail = '';
+  inviteTeamId: string | null = null;
+  inviteRole: string = 'member';
   isInviting = false;
 
   // Team Edit Modal
@@ -102,6 +104,8 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   editingTeam: Team | null = null;
   editTeamName = '';
   editTeamDescription = '';
+
+  isUploadingAvatar = false;
 
   constructor(
     private router: Router,
@@ -336,11 +340,15 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     }
     this.isInviteMemberModalVisible = true;
     this.inviteEmail = '';
+    this.inviteTeamId = null;
+    this.inviteRole = 'member';
   }
 
   cancelInviteMember() {
     this.isInviteMemberModalVisible = false;
     this.inviteEmail = '';
+    this.inviteTeamId = null;
+    this.inviteRole = 'member';
     this.isInviting = false;
   }
 
@@ -601,5 +609,40 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  }
+
+  async onAvatarFileSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (!file || !this.currentOrganization) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      this.message.error('Please upload a valid image file (JPEG, PNG, WEBP, or GIF)');
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      this.message.error('File size must be less than 2MB');
+      return;
+    }
+
+    try {
+      this.isUploadingAvatar = true;
+      const publicUrl = await this.organizationService.uploadOrgAvatar(this.currentOrganization.id, file);
+      
+      if (publicUrl) {
+        this.message.success('Organization avatar updated successfully');
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      this.message.error('Failed to upload avatar. Please try again.');
+    } finally {
+      this.isUploadingAvatar = false;
+      // Reset input
+      event.target.value = '';
+    }
   }
 }

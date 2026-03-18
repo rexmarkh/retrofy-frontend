@@ -2,7 +2,10 @@
   <!-- Skeleton Header -->
   <div *ngIf="isLoading$ | async" class="mb-8">
     <div class="flex items-start justify-between">
-      <div class="flex items-start gap-4 w-full">
+      <div class="flex items-start gap-6 w-full">
+        <!-- Avatar Skeleton -->
+        <nz-skeleton-element nzType="avatar" [nzActive]="true" [nzSize]="'large'" nzShape="square" style="width: 80px; height: 80px; border-radius: 2px;"></nz-skeleton-element>
+        
         <div class="pt-1">
           <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 300px; height: 40px; margin-bottom: 8px;"></nz-skeleton-element>
           <div class="flex flex-col gap-1">
@@ -22,16 +25,30 @@
   <!-- Organization Header -->
   <div *ngIf="currentOrganization && !(isLoading$ | async)" class="mb-8 fade-in">
     <div class="flex items-start justify-between">
-      <div class="flex items-start gap-4">
-        <div class="pt-1">
-          <h1 class="text-[32px] font-bold text-gray-900 leading-tight mb-2 tracking-tight">{{ currentOrganization.name }}</h1>
-          <div class="flex flex-col gap-1 text-[15px] font-medium text-gray-500">
+      <div class="flex items-center gap-6">
+        <!-- Organization Avatar -->
+        <div class="relative group cursor-pointer" (click)="avatarInput.click()">
+          <div class="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 transition-all group-hover:border-[#7954AA]">
+            <img *ngIf="currentOrganization.avatarUrl" [src]="currentOrganization.avatarUrl" class="w-full h-full object-cover">
+            <span *ngIf="!currentOrganization.avatarUrl" class="text-4xl text-gray-300 font-bold uppercase">{{ currentOrganization.name.charAt(0) }}</span>
+            
+            <!-- Upload Overlay -->
+            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span nz-icon [nzType]="isUploadingAvatar ? 'loading' : 'camera'" class="text-white text-2xl"></span>
+            </div>
+          </div>
+          <input type="file" #avatarInput class="hidden" (change)="onAvatarFileSelected($event)" accept="image/*">
+        </div>
+
+        <div class="pt-0">
+          <h1 class="text-[26px] font-bold text-gray-900 leading-tight mb-1.5 tracking-tight">{{ currentOrganization.name }}</h1>
+          <div class="flex flex-col gap-0.5 text-[13px] font-medium text-gray-500">
             <span class="flex items-center gap-2">
-              <span nz-icon nzType="team" nzTheme="outline"></span>
+              <span nz-icon nzType="team" nzTheme="outline" class="text-[14px]"></span>
               {{ currentOrganization.memberCount }} member{{ currentOrganization.memberCount !== 1 ? 's' : '' }} • {{ currentOrganization.teamCount }} team{{ currentOrganization.teamCount !== 1 ? 's' : '' }}
             </span>
             <span class="flex items-center gap-2">
-              <span nz-icon nzType="calendar" nzTheme="outline"></span>
+              <span nz-icon nzType="calendar" nzTheme="outline" class="text-[14px]"></span>
               Created {{ currentOrganization.createdAt | date:'MMM d, yyyy' }}
             </span>
           </div>
@@ -143,7 +160,10 @@
         </div>
         <div class="member-list space-y-2 mb-6">
           <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-50">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="square" style="width: 40px; height: 40px;"></nz-skeleton-element>
+            <div class="relative flex-shrink-0">
+              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="square" style="width: 40px; height: 40px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border: 2.5px solid white; z-index: 10;"></nz-skeleton-element>
+            </div>
             <div class="flex-1">
               <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['120px', '180px'] }"></nz-skeleton>
             </div>
@@ -240,17 +260,19 @@
               class="flex items-center justify-between p-2 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-50 mb-1"
             >
               <div class="flex items-center gap-3">
-                <j-avatar 
-                  [avatarUrl]="member.user.avatarUrl"
-                  [name]="member.user.name"
-                  [size]="40"
-                  className="rounded-sm">
-                </j-avatar>
+                <div class="relative flex-shrink-0">
+                  <j-avatar 
+                    [avatarUrl]="member.user.avatarUrl"
+                    [name]="member.user.name"
+                    [size]="40"
+                    className="rounded-sm">
+                  </j-avatar>
+                  <span style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white; z-index: 10;"></span>
+                </div>
                 <div>
                   <div class="font-bold text-gray-900 text-sm flex items-center gap-2">
                     {{ member.user.name }}
-                    <span class="bg-[#f1f5f9] text-gray-500 text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">MEMBER</span>
-                    <span class="bg-[#dcfce7] text-[#166534] text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">ACTIVE</span>
+                    <span class="bg-[#f1f5f9] text-gray-500 text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">{{ member.role }}</span>
                   </div>
                   <div class="text-[11px] text-gray-500">{{ member.user.email }}</div>
                 </div>
@@ -309,132 +331,86 @@
 <!-- Create Organization Modal -->
 <nz-modal
   [(nzVisible)]="isCreateOrgModalVisible"
-  nzClosable="false"
-  nzFooter="null"
-  nzWidth="700px"
+  nzTitle="Create New Organization"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelCreateOrg()"
+  nzWidth="520px"
+  nzWrapClassName="create-board-modal"
 >
   <ng-container *nzModalContent>
-    <div class="px-8 py-5">
-      <div class="flex items-center py-3 text-textDarkest">
-        <div class="text-xl">
-          Create New Organization
-        </div>
-        <div class="flex-auto"></div>
-        <j-button icon="times"
-                  [iconSize]="24"
-                  (click)="cancelCreateOrg()"
-                  [className]="'btn-empty'">
-        </j-button>
+    <form class="board-form">
+      <div class="form-group">
+        <label class="label">Organization Name *</label>
+        <input
+          nz-input
+          [(ngModel)]="newOrgName"
+          name="orgName"
+          placeholder="e.g., Acme Corp"
+          class="form-input"
+        />
       </div>
-      <form class="org-form modal-form">
-        <div class="form-group">
-          <label class="label">
-            Organization Name *
-          </label>
-          <input
-            [(ngModel)]="newOrgName"
-            name="orgName"
-            class="form-input"
-            placeholder="e.g., Acme Corp"
-            #orgNameInput
-          />
-        </div>
-        
-        <div class="mt-3 form-group">
-          <label class="label">
-            Description
-          </label>
-          <textarea
-            [(ngModel)]="newOrgDescription"
-            name="orgDescription"
-            class="form-input"
-            cdkTextareaAutosize
-            [cdkAutosizeMinRows]="3"
-            [cdkAutosizeMaxRows]="6"
-            placeholder="Describe your organization workspace"
-          ></textarea>
-        </div>
-
-        <div class="mt-5 form-group form-action">
-          <j-button className="btn-primary mr-2"
-                    type="button"
-                    [disabled]="!newOrgName.trim()"
-                    (click)="createOrganization()">
-            Create Organization
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelCreateOrg()">
-            Cancel
-          </j-button>
-        </div>
-      </form>
-    </div>
+      <div class="form-group">
+        <label class="label">Description</label>
+        <textarea
+          nz-input
+          [(ngModel)]="newOrgDescription"
+          name="orgDescription"
+          placeholder="Describe your organization workspace"
+          [nzAutosize]="{ minRows: 3, maxRows: 6 }"
+          class="form-input"
+          cdkTextareaAutosize
+        ></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+        <button nz-button nzType="default" type="button" (click)="cancelCreateOrg()">Cancel</button>
+        <button nz-button nzType="primary" type="button" [disabled]="!newOrgName.trim()" (click)="createOrganization()">
+          Create Organization
+        </button>
+      </div>
+    </form>
   </ng-container>
 </nz-modal>
 
 <!-- Create Team Modal -->
 <nz-modal
   [(nzVisible)]="isCreateTeamModalVisible"
-  nzClosable="false"
-  nzFooter="null"
-  nzWidth="700px"
+  nzTitle="Create New Team"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelCreateTeam()"
+  nzWidth="520px"
+  nzWrapClassName="create-board-modal"
 >
   <ng-container *nzModalContent>
-    <div class="px-8 py-5">
-      <div class="flex items-center py-3 text-textDarkest">
-        <div class="text-xl">
-          Create New Team
-        </div>
-        <div class="flex-auto"></div>
-        <j-button icon="times"
-                  [iconSize]="24"
-                  (click)="cancelCreateTeam()"
-                  [className]="'btn-empty'">
-        </j-button>
+    <form class="board-form">
+      <div class="form-group">
+        <label class="label">Team Name *</label>
+        <input
+          nz-input
+          [(ngModel)]="newTeamName"
+          name="teamName"
+          placeholder="e.g., Engineering Team"
+          class="form-input"
+        />
       </div>
-      <form class="team-form modal-form">
-        <div class="form-group">
-          <label class="label">
-            Team Name *
-          </label>
-          <input
-            [(ngModel)]="newTeamName"
-            name="teamName"
-            class="form-input"
-            placeholder="e.g., Engineering Team"
-            #teamNameInput
-          />
-        </div>
-        
-        <div class="mt-3 form-group">
-          <label class="label">
-            Description
-          </label>
-          <textarea
-            [(ngModel)]="newTeamDescription"
-            name="teamDescription"
-            class="form-input"
-            cdkTextareaAutosize
-            [cdkAutosizeMinRows]="3"
-            [cdkAutosizeMaxRows]="6"
-            placeholder="Describe the team's role and responsibilities"
-          ></textarea>
-        </div>
-
-        <div class="mt-5 form-group form-action">
-          <j-button className="btn-primary mr-2"
-                    type="button"
-                    [disabled]="!newTeamName.trim() || !currentOrganization"
-                    (click)="createTeam()">
-            Create Team
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelCreateTeam()">
-            Cancel
-          </j-button>
-        </div>
-      </form>
-    </div>
+      <div class="form-group">
+        <label class="label">Description</label>
+        <textarea
+          nz-input
+          [(ngModel)]="newTeamDescription"
+          name="teamDescription"
+          placeholder="Describe the team's role and responsibilities"
+          [nzAutosize]="{ minRows: 3, maxRows: 6 }"
+          class="form-input"
+          cdkTextareaAutosize
+        ></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+        <button nz-button nzType="default" type="button" (click)="cancelCreateTeam()">Cancel</button>
+        <button nz-button nzType="primary" type="button" [disabled]="!newTeamName.trim() || !currentOrganization" (click)="createTeam()">
+          Create Team
+        </button>
+      </div>
+    </form>
   </ng-container>
 </nz-modal>
 
@@ -580,119 +556,101 @@
 <!-- Edit Team Modal -->
 <nz-modal
   [(nzVisible)]="isEditTeamModalVisible"
-  nzClosable="false"
-  nzFooter="null"
-  nzWidth="700px"
+  nzTitle="Edit Team"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelEditTeam()"
+  nzWidth="520px"
+  nzWrapClassName="create-board-modal"
 >
   <ng-container *nzModalContent>
-    <div class="px-8 py-5">
-      <div class="flex items-center py-3 text-textDarkest">
-        <div class="text-xl">
-          Edit Team
-        </div>
-        <div class="flex-auto"></div>
-        <j-button icon="times"
-                  [iconSize]="24"
-                  (click)="cancelEditTeam()"
-                  [className]="'btn-empty'">
-        </j-button>
+    <form class="board-form">
+      <div class="form-group">
+        <label class="label">Team Name *</label>
+        <input
+          nz-input
+          [(ngModel)]="editTeamName"
+          name="editTeamName"
+          placeholder="e.g., Engineering Team"
+          class="form-input"
+        />
       </div>
-      <form class="team-form modal-form">
-        <div class="form-group">
-          <label class="label">
-            Team Name *
-          </label>
-          <input
-            [(ngModel)]="editTeamName"
-            name="editTeamName"
-            class="form-input"
-            placeholder="e.g., Engineering Team"
-          />
-        </div>
-        
-        <div class="mt-3 form-group">
-          <label class="label">
-            Description
-          </label>
-          <textarea
-            [(ngModel)]="editTeamDescription"
-            name="editTeamDescription"
-            class="form-input"
-            cdkTextareaAutosize
-            [cdkAutosizeMinRows]="3"
-            [cdkAutosizeMaxRows]="6"
-            placeholder="Describe the team's role and responsibilities"
-          ></textarea>
-        </div>
-
-        <div class="mt-5 form-group form-action">
-          <j-button className="btn-primary mr-2"
-                    type="button"
-                    [disabled]="!editTeamName.trim()"
-                    (click)="editTeam()">
-            Save Changes
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelEditTeam()">
-            Cancel
-          </j-button>
-        </div>
-      </form>
-    </div>
+      <div class="form-group">
+        <label class="label">Description</label>
+        <textarea
+          nz-input
+          [(ngModel)]="editTeamDescription"
+          name="editTeamDescription"
+          placeholder="Describe the team's role and responsibilities"
+          [nzAutosize]="{ minRows: 3, maxRows: 6 }"
+          class="form-input"
+          cdkTextareaAutosize
+        ></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+        <button nz-button nzType="default" type="button" (click)="cancelEditTeam()">Cancel</button>
+        <button nz-button nzType="primary" type="button" [disabled]="!editTeamName.trim()" (click)="editTeam()">
+          Save Changes
+        </button>
+      </div>
+    </form>
   </ng-container>
 </nz-modal>
 <!-- Invite Member Modal -->
 <nz-modal
   [(nzVisible)]="isInviteMemberModalVisible"
-  nzClosable="false"
-  nzFooter="null"
-  nzWidth="600px"
+  [nzTitle]="inviteModalTitle"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelInviteMember()"
+  nzWidth="520px"
+  nzWrapClassName="create-board-modal"
 >
+  <ng-template #inviteModalTitle>
+    Invite Member to {{ currentOrganization?.name }}
+  </ng-template>
   <ng-container *nzModalContent>
-    <div class="px-8 py-5">
-      <div class="flex items-center py-3 text-textDarkest">
-        <div class="text-xl">
-          Invite Member to {{ currentOrganization?.name }}
-        </div>
-        <div class="flex-auto"></div>
-        <j-button icon="times"
-                  [iconSize]="24"
-                  (click)="cancelInviteMember()"
-                  [className]="'btn-empty'">
-        </j-button>
+    <form class="board-form" (submit)="inviteMember(); $event.preventDefault()">
+      <!-- Email -->
+      <div class="form-group">
+        <label class="label">Email Address *</label>
+        <input
+          nz-input
+          [(ngModel)]="inviteEmail"
+          name="inviteEmail"
+          type="email"
+          class="form-input"
+          placeholder="e.g., colleague@example.com"
+          required
+        />
+        <p class="text-xs mt-2" style="color: #8993a4;">An invitation will be sent to this email address with instructions to join the organization.</p>
       </div>
-      <form class="invite-form modal-form" (submit)="inviteMember()">
-        <div class="form-group">
-          <label class="label">
-            Email Address *
-          </label>
-          <input
-            [(ngModel)]="inviteEmail"
-            name="inviteEmail"
-            type="email"
-            class="form-input"
-            placeholder="e.g., colleague@example.com"
-            required
-          />
-          <p class="text-xs text-gray-400 mt-2">
-            An invitation will be sent to this email address with instructions to join the organization.
-          </p>
-        </div>
-
-        <div class="mt-8 form-group form-action">
-          <j-button className="btn-primary mr-2"
-                    type="submit"
-                    [disabled]="!inviteEmail.trim() || isInviting"
-                    [isWorking]="isInviting">
-            Send Invitation
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelInviteMember()"
-                    [disabled]="isInviting">
-            Cancel
-          </j-button>
-        </div>
-      </form>
-    </div>
+      <!-- Team -->
+      <div class="form-group">
+        <label class="label">Team</label>
+        <nz-select
+          [(ngModel)]="inviteTeamId"
+          name="inviteTeamId"
+          nzPlaceHolder="Select a team"
+          nzAllowClear
+          style="width: 100%;"
+        >
+          <nz-option *ngFor="let team of teams" [nzValue]="team.id" [nzLabel]="team.name"></nz-option>
+        </nz-select>
+      </div>
+      <!-- Role -->
+      <div class="form-group">
+        <label class="label">Role</label>
+        <nz-select [(ngModel)]="inviteRole" name="inviteRole" style="width: 100%;">
+          <nz-option nzValue="member" nzLabel="Member"></nz-option>
+          <nz-option nzValue="admin" nzLabel="Admin"></nz-option>
+        </nz-select>
+      </div>
+      <!-- Actions -->
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+        <button nz-button nzType="default" type="button" (click)="cancelInviteMember()" [disabled]="isInviting">Cancel</button>
+        <button nz-button nzType="primary" type="submit" [disabled]="!inviteEmail.trim() || isInviting" [nzLoading]="isInviting">
+          Send Invitation
+        </button>
+      </div>
+    </form>
   </ng-container>
 </nz-modal>

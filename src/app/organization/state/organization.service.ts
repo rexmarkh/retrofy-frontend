@@ -135,7 +135,7 @@ export class OrganizationService {
             id: m.id || `${m.org_id}_${m.user_id}`,
             userId: m.user_id,
             organizationId: org.id, // Explicitly use the org.id to ensure they filter correctly in queries
-            role: m.role || OrganizationRole.MEMBER,
+            role: m.user_id === org.owner_id ? OrganizationRole.OWNER : (m.role || OrganizationRole.MEMBER),
             joinedAt: m.created_at || org.created_at || new Date().toISOString(),
             status: MemberStatus.ACTIVE,
             user: userDetails
@@ -146,7 +146,8 @@ export class OrganizationService {
         return {
           id: org.id,
           name: org.name,
-          description: org.description || '', 
+          description: org.description || '',
+          avatarUrl: org.avatar_url,
           createdAt: org.created_at || new Date().toISOString(),
           updatedAt: org.created_at || new Date().toISOString(),
           memberCount: deduplicatedMemberships.length,
@@ -340,6 +341,45 @@ export class OrganizationService {
     this.addOrganizationMember(organizationId, user?.id || '', OrganizationRole.OWNER);
 
     return newOrganization;
+  }
+
+  async uploadOrgAvatar(orgId: string, file: File): Promise<string | null> {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${orgId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // 1. Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await this.supabaseService.client.storage
+        .from('org-avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = this.supabaseService.client.storage
+        .from('org-avatars')
+        .getPublicUrl(filePath);
+
+      // 3. Update Database
+      const { error: updateError } = await this.supabaseService.client
+        .from('organisations')
+        .update({ avatar_url: publicUrl })
+        .eq('id', orgId);
+
+      if (updateError) throw updateError;
+
+      // 4. Update local state
+      this.updateOrganization(orgId, { avatarUrl: publicUrl });
+
+      return publicUrl;
+    } catch (error) {
+      console.error('[OrganizationService] uploadOrgAvatar failed:', error);
+      return null;
+    }
   }
 
   updateOrganization(organizationId: string, updates: Partial<Organization>): void {
