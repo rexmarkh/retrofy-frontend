@@ -45,6 +45,7 @@ export interface RetrospectiveBoard {
   participants: string[];
   columns: RetroColumn[];
   stickyNotes: StickyNote[];
+  aiSummary?: Record<string, string>;
   notesCount?: number;
   isActive: boolean;
   timerDuration?: number;

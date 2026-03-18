@@ -48,6 +48,7 @@ export class RetrospectiveService {
         participants: row.participants || [row.created_by || ''], 
         columns: [], // We can load columns/sticky notes lazily later
         stickyNotes: [],
+        aiSummary: row.ai_summary || {},
         notesCount: row.retro_items?.[0]?.count || 0,
         isActive: row.status === 'active',
         currentPhase: this.mapPhaseFromDb(row.current_stage),
@@ -118,6 +119,7 @@ export class RetrospectiveService {
         participants: [data.created_by],
         columns: [],
         stickyNotes: [],
+        aiSummary: {},
         notesCount: 0,
         isActive: true,
         currentPhase: RetroPhase.BRAINSTORMING,
@@ -233,6 +235,7 @@ export class RetrospectiveService {
             participants: boardData.participants || [boardData.created_by || ''],
             columns: [],
             stickyNotes: [],
+            aiSummary: boardData.ai_summary || {},
             isActive: boardData.status === 'active',
             currentPhase: this.mapPhaseFromDb(boardData.current_stage),
             createdAt: boardData.created_at || new Date().toISOString(),
@@ -693,6 +696,38 @@ export class RetrospectiveService {
     }
 
     await this.updateBoardSupabase(currentState.currentBoard.id, updates);
+  }
+
+  async updateBoardAiSummary(boardId: string, columnId: string, summary: string): Promise<void> {
+    const currentState = this.store.getValue();
+    const board = currentState.boards.find(b => b.id === boardId);
+    if (!board) return;
+
+    const newAiSummary = {
+      ...(board.aiSummary || {}),
+      [columnId]: summary
+    };
+
+    // Optimistically update local store
+    this.store.update(state => ({
+      ...state,
+      boards: state.boards.map(b => 
+        b.id === boardId ? { ...b, aiSummary: newAiSummary } : b
+      ),
+      currentBoard: state.currentBoard && state.currentBoard.id === boardId 
+        ? { ...state.currentBoard, aiSummary: newAiSummary }
+        : state.currentBoard
+    }));
+
+    // Save to Supabase
+    try {
+      await this.supabaseService.client
+        .from('retro_boards')
+        .update({ ai_summary: newAiSummary })
+        .eq('id', boardId);
+    } catch (error) {
+      console.error('Error updating ai_summary in Supabase:', error);
+    }
   }
 
   private createDemoBoard(): void {

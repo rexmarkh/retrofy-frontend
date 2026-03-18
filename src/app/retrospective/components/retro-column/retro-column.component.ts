@@ -14,6 +14,9 @@ import { CdkDropList, CdkDragDrop, CdkDragStart, CdkDragEnd, DragDropModule, mov
 import { RetroColumn, StickyNote, StickyNoteColor, RetroPhase } from '../../interfaces/retrospective.interface';
 import { StickyNoteComponent } from '../sticky-note/sticky-note.component';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
+import { RetrospectiveService } from '../../state/retrospective.service';
+import { RetrospectiveQuery } from '../../state/retrospective.query';
+import { SupabaseService } from '../../../core/services/supabase.service';
 
 @Component({
   selector: 'app-retro-column',
@@ -64,7 +67,12 @@ export class RetroColumnComponent {
   
   colorOptions = Object.values(StickyNoteColor);
 
-  constructor(private renderer: Renderer2) {}
+  constructor(
+    private renderer: Renderer2,
+    private retrospectiveService: RetrospectiveService,
+    private retrospectiveQuery: RetrospectiveQuery,
+    private supabaseService: SupabaseService
+  ) {}
 
   getRandomColor(): StickyNoteColor {
     const colors = Object.values(StickyNoteColor);
@@ -239,101 +247,68 @@ export class RetroColumnComponent {
   }
 
   toggleAISummary() {
+    const currentBoard = this.retrospectiveQuery.getCurrentBoard();
+    
+    // Check if we have cached summary
+    if (currentBoard?.aiSummary && currentBoard.aiSummary[this.column.id]) {
+      this.aiSummary = currentBoard.aiSummary[this.column.id];
+    }
+
     if (!this.isAISummaryExpanded && !this.aiSummary && !this.isGeneratingSummary) {
-      // Auto-generate on first expand if not already generated
       this.generateAISummary();
-      // Don't toggle here since generateAISummary already sets isAISummaryExpanded = true
       return;
     }
     this.isAISummaryExpanded = !this.isAISummaryExpanded;
   }
 
-  generateAISummary() {
+  async generateAISummary(forceRegenerate = false) {
     if (this.stickyNotes.length === 0 || this.isGeneratingSummary) {
       return;
     }
 
+    const currentBoard = this.retrospectiveQuery.getCurrentBoard();
+    if (!currentBoard) return;
+
     this.isAISummaryExpanded = true;
+
+    // Use cache if not forcing regeneration
+    if (!forceRegenerate && currentBoard.aiSummary && currentBoard.aiSummary[this.column.id]) {
+      this.aiSummary = currentBoard.aiSummary[this.column.id];
+      return;
+    }
+
     this.isGeneratingSummary = true;
     this.aiSummary = '';
 
-    // Simulate AI processing (in real app, this would call an AI service)
-    setTimeout(() => {
-      const noteContents = this.stickyNotes.map(note => note.content);
-      this.aiSummary = this.generateSummaryText(noteContents);
+    try {
+      const noteContents = this.stickyNotes.map(n => n.content);
+      
+      const { data, error } = await this.supabaseService.client.functions.invoke('generate-ai-summary', {
+        body: {
+          boardId: currentBoard.id,
+          columnId: this.column.id,
+          columnTitle: this.column.title,
+          notes: noteContents
+        }
+      });
+
+      if (error) throw error;
+
+      if (data && data.summary) {
+        this.aiSummary = data.summary;
+        this.retrospectiveService.updateBoardAiSummary(currentBoard.id, this.column.id, data.summary);
+      } else {
+        this.aiSummary = 'Unable to generate summary.';
+      }
+    } catch (err) {
+      console.error('Failed to generate summary:', err);
+      this.aiSummary = 'Error generating summary. Please try again.';
+    } finally {
       this.isGeneratingSummary = false;
-    }, 2000);
+    }
   }
 
   regenerateAISummary() {
-    this.generateAISummary();
-  }
-
-  private generateSummaryText(notes: string[]): string {
-    // This is a placeholder. In a real application, you would call an AI service
-    const noteCount = notes.length;
-    const totalWords = notes.join(' ').split(' ').length;
-    const avgWordsPerNote = Math.round(totalWords / noteCount);
-
-    // Group similar themes (simplified example)
-    const themes: string[] = [];
-    const commonWords = this.extractCommonWords(notes);
-    
-    if (commonWords.length > 0) {
-      themes.push(`Main themes: ${commonWords.slice(0, 5).join(', ')}`);
-    }
-
-    const summary = `📊 Analysis of ${noteCount} note${noteCount !== 1 ? 's' : ''}:
-
-${themes.length > 0 ? themes.join('\n') + '\n\n' : ''}Key Insights:
-• Total contributions: ${noteCount} notes
-• Average note length: ${avgWordsPerNote} words
-• Most voted: ${this.getMostVotedNote()?.content || 'No votes yet'}
-
-Summary: The team has shared ${noteCount} observation${noteCount !== 1 ? 's' : ''} in the "${this.column.title}" category. ${this.getPhaseSpecificInsight()}`;
-
-    return summary;
-  }
-
-  private extractCommonWords(notes: string[]): string[] {
-    const words = notes
-      .join(' ')
-      .toLowerCase()
-      .replace(/[^\w\s]/g, '')
-      .split(/\s+/)
-      .filter(word => word.length > 4); // Filter out short words
-
-    const wordCount: { [key: string]: number } = {};
-    words.forEach(word => {
-      wordCount[word] = (wordCount[word] || 0) + 1;
-    });
-
-    return Object.entries(wordCount)
-      .filter(([_, count]) => count > 1)
-      .sort((a, b) => b[1] - a[1])
-      .map(([word]) => word);
-  }
-
-  private getMostVotedNote(): StickyNote | undefined {
-    return this.stickyNotes.length > 0
-      ? this.stickyNotes.reduce((max, note) => note.votes > max.votes ? note : max)
-      : undefined;
-  }
-
-  private getPhaseSpecificInsight(): string {
-    switch (this.currentPhase) {
-      case RetroPhase.BRAINSTORMING:
-        return 'The team is actively brainstorming ideas.';
-      case RetroPhase.GROUPING:
-        return 'These items can be grouped to identify patterns.';
-      case RetroPhase.VOTING:
-        return 'Team members are voting on priorities.';
-      case RetroPhase.DISCUSSION:
-        return 'These topics are ready for team discussion.';
-      case RetroPhase.ACTION_ITEMS:
-        return 'Consider converting high-priority items into action items.';
-      default:
-        return 'Review complete.';
-    }
+    this.generateAISummary(true);
   }
 }

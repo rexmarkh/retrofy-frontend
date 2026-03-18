@@ -137,7 +137,7 @@
           (click)="onVote()"
           class="flex items-center gap-1"
           nz-tooltip
-          [nzTooltipTitle]="!canVote() ? 'Voting is only allowed during Brainstorming, Grouping, and Voting phases' : 'Vote on this note'"
+          [nzTooltipTitle]="!canVote() ? 'Voting is not allowed' : 'Vote on this note'"
           nzTooltipPlacement="top"
         >
           <span class="text-xs font-semibold">{{ note.votes }}</span>
