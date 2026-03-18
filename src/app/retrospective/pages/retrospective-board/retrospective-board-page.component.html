@@ -43,6 +43,7 @@
                 nz-button 
                 nzType="default"
                 (click)="showSettingsModal()"
+                [disabled]="currentBoard.currentPhase === RetroPhase.COMPLETED"
                 class="flex items-center gap-2"
               >
                 <span nz-icon nzType="setting" nzTheme="outline"></span>

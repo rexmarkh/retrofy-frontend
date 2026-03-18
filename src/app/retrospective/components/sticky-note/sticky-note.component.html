@@ -132,9 +132,13 @@
           nzType="text" 
           nzSize="small"
           [class.vote-button-active]="hasUserVoted()"
-          [class.vote-button]="!hasUserVoted()"
+          [class.vote-button]="!canVote()"
+          [disabled]="!canVote()"
           (click)="onVote()"
           class="flex items-center gap-1"
+          nz-tooltip
+          [nzTooltipTitle]="!canVote() ? 'Voting is only allowed during Brainstorming, Grouping, and Voting phases' : 'Vote on this note'"
+          nzTooltipPlacement="top"
         >
           <span class="text-xs font-semibold">{{ note.votes }}</span>
           <span 

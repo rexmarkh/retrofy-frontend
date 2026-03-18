@@ -205,6 +205,11 @@ export class RetroColumnComponent {
   }
 
   canAddNotes(): boolean {
+    // Strictly disable if completed
+    if (this.currentPhase === RetroPhase.COMPLETED) {
+      return false;
+    }
+
     if (this.column.id === 'action-items') {
       return this.currentPhase === RetroPhase.DISCUSSION || this.currentPhase === RetroPhase.ACTION_ITEMS;
     }

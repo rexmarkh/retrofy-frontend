@@ -311,6 +311,11 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    // If board is completed, no one can change phase (locking the board)
+    if (this.currentBoard.currentPhase === RetroPhase.COMPLETED) {
+      return false;
+    }
+
     // Current phase is not clickable (already there)
     if (this.currentBoard.currentPhase === phase) {
       return false;
@@ -509,6 +514,9 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   saveSettings() {
+    if (this.currentBoard?.currentPhase === RetroPhase.COMPLETED) {
+      return;
+    }
     // In a real app, you would update the board settings via the service
     console.log('Saving settings:', { title: this.settingsTitle, description: this.settingsDescription });
     this.isSettingsModalVisible = false;
@@ -573,7 +581,17 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   onNoteVote(noteId: string) {
-    this.retrospectiveService.voteOnStickyNote(noteId);
+    if (!this.currentBoard) return;
+    
+    const votingPhases = [
+      RetroPhase.BRAINSTORMING,
+      RetroPhase.GROUPING,
+      RetroPhase.VOTING
+    ];
+    
+    if (votingPhases.includes(this.currentBoard.currentPhase)) {
+      this.retrospectiveService.voteOnStickyNote(noteId);
+    }
   }
 
   onNoteDrop(event: CdkDragDrop<StickyNote[]>) {

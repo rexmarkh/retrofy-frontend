@@ -114,9 +114,9 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
   // Permission methods
   canEdit(): boolean {
-    // Edit is only allowed during brainstorming phase and for the note author or facilitator
+    // Edit is only allowed during brainstorming phase and for the note author
     return this.currentPhase === RetroPhase.BRAINSTORMING && 
-           (this.note.authorId === this.currentUserId);
+           this.note.authorId === this.currentUserId;
   }
 
   canDelete(): boolean {
@@ -133,8 +133,22 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
   canDrag(): boolean {
     // Dragging is allowed during brainstorming and grouping phases
+    // But strictly disabled if completed
+    if (this.currentPhase === RetroPhase.COMPLETED) {
+      return false;
+    }
     return this.currentPhase === RetroPhase.BRAINSTORMING || 
            this.currentPhase === RetroPhase.GROUPING;
+  }
+
+  canVote(): boolean {
+    // Voting is allowed in Brainstorming, Grouping, and Voting phases
+    const votingPhases = [
+      RetroPhase.BRAINSTORMING,
+      RetroPhase.GROUPING,
+      RetroPhase.VOTING
+    ];
+    return votingPhases.includes(this.currentPhase);
   }
 
   shouldShowAuthor(): boolean {
@@ -191,7 +205,9 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   }
 
   onVote() {
-    this.noteVote.emit(this.note.id);
+    if (this.canVote()) {
+      this.noteVote.emit(this.note.id);
+    }
   }
 
   confirmDelete() {
