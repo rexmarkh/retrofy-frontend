@@ -140,28 +140,37 @@
       <div *ngIf="state.isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div *ngFor="let _ of [1, 2, 3, 4]" class="bg-white rounded-xl h-full flex flex-col" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
           <div class="p-5 flex flex-col flex-grow">
-            <!-- Phase Badge -->
+            <!-- Phase Badge Skeleton -->
             <div class="flex justify-between mb-4">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 80px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 80px; height: 24px;"></nz-skeleton-element>
             </div>
-            <!-- Title -->
+            <!-- Title Skeleton -->
             <div class="mb-1">
               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 160px; height: 18px;"></nz-skeleton-element>
             </div>
-            <!-- Description -->
+            <!-- Description Skeleton -->
             <div class="mb-5 flex-grow">
               <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['90%', '75%'] }"></nz-skeleton>
             </div>
-            <!-- Metrics -->
+            <!-- Two-Tier Metrics Skeleton -->
             <div class="flex items-center gap-6">
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['50px'] }"></nz-skeleton>
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['50px'] }"></nz-skeleton>
+              <div class="flex flex-col gap-1">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 40px; height: 10px;"></nz-skeleton-element>
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 16px;"></nz-skeleton-element>
+              </div>
+              <div class="flex flex-col gap-1">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 70px; height: 10px;"></nz-skeleton-element>
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 16px;"></nz-skeleton-element>
+              </div>
             </div>
           </div>
-          <!-- Footer -->
-          <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between">
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px;"></nz-skeleton-element>
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px;"></nz-skeleton-element>
+          <!-- Footer Skeleton -->
+          <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between rounded-b-xl">
+            <div class="flex items-center gap-1.5">
+              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 14px; height: 14px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 10px;"></nz-skeleton-element>
+            </div>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 32px; border-radius: 8px;"></nz-skeleton-element>
           </div>
         </div>
       </div>
@@ -333,7 +342,10 @@
                   <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100px', '60px'] }"></nz-skeleton>
                 </div>
               </div>
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 120px; height: 6px;"></nz-skeleton-element>
+              <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0 pt-2">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 40px; height: 14px;"></nz-skeleton-element>
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 160px; height: 6px;"></nz-skeleton-element>
+              </div>
             </div>
           </div>
 
