@@ -398,7 +398,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
       if (team) {
         this.cancelCreateTeam();
         this.message.success(`Team "${team.name}" created successfully!`);
-        this.router.navigate(['/project/retrospective']);
+        this.router.navigate(['/retrospective']);
       } else {
         this.message.error('Failed to create team. Please try again.');
       }
@@ -417,7 +417,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
       this.organizationService.setCurrentTeam(team.id);
 
       // Direct navigation to Retrospective board as per new onboarding flow
-      this.router.navigate(['/project/retrospective']);
+      this.router.navigate(['/retrospective']);
     }
   }
 

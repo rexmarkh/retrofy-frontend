@@ -10,7 +10,12 @@ const routes: Routes = [
     loadChildren: () => import('./login/login.module').then((m) => m.LoginModule)
   },
   {
-    path: 'project',
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'organization'
+  },
+  {
+    path: '',
     canActivate: [AuthGuard],
     loadChildren: () => import('./project/project.module').then((m) => m.ProjectModule)
   },
@@ -27,11 +32,6 @@ const routes: Routes = [
         (m) => m.WorkInProgressModule
       )
   },
-  {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  }
 ];
 
 @NgModule({

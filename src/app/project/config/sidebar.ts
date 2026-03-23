@@ -3,6 +3,7 @@ import { SideBarLink } from '@trungk18/interface/ui-model/nav-link';
 export const SideBarLinks = [
   // new SideBarLink('Kanban Board', 'board', 'board'),
   new SideBarLink('Retro Dashboard', 'board', 'retrospective'),
+  new SideBarLink('My Profile', 'user', 'profile'),
   new SideBarLink('Project Settings', 'cog', 'settings'),
   new SideBarLink('Releases', 'ship'),
   new SideBarLink('Issues and filters', 'filters'),

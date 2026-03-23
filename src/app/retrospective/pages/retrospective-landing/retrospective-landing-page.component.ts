@@ -289,7 +289,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   openBoard(boardId: string) {
-    this.router.navigate(['/project/retrospective/board', boardId]);
+    this.router.navigate(['/retrospective/board', boardId]);
   }
 
   editBoard(board: RetrospectiveBoard) {
@@ -567,24 +567,17 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Calculate total contributions for retros joined by each user
-    this.boards.forEach(board => {
-      const totalInBoard = boardTotals.get(board.id) || 0;
-      board.participants.forEach(participantId => {
-        if (stats.has(participantId)) {
-          stats.get(participantId)!.total += totalInBoard;
-        }
-      });
-    });
+    // Calculate grand total contributions across all boards
+    let grandTotal = 0;
+    boardTotals.forEach(total => grandTotal += total);
 
-    // Calculate final percentage
+    // Calculate final percentage relative to team grand total
     this.memberContributionStats.clear();
-    let min = 100;
-    let max = 0;
     const rates: number[] = [];
 
     stats.forEach((val, userId) => {
-      const rate = val.total > 0 ? (val.user / val.total) * 100 : 0;
+      // Each user's rate is their total actions / grand total actions of the team
+      const rate = grandTotal > 0 ? (val.user / grandTotal) * 100 : 0;
       const roundedRate = Math.round(rate);
       this.memberContributionStats.set(userId, roundedRate);
       rates.push(roundedRate);
