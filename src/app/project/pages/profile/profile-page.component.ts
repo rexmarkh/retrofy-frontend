@@ -7,6 +7,7 @@ import { AuthService } from '@trungk18/project/auth/auth.service';
 import { ProjectQuery } from '@trungk18/project/state/project/project.query';
 import { RetrospectiveService } from '@trungk18/retrospective/state/retrospective.service';
 import { Observable, forkJoin, of } from 'rxjs';
+import { filter, distinctUntilKeyChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-profile-page',
@@ -41,7 +42,7 @@ export class ProfilePageComponent implements OnInit {
   activeIssues = 0;
   loginEmail = '';
   lastLoginTime = new Date();
-  isLoading = true;
+  isLoading = false;
 
   constructor(
     private authQuery: AuthQuery,
@@ -54,56 +55,63 @@ export class ProfilePageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.user$.pipe(untilDestroyed(this)).subscribe(async user => {
+    this.user$.pipe(
+      filter(user => !!user),
+      distinctUntilKeyChanged('id'),
+      untilDestroyed(this)
+    ).subscribe(async user => {
+      if (!user) {
+        this.isLoading = false;
+        return;
+      }
+
       this.currentUser = user;
-      if (user) {
-        this.loginEmail = user.email || '';
-        this.lastLoginTime = new Date(); 
-        
-        this.isLoading = true;
-        try {
-          // Load retro stats
-          const stats = await this.retrospectiveService.getUserRetroStats(user.id);
-          if (stats) {
-            this.retrosJoined = stats.retrosJoined;
-            this.notesAdded = stats.notesAdded;
-            this.votesCast = stats.votesCast;
-            this.actionItems = stats.actionItems;
-            this.categoryDistribution = stats.categoryDistribution;
-            
-            // Calculate dynamic trends
-            this.votesTrend = this.retrosJoined > 0 
-              ? `Avg ${Math.round(this.votesCast / this.retrosJoined)} votes per board`
-              : 'Start voting to see stats';
-              
-            this.userRole = this.notesAdded > 20 ? 'Power Contributor' : 'Active Contributor';
-            this.actionItemsTrend = `${this.actionItems} items identified`;
-          }
-
-          // Load activity history
-          this.activityHistory = await this.retrospectiveService.getUserActivityHistory(user.id);
+      this.loginEmail = user.email || '';
+      this.lastLoginTime = new Date(); 
+      
+      this.isLoading = true;
+      try {
+        // Load retro stats
+        const stats = await this.retrospectiveService.getUserRetroStats(user.id);
+        if (stats) {
+          this.retrosJoined = stats.retrosJoined;
+          this.notesAdded = stats.notesAdded;
+          this.votesCast = stats.votesCast;
+          this.actionItems = stats.actionItems;
+          this.categoryDistribution = stats.categoryDistribution;
           
-          if (this.activityHistory.length > 0) {
-            const lastActivity = new Date(this.activityHistory[0].date);
-            this.notesTrend = `Last active ${this.getRelativeTime(lastActivity)}`;
-          }
-
-          // Fetch total boards for participation trend
-          const { count: totalBoards } = await this.retrospectiveService['supabaseService'].client
-            .from('retro_boards')
-            .select('*', { count: 'exact', head: true });
+          // Calculate dynamic trends
+          this.votesTrend = this.retrosJoined > 0 
+            ? `Avg ${Math.round(this.votesCast / this.retrosJoined)} votes per board`
+            : 'Start voting to see stats';
             
-          if (totalBoards && totalBoards > 0) {
-            const percent = Math.round((this.retrosJoined / totalBoards) * 100);
-            this.retrosTrend = `${percent}% participation rate`;
-          }
-
-        } finally {
-          this.isLoading = false;
+          this.userRole = this.notesAdded > 20 ? 'Power Contributor' : 'Active Contributor';
+          this.actionItemsTrend = `${this.actionItems} items identified`;
         }
 
-        this.calculateUserStats(user);
+        // Load activity history
+        this.activityHistory = await this.retrospectiveService.getUserActivityHistory(user.id);
+        
+        if (this.activityHistory.length > 0) {
+          const lastActivity = new Date(this.activityHistory[0].date);
+          this.notesTrend = `Last active ${this.getRelativeTime(lastActivity)}`;
+        }
+
+        // Fetch total boards for participation trend using service method
+        const totalBoards = await this.retrospectiveService.getTotalRetroBoardsCount();
+          
+        if (totalBoards && totalBoards > 0) {
+          const percent = Math.round((this.retrosJoined / totalBoards) * 100);
+          this.retrosTrend = `${percent}% participation rate`;
+        }
+
+      } catch (err) {
+        console.error('[Profile] Loading failed:', err);
+      } finally {
+        this.isLoading = false;
       }
+
+      this.calculateUserStats(user);
     });
   }
 

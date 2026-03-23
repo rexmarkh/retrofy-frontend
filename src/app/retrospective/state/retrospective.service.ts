@@ -917,6 +917,20 @@ export class RetrospectiveService {
     }
   }
 
+  async getTotalRetroBoardsCount(): Promise<number> {
+    try {
+      const { count, error } = await this.supabaseService.client
+        .from('retro_boards')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error('[RetrospectiveService] getTotalRetroBoardsCount failed:', error);
+      return 0;
+    }
+  }
+
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
