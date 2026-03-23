@@ -12,7 +12,7 @@ export class RetrospectiveService {
   constructor(
     private store: RetrospectiveStore,
     private authQuery: AuthQuery,
-    private supabaseService: SupabaseService,
+    public supabaseService: SupabaseService,
     private projectQuery: ProjectQuery
   ) {}
 
@@ -902,5 +902,96 @@ export class RetrospectiveService {
 
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+
+  async getUserRetroStats(userId: string) {
+    try {
+      const { count: retrosJoined, error: retrosError } = await this.supabaseService.client
+        .from('retro_boards')
+        .select('*', { count: 'exact', head: true })
+        .contains('participants', [userId]);
+
+      if (retrosError) throw retrosError;
+
+      const { data: notesData, error: notesError } = await this.supabaseService.client
+        .from('retro_items')
+        .select('category')
+        .eq('user_id', userId);
+
+      if (notesError) throw notesError;
+
+      const notesAdded = notesData?.filter(item => item.category !== 'Action Items').length || 0;
+      const actionItems = notesData?.filter(item => item.category === 'Action Items').length || 0;
+
+      const { count: votesCast, error: votesError } = await this.supabaseService.client
+        .from('retro_items')
+        .select('*', { count: 'exact', head: true })
+        .contains('voter_ids', [userId]);
+
+      if (votesError) throw votesError;
+
+      // Calculate category distribution
+      const categoryDistribution = {
+        'What went well': notesData?.filter(item => item.category === 'What went well').length || 0,
+        'What can be improved': notesData?.filter(item => item.category === 'What can be improved').length || 0,
+        'Action Items': actionItems
+      };
+
+      return {
+        retrosJoined: retrosJoined || 0,
+        notesAdded,
+        votesCast: votesCast || 0,
+        actionItems,
+        categoryDistribution
+      };
+    } catch (error) {
+      console.error('Error fetching user retro stats:', error);
+      return null;
+    }
+  }
+
+  async getUserActivityHistory(userId: string) {
+    try {
+      // 1. Fetch recent notes
+      const { data: notes, error: notesError } = await this.supabaseService.client
+        .from('retro_items')
+        .select('content, category, created_at, board_id, retro_boards(title)')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (notesError) throw notesError;
+
+      // 2. Fetch recent votes
+      const { data: votes, error: votesError } = await this.supabaseService.client
+        .from('retro_items')
+        .select('content, created_at, board_id, retro_boards(title)')
+        .contains('voter_ids', [userId])
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (votesError) throw votesError;
+
+      // Merge and sort
+      const history = [
+        ...(notes || []).map(n => ({
+          type: 'added_note',
+          content: n.content,
+          target: (n as any).retro_boards?.title || 'Unknown Retro',
+          date: n.created_at
+        })),
+        ...(votes || []).map(v => ({
+          type: 'voted',
+          content: `Voted on 3 notes`, // Simulated text for now
+          target: (v as any).retro_boards?.title || 'Unknown Retro',
+          date: v.created_at
+        }))
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      return history.slice(0, 10);
+    } catch (error) {
+      console.error('Error fetching user activity history:', error);
+      return [];
+    }
   }
 }

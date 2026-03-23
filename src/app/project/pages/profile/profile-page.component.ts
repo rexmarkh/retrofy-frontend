@@ -5,7 +5,8 @@ import { JUser } from '@trungk18/interface/user';
 import { AuthQuery } from '@trungk18/project/auth/auth.query';
 import { AuthService } from '@trungk18/project/auth/auth.service';
 import { ProjectQuery } from '@trungk18/project/state/project/project.query';
-import { Observable } from 'rxjs';
+import { RetrospectiveService } from '@trungk18/retrospective/state/retrospective.service';
+import { Observable, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-profile-page',
@@ -19,29 +20,89 @@ export class ProfilePageComponent implements OnInit {
   currentUser: JUser | null = null;
   isEditing = false;
   
+  // Retro stats
+  retrosJoined = 0;
+  notesAdded = 0;
+  votesCast = 0;
+  actionItems = 0;
+  categoryDistribution: { [key: string]: number } = {};
+  activityHistory: any[] = [];
+  
+  // Dynamic Trends & Info
+  userRole = 'Contributor';
+  retrosTrend = 'Active participant';
+  notesTrend = 'Identifying team wins';
+  votesTrend = 'Supporting team ideas';
+  actionItemsTrend = 'Driving progress';
+  
   // Profile stats
   totalIssuesAssigned = 0;
   completedIssues = 0;
   activeIssues = 0;
   loginEmail = '';
   lastLoginTime = new Date();
+  isLoading = true;
 
   constructor(
     private authQuery: AuthQuery,
     private authService: AuthService,
     private projectQuery: ProjectQuery,
+    private retrospectiveService: RetrospectiveService,
     private router: Router
   ) {
     this.user$ = this.authQuery.user$;
   }
 
   ngOnInit(): void {
-    this.user$.pipe(untilDestroyed(this)).subscribe(user => {
+    this.user$.pipe(untilDestroyed(this)).subscribe(async user => {
       this.currentUser = user;
       if (user) {
-        this.calculateUserStats(user);
         this.loginEmail = user.email || '';
-        this.lastLoginTime = new Date(); // In a real app, this would come from auth state
+        this.lastLoginTime = new Date(); 
+        
+        this.isLoading = true;
+        try {
+          // Load retro stats
+          const stats = await this.retrospectiveService.getUserRetroStats(user.id);
+          if (stats) {
+            this.retrosJoined = stats.retrosJoined;
+            this.notesAdded = stats.notesAdded;
+            this.votesCast = stats.votesCast;
+            this.actionItems = stats.actionItems;
+            this.categoryDistribution = stats.categoryDistribution;
+            
+            // Calculate dynamic trends
+            this.votesTrend = this.retrosJoined > 0 
+              ? `Avg ${Math.round(this.votesCast / this.retrosJoined)} votes per board`
+              : 'Start voting to see stats';
+              
+            this.userRole = this.notesAdded > 20 ? 'Power Contributor' : 'Active Contributor';
+            this.actionItemsTrend = `${this.actionItems} items identified`;
+          }
+
+          // Load activity history
+          this.activityHistory = await this.retrospectiveService.getUserActivityHistory(user.id);
+          
+          if (this.activityHistory.length > 0) {
+            const lastActivity = new Date(this.activityHistory[0].date);
+            this.notesTrend = `Last active ${this.getRelativeTime(lastActivity)}`;
+          }
+
+          // Fetch total boards for participation trend
+          const { count: totalBoards } = await this.retrospectiveService['supabaseService'].client
+            .from('retro_boards')
+            .select('*', { count: 'exact', head: true });
+            
+          if (totalBoards && totalBoards > 0) {
+            const percent = Math.round((this.retrosJoined / totalBoards) * 100);
+            this.retrosTrend = `${percent}% participation rate`;
+          }
+
+        } finally {
+          this.isLoading = false;
+        }
+
+        this.calculateUserStats(user);
       }
     });
   }
@@ -142,5 +203,17 @@ export class ProfilePageComponent implements OnInit {
   getLoginBadgeText(): string {
     const loginType = this.getLoginType();
     return loginType === 'Email' ? 'Active Login' : `${loginType} Login`;
+  }
+
+  private getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    
+    return date.toLocaleDateString();
   }
 }
