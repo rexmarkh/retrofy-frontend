@@ -42,6 +42,9 @@ export class OrganizationService {
         throw new Error('User not authenticated');
       }
 
+      // Auto-activate any pending memberships for the current user
+      await this.activateMembership(currentUserId);
+
       // Step 1: Get organizations the user belongs to along with their teams
       const { data: orgsData, error: orgsError } = await this.supabaseService.client
         .from('organisations')
@@ -134,14 +137,17 @@ export class OrganizationService {
           return {
             id: m.id || `${m.org_id}_${m.user_id}`,
             userId: m.user_id,
-            organizationId: org.id, // Explicitly use the org.id to ensure they filter correctly in queries
+            organizationId: org.id,
             role: m.user_id === org.owner_id ? OrganizationRole.OWNER : (m.role || OrganizationRole.MEMBER),
             joinedAt: m.created_at || org.created_at || new Date().toISOString(),
-            status: MemberStatus.ACTIVE,
+            status: m.status as MemberStatus || MemberStatus.ACTIVE,
             user: userDetails
           };
         });
-        allOrganizationMembers = [...allOrganizationMembers, ...mappedMembers];
+        
+        // Filter out pending members from the main organization list
+        const activeMembers = mappedMembers.filter(m => m.status === MemberStatus.ACTIVE);
+        allOrganizationMembers = [...allOrganizationMembers, ...activeMembers];
 
         return {
           id: org.id,
@@ -150,7 +156,7 @@ export class OrganizationService {
           avatarUrl: org.avatar_url,
           createdAt: org.created_at || new Date().toISOString(),
           updatedAt: org.created_at || new Date().toISOString(),
-          memberCount: deduplicatedMemberships.length,
+          memberCount: activeMembers.length,
           teamCount: (org.teams || []).length,
           ownerId: org.owner_id || '',
           isPrivate: true,
@@ -489,7 +495,7 @@ export class OrganizationService {
           teamId: teamId,
           organizationId: m.org_id || '',
           role: m.role || 'member',
-          status: 'active',
+          status: m.status || 'active',
           joinDate: new Date(m.created_at || new Date()),
           projectIds: []
         } as TeamMember;
@@ -499,7 +505,7 @@ export class OrganizationService {
         ...state,
         teamMembers: [
           ...state.teamMembers.filter(m => m.teamId !== teamId),
-          ...members
+          ...members.filter(m => m.status === 'active')
         ]
       }));
     } catch (err) {
@@ -785,6 +791,20 @@ export class OrganizationService {
     } catch (err) {
       console.error('[OrganizationService] addMemberToTeamSupabase failed:', err);
       return false;
+    }
+  }
+
+  async activateMembership(userId: string): Promise<void> {
+    try {
+      const { error } = await this.supabaseService.client
+        .from('memberships')
+        .update({ status: 'active' })
+        .eq('user_id', userId)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[OrganizationService] activateMembership failed:', error);
     }
   }
 

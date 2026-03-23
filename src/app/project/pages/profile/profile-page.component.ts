@@ -205,6 +205,46 @@ export class ProfilePageComponent implements OnInit {
     return loginType === 'Email' ? 'Active Login' : `${loginType} Login`;
   }
 
+  getGroupedActivity(): any[] {
+    const rawGroups: Map<string, any> = new Map();
+
+    this.activityHistory.forEach(activity => {
+      if (!rawGroups.has(activity.boardId)) {
+        rawGroups.set(activity.boardId, {
+          boardId: activity.boardId,
+          target: activity.target,
+          date: activity.date,
+          notes: [],
+          voteCount: 0
+        });
+      }
+      
+      const group = rawGroups.get(activity.boardId);
+      if (activity.type === 'added_note') {
+        const catClass = activity.category?.toLowerCase()?.split(' ').join('-') || 'default';
+        group.notes.push({ ...activity, categoryClass: catClass });
+      } else if (activity.type === 'voted') {
+        group.voteCount++;
+      }
+    });
+
+    // Convert Map back to array and structure for template
+    return Array.from(rawGroups.values()).map(group => {
+      const activities: any[] = [...group.notes];
+      if (group.voteCount > 0) {
+        activities.push({
+          type: 'voted',
+          count: group.voteCount,
+          date: group.date // Using group date for simplicity
+        });
+      }
+      return {
+        ...group,
+        activities: activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      };
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
   private getRelativeTime(date: Date): string {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);

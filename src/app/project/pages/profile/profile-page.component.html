@@ -75,14 +75,25 @@
           <div class="activity-card">
             <h2 class="section-title">Recent Activity</h2>
             <div class="activity-timeline">
-              <div class="timeline-item" *ngFor="let item of activityHistory" [ngClass]="item.type">
-                <div class="item-content">
-                  <div class="item-title">
-                    <span *ngIf="item.type === 'added_note'">Added a new note</span>
-                    <span *ngIf="item.type === 'voted'">Cast a vote</span>
+              <div class="timeline-group" *ngFor="let group of getGroupedActivity()">
+                <div class="group-header">
+                  <span class="group-target">{{ group.target }}</span>
+                  <span class="group-date">{{ group.date | date: 'MMM d' }}</span>
+                </div>
+                <div class="timeline-item" *ngFor="let item of group.activities" [ngClass]="item.type">
+                  <div class="item-content">
+                    <div class="item-title">
+                      <span *ngIf="item.type === 'added_note'">
+                        Added a note to
+                      </span>
+                      <span *ngIf="item.type === 'voted'">Cast {{ item.count }} {{ item.count === 1 ? 'vote' : 'votes' }}</span>
+                      
+                      <span *ngIf="item.type === 'added_note'" class="category-highlight" [ngClass]="item.categoryClass">
+                        {{ item.category }}
+                      </span>
+                    </div>
+                    <div class="item-detail" *ngIf="item.content">{{ item.content }}</div>
                   </div>
-                  <div class="item-target">in {{ item.target }}</div>
-                  <div class="item-date">{{ item.date | date: 'MMM d, h:mm a' }}</div>
                 </div>
               </div>
               <div *ngIf="activityHistory.length === 0" class="empty-state p-4 text-center text-muted">

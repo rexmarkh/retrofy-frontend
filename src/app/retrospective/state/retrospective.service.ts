@@ -977,13 +977,16 @@ export class RetrospectiveService {
         ...(notes || []).map(n => ({
           type: 'added_note',
           content: n.content,
+          category: n.category,
           target: (n as any).retro_boards?.title || 'Unknown Retro',
+          boardId: n.board_id,
           date: n.created_at
         })),
         ...(votes || []).map(v => ({
           type: 'voted',
           content: `Voted on 3 notes`, // Simulated text for now
           target: (v as any).retro_boards?.title || 'Unknown Retro',
+          boardId: v.board_id,
           date: v.created_at
         }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
