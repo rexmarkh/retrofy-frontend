@@ -49,7 +49,7 @@ export class NavbarLeftComponent implements OnInit {
   }
 
   navigateToProfile() {
-    this.router.navigate(['/project/profile']);
+    this.router.navigate(['/profile']);
   }
 
   navigateToOrganization() {

@@ -20,8 +20,15 @@ export class RetrospectiveService {
     console.log('[RetrospectiveService] loadBoardsFromSupabase called | orgId:', orgId, '| teamId:', teamId);
     this.store.setLoading(true);
     try {
-      // Build query to fetch boards with their items count
-      let query = this.supabaseService.client.from('retro_boards').select('*, retro_items(count)');
+      // Build query to fetch boards with their items' creation times
+      let query = this.supabaseService.client
+        .from('retro_boards')
+        .select(`
+          *,
+          retro_items (
+            created_at
+          )
+        `);
       
       // If teamId is provided, optionally filter by team
       if (teamId) {
@@ -40,21 +47,31 @@ export class RetrospectiveService {
       if (error) throw error;
 
       // Map Supabase rows to Angular models
-      const mappedBoards: RetrospectiveBoard[] = (data || []).map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        description: row.description || '',
-        facilitatorId: row.created_by || '',
-        participants: row.participants || [row.created_by || ''], 
-        columns: [], // We can load columns/sticky notes lazily later
-        stickyNotes: [],
-        aiSummary: row.ai_summary || {},
-        notesCount: row.retro_items?.[0]?.count || 0,
-        isActive: row.status === 'active',
-        currentPhase: this.mapPhaseFromDb(row.current_stage),
-        createdAt: row.created_at || new Date().toISOString(),
-        updatedAt: row.created_at || new Date().toISOString()
-      }));
+      const mappedBoards: RetrospectiveBoard[] = (data || []).map((row: any) => {
+        // Calculate the latest activity time (max of board updated_at and all notes created_at)
+        const noteDates = row.retro_items?.map((item: any) => new Date(item.created_at).getTime()) || [];
+        const boardUpdateAt = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+        const boardCreateAt = row.created_at ? new Date(row.created_at).getTime() : 0;
+        
+        const latestActivityTime = Math.max(boardUpdateAt, boardCreateAt, ...noteDates);
+        const finalUpdatedAt = latestActivityTime > 0 ? new Date(latestActivityTime).toISOString() : new Date().toISOString();
+
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description || '',
+          facilitatorId: row.created_by || '',
+          participants: row.participants || [row.created_by || ''], 
+          columns: [],
+          stickyNotes: [],
+          aiSummary: row.ai_summary || {},
+          notesCount: row.retro_items?.length || 0,
+          isActive: row.status === 'active',
+          currentPhase: this.mapPhaseFromDb(row.current_stage),
+          createdAt: row.created_at || new Date().toISOString(),
+          updatedAt: finalUpdatedAt
+        };
+      });
 
       this.store.update(state => ({
         ...state,

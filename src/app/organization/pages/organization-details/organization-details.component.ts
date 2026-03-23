@@ -175,7 +175,7 @@ export class OrganizationDetailsComponent implements OnInit, OnDestroy {
 
   onTeamClick(team: Team) {
     if (this.organization) {
-      this.router.navigate(['/project/retrospective']);
+      this.router.navigate(['/retrospective']);
     } else {
       // Fallback to old route structure (optional, but good to ensure redirect here as well)
       this.router.navigate(['/project/retrospective']);

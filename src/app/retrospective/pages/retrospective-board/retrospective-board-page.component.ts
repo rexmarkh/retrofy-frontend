@@ -136,7 +136,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/project/retrospective']);
+    this.router.navigate(['/retrospective']);
   }
 
   getCurrentUserId(): string {
@@ -180,7 +180,35 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     // If beyond BRAINSTORMING phase, sort by vote count descending instead
     if (this.currentBoard.currentPhase !== RetroPhase.BRAINSTORMING) {
       Object.keys(this.columnDataArrays).forEach(columnId => {
-        this.columnDataArrays[columnId].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+        const notes = this.columnDataArrays[columnId];
+        
+        // Pre-calculate max votes per group for efficient sorting
+        const groupMaxVotes: Record<string, number> = {};
+        notes.forEach(n => {
+          if (n.groupId) {
+            groupMaxVotes[n.groupId] = Math.max(groupMaxVotes[n.groupId] || 0, n.votes || 0);
+          }
+        });
+
+        notes.sort((a, b) => {
+          // 1. Group by tags (groupId) if available
+          if (a.groupId || b.groupId) {
+            if (a.groupId !== b.groupId) {
+              // Both have groups - sort by group's importance (max votes)
+              if (a.groupId && b.groupId) {
+                const maxA = groupMaxVotes[a.groupId] || 0;
+                const maxB = groupMaxVotes[b.groupId] || 0;
+                if (maxA !== maxB) return maxB - maxA;
+                return a.groupId.localeCompare(b.groupId);
+              }
+              // Ungrouped items go to the bottom
+              return a.groupId ? -1 : 1;
+            }
+          }
+
+          // 2. Internally (or if no groups), sort by votes high to low
+          return (b.votes || 0) - (a.votes || 0);
+        });
       });
     }
   }
@@ -695,13 +723,14 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
     // Simulate AI processing (in production, this would call an AI service)
     setTimeout(() => {
-      const groupedNotes = this.analyzeAndGroupNotes();
+      const noteUpdates = this.analyzeAndGroupNotes();
       
-      // Apply the grouping
-      groupedNotes.forEach(noteUpdate => {
-        this.retrospectiveService.updateStickyNote(noteUpdate.noteId, {
-          tags: noteUpdate.tags,
-          groupId: noteUpdate.groupId
+      // Apply the grouping and sorting positions
+      noteUpdates.forEach(update => {
+        this.retrospectiveService.updateStickyNote(update.noteId, {
+          tags: update.tags,
+          groupId: update.groupId,
+          position: update.position
         });
       });
 
@@ -710,10 +739,10 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       
       setTimeout(() => {
         this.modal.success({
-          nzTitle: '✨ AI Grouping Complete!',
+          nzTitle: '✨ AI Grouping & Sorting Complete!',
           nzContent: `
             <div style="padding: 12px;">
-              <p style="margin-bottom: 12px;">Successfully analyzed and grouped ${this.currentBoard?.stickyNotes.length} notes.</p>
+              <p style="margin-bottom: 12px;">Successfully analyzed, grouped, and sorted ${this.currentBoard?.stickyNotes.length} notes by category and votes.</p>
               <div style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-top: 12px;">
                 <strong style="display: block; margin-bottom: 8px;">Groups Identified:</strong>
                 <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
@@ -721,7 +750,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
                 </ul>
               </div>
               <p style="margin-top: 12px; font-size: 13px; color: #6b7280;">
-                Notes have been tagged and can now be easily grouped by dragging them together.
+                Notes have been tagged and reordered with highest-voted items at the top of each group.
               </p>
             </div>
           `,
@@ -732,10 +761,10 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     }, 2500); // Simulate AI processing time
   }
 
-  private analyzeAndGroupNotes(): Array<{ noteId: string; tags: string[]; groupId: string }> {
+  private analyzeAndGroupNotes(): Array<{ noteId: string; tags: string[]; groupId: string; position: { x: number, y: number } }> {
     if (!this.currentBoard) return [];
 
-    const noteUpdates: Array<{ noteId: string; tags: string[]; groupId: string }> = [];
+    const allUpdates: Array<{ noteId: string; tags: string[]; groupId: string; position: { x: number, y: number } }> = [];
     
     // Group notes by column first
     const notesByColumn: { [columnId: string]: StickyNote[] } = {};
@@ -746,17 +775,60 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       notesByColumn[note.columnId].push(note);
     });
 
-    // Analyze each column separately
+    // Analyze and sort each column separately
     Object.entries(notesByColumn).forEach(([columnId, notes]) => {
-      const columnGroups = this.identifyGroupsInColumn(notes, columnId);
-      noteUpdates.push(...columnGroups);
+      // 1. Assign tags and temporary group IDs
+      const taggedNotes = notes.map(note => {
+        const analysis = this.analyzeNoteContent(note.content, columnId);
+        return {
+          ...note,
+          tempTags: analysis.tags,
+          tempGroupId: analysis.groupId
+        };
+      });
+
+      // 2. Group notes by primary tag
+      const groups: { [groupId: string]: any[] } = {};
+      taggedNotes.forEach(note => {
+        if (!groups[note.tempGroupId]) {
+          groups[note.tempGroupId] = [];
+        }
+        groups[note.tempGroupId].push(note);
+      });
+
+      // 3. Rank groups by highest individual vote count within group
+      const sortedGroupIds = Object.keys(groups).sort((idA, idB) => {
+        const maxVotesA = Math.max(...groups[idA].map(n => n.votes || 0));
+        const maxVotesB = Math.max(...groups[idB].map(n => n.votes || 0));
+        return maxVotesB - maxVotesA;
+      });
+
+      // 4. Flatten and assign positions
+      let currentY = 10;
+      const columnUpdates: any[] = [];
+      
+      sortedGroupIds.forEach(groupId => {
+        // Sort notes within group by votes
+        const sortedNotesInGroup = groups[groupId].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+        
+        sortedNotesInGroup.forEach(note => {
+          columnUpdates.push({
+            noteId: note.id,
+            tags: note.tempTags,
+            groupId: note.tempGroupId,
+            position: { x: 0, y: currentY }
+          });
+          currentY += 120; // Standard spacing
+        });
+      });
+
+      allUpdates.push(...columnUpdates);
     });
 
-    return noteUpdates;
+    return allUpdates;
   }
 
-  private identifyGroupsInColumn(notes: StickyNote[], columnId: string): Array<{ noteId: string; tags: string[]; groupId: string }> {
-    // Simple keyword-based grouping (in production, use NLP/AI service)
+  private analyzeNoteContent(content: string, columnId: string): { tags: string[], groupId: string } {
     const keywords = {
       'Communication': ['communication', 'talk', 'discuss', 'meeting', 'sync', 'share', 'update', 'inform'],
       'Process': ['process', 'workflow', 'procedure', 'system', 'method', 'approach', 'way'],
@@ -770,37 +842,27 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       'Blocker': ['blocker', 'blocked', 'issue', 'problem', 'obstacle', 'challenge', 'difficulty']
     };
 
-    const noteUpdates: Array<{ noteId: string; tags: string[]; groupId: string }> = [];
-
-    notes.forEach(note => {
-      const content = note.content.toLowerCase();
-      const matchedTags: string[] = [];
-      
-      // Find matching keywords
-      Object.entries(keywords).forEach(([category, words]) => {
-        const hasMatch = words.some(word => content.includes(word.toLowerCase()));
-        if (hasMatch) {
-          matchedTags.push(category);
-        }
-      });
-
-      // If no tags matched, assign a default tag
-      if (matchedTags.length === 0) {
-        matchedTags.push('General');
+    const matchedTags: string[] = [];
+    const lowerContent = content.toLowerCase();
+    
+    Object.entries(keywords).forEach(([category, words]) => {
+      const hasMatch = words.some(word => lowerContent.includes(word.toLowerCase()));
+      if (hasMatch) {
+        matchedTags.push(category);
       }
-
-      // Use the primary tag as the group ID
-      const primaryTag = matchedTags[0];
-      const groupId = `${columnId}-${primaryTag.toLowerCase().replace(/\s+/g, '-')}`;
-
-      noteUpdates.push({
-        noteId: note.id,
-        tags: matchedTags.slice(0, 3), // Limit to 3 tags per note
-        groupId: groupId
-      });
     });
 
-    return noteUpdates;
+    if (matchedTags.length === 0) {
+      matchedTags.push('General');
+    }
+
+    const primaryTag = matchedTags[0];
+    const groupId = `${columnId}-${primaryTag.toLowerCase().replace(/\s+/g, '-')}`;
+
+    return {
+      tags: matchedTags.slice(0, 3),
+      groupId: groupId
+    };
   }
 
   private getUniqueGroups(): string[] {

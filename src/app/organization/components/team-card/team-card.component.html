@@ -41,7 +41,7 @@
         {{ getInitials(team.name) }}
       </div>
       <div class="pt-0.5 min-w-0 flex-grow">
-        <h3 class="text-[17px] font-bold text-gray-900 leading-tight mb-2 truncate pr-16" [nz-tooltip]="team.name.length > 25 ? team.name : ''">
+        <h3 class="text-[17px] font-bold text-gray-900 leading-tight truncate pr-16" [nz-tooltip]="team.name.length > 25 ? team.name : ''">
           {{ team.name }}
         </h3>
         <p class="text-[13px] text-gray-500 line-clamp-2 m-0 leading-relaxed pr-8" [nz-tooltip]="(team.description?.length || 0) > 80 ? team.description : ''">

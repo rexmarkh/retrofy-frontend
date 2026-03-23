@@ -156,7 +156,7 @@ export class ProfilePageComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/project/board']);
+    this.router.navigate(['/board']);
   }
 
   formatJoinDate(dateString: string): string {

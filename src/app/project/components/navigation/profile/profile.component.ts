@@ -38,7 +38,7 @@ export class ProfileComponent implements OnInit {
     if (!this.clickable) return;
     
     // Navigate to profile page
-    this.router.navigate(['/project/profile']);
+    this.router.navigate(['/profile']);
   }
 
   getDisplayUser(): JUser | null {

@@ -289,7 +289,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   openBoard(boardId: string) {
-    this.router.navigate(['/project/retrospective/board', boardId]);
+    this.router.navigate(['/retrospective/board', boardId]);
   }
 
   editBoard(board: RetrospectiveBoard) {
