@@ -825,9 +825,10 @@ export class OrganizationService {
           full_name,
           email,
           avatar_url,
-          memberships!inner(org_id)
+          memberships!inner(org_id, status)
         `)
         .eq('memberships.org_id', currentOrg.id)
+        .eq('memberships.status', 'active')
         .limit(20);
 
       if (query && query.trim() !== '') {

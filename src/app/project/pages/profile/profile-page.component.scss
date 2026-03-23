@@ -109,6 +109,32 @@
         background: #e5e7eb;
       }
     }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid #fee2e2;
+      border-radius: 8px;
+      color: #ef4444;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      &:hover {
+        background: #fef2f2;
+        border-color: #fecaca;
+      }
+
+      i {
+        font-size: 14px;
+      }
+    }
   }
 }
 
