@@ -360,42 +360,38 @@
   </button>
 </ng-template>
 
-<!-- Add Member Modal -->
 <nz-modal
   [(nzVisible)]="isAddMemberModalVisible"
-  nzClosable="false"
-  nzFooter="null"
-  nzWidth="600px"
+  nzTitle="Add Team Member"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelAddMember()"
+  nzWidth="520px"
+  nzWrapClassName="premium-modal"
 >
   <ng-container *nzModalContent>
-    <div class="px-8 py-5">
-      <div class="flex items-center py-3 text-textDarkest">
-        <div class="text-xl">
-          Add Team Member
-        </div>
-        <div class="flex-auto"></div>
-        <j-button icon="times"
-                  [iconSize]="24"
-                  (click)="cancelAddMember()"
-                  [className]="'btn-empty'">
-        </j-button>
-      </div>
-      <form class="member-form modal-form">
-        <!-- Member form fields will be added here -->
-        <div class="text-center py-8 text-gray-500">
-          Member addition form will be implemented here
+    <div class="member-form p-2">
+      <form (submit)="addMember(); $event.preventDefault()" class="space-y-6">
+        <div class="form-group">
+          <label class="label mb-2 block font-bold text-gray-700 uppercase text-[11px] tracking-wider">Email Address *</label>
+          <input 
+            nz-input
+            type="email"
+            name="email"
+            placeholder="Enter member email"
+            class="w-full"
+          />
         </div>
 
-        <div class="mt-5 form-group form-action">
-          <j-button className="btn-primary mr-2"
-                    type="button"
-                    (click)="addMember()">
+        <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-3">
+          <span nz-icon nzType="info-circle" nzTheme="outline" class="text-blue-500 mt-0.5"></span>
+          <p class="text-[12px] text-gray-500 m-0">Members will receive an invitation email to join the team and access shared projects.</p>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
+          <button nz-button (click)="cancelAddMember()" type="button">Cancel</button>
+          <button nz-button nzType="primary" type="submit" class="bg-[#7954AA]">
             Add Member
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelAddMember()">
-            Cancel
-          </j-button>
+          </button>
         </div>
       </form>
     </div>

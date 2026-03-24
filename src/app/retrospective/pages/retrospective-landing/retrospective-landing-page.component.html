@@ -348,7 +348,7 @@
 </div>
 
 <!-- Create Board Modal -->
-<nz-modal [(nzVisible)]="isCreateModalVisible" nzTitle="Create New Retrospective" [nzFooter]="null" (nzOnCancel)="cancelCreateBoard()" nzWidth="520px" nzClassName="premium-modal">
+<nz-modal [(nzVisible)]="isCreateModalVisible" nzTitle="Create New Retrospective" [nzFooter]="null" (nzOnCancel)="cancelCreateBoard()" nzWidth="520px" nzWrapClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form">
       <div class="form-group mb-4">
@@ -368,7 +368,7 @@
 </nz-modal>
 
 <!-- Edit Board Modal -->
-<nz-modal [(nzVisible)]="isEditBoardModalVisible" nzTitle="Edit Retrospective" [nzFooter]="null" (nzOnCancel)="cancelEditBoard()" nzWidth="520px" nzClassName="premium-modal">
+<nz-modal [(nzVisible)]="isEditBoardModalVisible" nzTitle="Edit Retrospective" [nzFooter]="null" (nzOnCancel)="cancelEditBoard()" nzWidth="520px" nzWrapClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form">
       <div class="form-group mb-4">

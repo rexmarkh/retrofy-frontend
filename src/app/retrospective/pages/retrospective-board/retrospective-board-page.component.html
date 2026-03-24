@@ -207,133 +207,100 @@
   </div>
     <nz-modal
       [(nzVisible)]="isPhaseModalVisible"
-      nzClosable="false"
-      [nzFooter]="phaseModalFooter"
-      nzWidth="600px"
+      nzTitle="Retrospective Phases"
+      [nzFooter]="null"
+      (nzOnCancel)="cancelPhaseChange()"
+      nzWidth="520px"
+      nzWrapClassName="premium-modal"
     >
       <ng-container *nzModalContent>
-        <div class="px-8 py-5">
-          <div class="flex items-center py-3 text-textDarkest">
-            <div class="text-xl">
-              Retrospective Phases
-            </div>
-            <div class="flex-auto"></div>
-            <j-button icon="times"
-                      [iconSize]="24"
-                      (click)="cancelPhaseChange()"
-                      [className]="'btn-empty'">
-            </j-button>
-          </div>
-          <div class="phase-form retro-modal-form">
-            <div class="form-group">
-              <label class="label">
-                Current Phase
-              </label>
-              <div class="space-y-3">
+        <div class="phase-form p-2">
+          <div class="form-group">
+            <label class="label mb-4 block font-bold text-gray-700 uppercase text-[11px] tracking-wider">Current Phase</label>
+            <div class="space-y-3">
+              <div 
+                *ngFor="let phase of phaseOptions" 
+                class="flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 group"
+                [class.bg-purple-50]="selectedPhase === phase.value"
+                [class.border-purple-200]="selectedPhase === phase.value"
+                [class.hover:bg-gray-50]="selectedPhase !== phase.value"
+                (click)="selectedPhase = phase.value"
+              >
+                <div class="w-10 h-10 flex items-center justify-center rounded-lg mr-4 transition-colors"
+                     [ngClass]="selectedPhase === phase.value ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'">
+                  <span nz-icon [nzType]="phase.icon" nzTheme="outline" class="text-xl"></span>
+                </div>
+                <div class="flex-1">
+                  <div class="font-bold text-gray-900 leading-tight mb-0.5">{{ phase.label }}</div>
+                  <div class="text-[12px] text-gray-500">{{ getPhaseDescription(phase.value) }}</div>
+                </div>
                 <div 
-                  *ngFor="let phase of retroPhases" 
-                  class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer transition-colors"
-                  [class.bg-blue-50]="selectedPhase === phase"
-                  [class.border-blue-300]="selectedPhase === phase"
-                  (click)="selectedPhase = phase"
+                  *ngIf="selectedPhase === phase.value" 
+                  class="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-200"
                 >
-                  <div class="flex-1">
-                    <div class="font-medium text-gray-900">{{ getPhaseTitle(phase) }}</div>
-                    <div class="text-sm text-gray-500">{{ getPhaseDescription(phase) }}</div>
-                  </div>
-                  <div 
-                    *ngIf="selectedPhase === phase" 
-                    class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
-                  >
-                    <span nz-icon nzType="check" class="text-white text-xs"></span>
-                  </div>
+                  <span nz-icon nzType="check" class="text-white text-[10px] font-bold"></span>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
+            <button nz-button (click)="cancelPhaseChange()">Cancel</button>
+            <button nz-button nzType="primary" 
+                    [disabled]="selectedPhase === currentBoard?.currentPhase"
+                    (click)="updatePhase()" class="bg-[#7954AA]">
+              Update Phase
+            </button>
+          </div>
         </div>
       </ng-container>
-      
-      <ng-template #phaseModalFooter>
-        <div class="modal-footer-buttons">
-          <j-button className="btn-primary mr-2"
-                    [disabled]="selectedPhase === currentBoard?.currentPhase"
-                    (click)="updatePhase()">
-            Update Phase
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelPhaseChange()">
-            Cancel
-          </j-button>
-        </div>
-      </ng-template>
     </nz-modal>
 
 
     <!-- Settings Modal -->
     <nz-modal
       [(nzVisible)]="isSettingsModalVisible"
-      nzClosable="false"
-      [nzFooter]="settingsModalFooter"
-      nzWidth="600px"
+      nzTitle="Board Settings"
+      [nzFooter]="null"
+      (nzOnCancel)="cancelSettings()"
+      nzWidth="520px"
+      nzWrapClassName="premium-modal"
     >
       <ng-container *nzModalContent>
-        <div class="px-8 py-5">
-          <div class="flex items-center py-3 text-textDarkest">
-            <div class="text-xl">
-              Board Settings
-            </div>
-            <div class="flex-auto"></div>
-            <j-button icon="times"
-                      [iconSize]="24"
-                      (click)="cancelSettings()"
-                      [className]="'btn-empty'">
-            </j-button>
-          </div>
-          <form class="settings-form retro-modal-form">
+        <div class="settings-form p-2">
+          <form (submit)="saveSettings(); $event.preventDefault()" class="space-y-6">
             <div class="form-group">
-              <label class="label">
-                Board Title
-              </label>
+              <label class="label mb-2 block font-bold text-gray-700 uppercase text-[11px] tracking-wider">Board Title *</label>
               <input 
+                nz-input
                 [(ngModel)]="settingsTitle" 
                 name="title"
-                class="form-input"
                 placeholder="Enter board title"
+                class="w-full"
               />
             </div>
             
-            <div class="mt-3 form-group">
-              <label class="label">
-                Description
-              </label>
+            <div class="form-group">
+              <label class="label mb-2 block font-bold text-gray-700 uppercase text-[11px] tracking-wider">Description</label>
               <textarea
+                nz-input
                 [(ngModel)]="settingsDescription"
                 name="description"
-                class="form-input"
-                cdkTextareaAutosize
-                #cdkTextareaAutosize="cdkTextareaAutosize"
-                [cdkAutosizeMinRows]="3"
-                [cdkAutosizeMaxRows]="6"
+                [nzAutosize]="{ minRows: 3, maxRows: 6 }"
                 placeholder="Enter board description"
+                class="w-full"
               ></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
+              <button nz-button (click)="cancelSettings()" type="button">Cancel</button>
+              <button nz-button nzType="primary" type="submit" [disabled]="!settingsTitle.trim()" class="bg-[#7954AA]">
+                Save Changes
+              </button>
             </div>
           </form>
         </div>
       </ng-container>
-      
-      <ng-template #settingsModalFooter>
-        <div class="modal-footer-buttons">
-          <j-button className="btn-primary mr-2"
-                    (click)="saveSettings()">
-            Save
-          </j-button>
-          <j-button className="btn-empty"
-                    (click)="cancelSettings()">
-            Cancel
-          </j-button>
-        </div>
-      </ng-template>
     </nz-modal>
 
     <!-- Step Description Templates -->

@@ -170,40 +170,16 @@
   </div>
 </div>
 
-<!-- Jira Link Management Modal -->
 <nz-modal
   [(nzVisible)]="isJiraLinkModalVisible"
-  [nzTitle]="null"
+  nzTitle="Jira Integration"
   [nzFooter]="null"
-  [nzClosable]="false"
   (nzOnCancel)="cancelJiraLink()"
-  nzWidth="900px"
-  nzBodyStyle="padding: 0"
-  nzClassName="jira-modal"
+  nzWidth="600px"
+  nzWrapClassName="premium-modal"
 >
   <ng-container *nzModalContent>
-    <div class="jira-modal-container">
-      <!-- Header -->
-      <div class="modal-header">
-        <div class="header-content">
-          <div class="header-icon">
-            <span nz-icon nzType="api" nzTheme="outline" class="icon"></span>
-          </div>
-          <div class="header-text">
-            <h2 class="title">Jira Integration</h2>
-            <p class="subtitle">Connect {{ organization?.name }} to Jira for seamless project management</p>
-          </div>
-        </div>
-        <button 
-          nz-button 
-          nzType="text" 
-          nzSize="medium"
-          (click)="cancelJiraLink()"
-          class="close-btn"
-        >
-          <span nz-icon nzType="close" nzTheme="outline"></span>
-        </button>
-      </div>
+    <div class="jira-modal-container p-2">
 
       <!-- Content Area -->
       <div class="modal-content">
@@ -323,57 +299,41 @@
 <!-- Invite Member Modal -->
 <nz-modal
   [(nzVisible)]="isInviteMemberModalVisible"
-  [nzTitle]="null"
+  nzTitle="Invite Member"
   [nzFooter]="null"
-  [nzClosable]="false"
-  nzWidth="600px"
+  (nzOnCancel)="cancelInviteMember()"
+  nzWidth="520px"
+  nzWrapClassName="premium-modal"
 >
   <ng-container *nzModalContent>
-    <div class="p-8">
-      <div class="flex items-center justify-between mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 m-0">Invite Member to {{ organization?.name }}</h2>
-        <button nz-button nzType="text" (click)="cancelInviteMember()" class="flex items-center justify-center p-0">
-          <span nz-icon nzType="close" nzTheme="outline" class="text-xl text-gray-400"></span>
-        </button>
+    <div class="p-2">
+      <div class="mb-6 p-4 bg-purple-50 rounded-xl border border-purple-100">
+        <h4 class="text-sm font-bold text-purple-900 mb-1">Invite to {{ organization?.name }}</h4>
+        <p class="text-xs text-purple-600 m-0">Send an invitation to collaborate on retrospectives and projects.</p>
       </div>
 
-      <form nz-form [nzLayout]="'vertical'" (submit)="inviteMember()">
-        <nz-form-item>
-          <nz-form-label nzRequired>Email Address</nz-form-label>
-          <nz-form-control>
-            <input 
-              nz-input 
-              [(ngModel)]="inviteEmail" 
-              name="inviteEmail"
-              type="email"
-              placeholder="e.g., colleague@example.com"
-              class="h-12"
-              required
-            />
-            <p class="text-sm text-gray-500 mt-2">
-              An invitation will be sent to this email address with instructions to join the organization.
-            </p>
-          </nz-form-control>
-        </nz-form-item>
+      <form (submit)="inviteMember(); $event.preventDefault()" class="space-y-6">
+        <div class="form-group">
+          <label class="label mb-2 block font-bold text-gray-700 uppercase text-[11px] tracking-wider">Email Address *</label>
+          <input 
+            nz-input 
+            [(ngModel)]="inviteEmail" 
+            name="inviteEmail"
+            type="email"
+            placeholder="e.g., colleague@example.com"
+            class="w-full"
+            required
+          />
+        </div>
 
-        <div class="flex items-center justify-end gap-3 mt-8">
-          <button 
-            nz-button 
-            nzType="default" 
-            nzSize="large"
-            (click)="cancelInviteMember()"
-            [disabled]="isInviting"
-            class="px-8"
-          >
-            Cancel
-          </button>
+        <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
+          <button nz-button (click)="cancelInviteMember()" type="button">Cancel</button>
           <button 
             nz-button 
             nzType="primary" 
-            nzSize="large"
             [nzLoading]="isInviting"
             [disabled]="!inviteEmail.trim() || isInviting"
-            class="px-8 bg-[#7954AA] border-none"
+            class="bg-[#7954AA]"
           >
             Send Invitation
           </button>

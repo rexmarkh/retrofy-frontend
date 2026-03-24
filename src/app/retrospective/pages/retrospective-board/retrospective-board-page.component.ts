@@ -415,21 +415,24 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     if (phase === RetroPhase.GROUPING && this.currentBoard?.currentPhase === RetroPhase.BRAINSTORMING) {
       const modal = this.modal.create({
         nzTitle: `Switch to ${this.getPhaseTitle(phase)} Phase?`,
+        nzClassName: 'premium-modal',
+        nzWrapClassName: 'premium-modal',
         nzContent: this.getPhaseChangeWarning(phase) + `
-          <div style="margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #7954AA 0%, #5a3d82 100%); border-radius: 8px; color: white;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 18px;">💡</span>
-              <strong>AI-Powered Grouping Available!</strong>
+          <div style="margin-top: 16px; padding: 20px; background: linear-gradient(135deg, #7954AA 0%, #5a3d82 100%); border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(121, 84, 170, 0.2);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <span style="font-size: 24px;">💡</span>
+              <span style="font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px;">AI Opportunity</span>
             </div>
-            <p style="margin: 0; font-size: 13px; opacity: 0.95;">
-              Would you like AI to automatically analyze and group similar notes with tags?
-            </p>
+            <p style="margin: 0; font-size: 13px; line-height: 1.5; opacity: 0.9;">The <strong>Grouping</strong> phase is where Retrofy AI shines. We can automatically group similar stickers and sort them by team priority for you!</p>
           </div>
         `,
         nzFooter: [
           {
-            label: 'Cancel',
-            onClick: () => modal.destroy()
+            label: 'Maybe Later',
+            onClick: () => {
+              this.retrospectiveService.updatePhase(phase);
+              modal.destroy();
+            }
           },
           {
             label: '✨ Use AI Grouping',
@@ -448,6 +451,8 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     // Show confirmation modal for other phases
     const modal = this.modal.create({
       nzTitle: `Switch to ${this.getPhaseTitle(phase)} Phase?`,
+      nzClassName: 'premium-modal',
+      nzWrapClassName: 'premium-modal',
       nzContent: this.getPhaseChangeWarning(phase),
       nzFooter: [
         {
@@ -717,23 +722,15 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     // Show loading notification
     this.modal.info({
       nzTitle: '🤖 AI Grouping in Progress',
+      nzClassName: 'premium-modal',
+      nzWrapClassName: 'premium-modal',
       nzContent: `
-        <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">
-            <span style="display: inline-block; animation: spin 2s linear infinite;">🔄</span>
+        <div style="text-align: center; padding: 32px 20px;">
+          <div style="font-size: 56px; margin-bottom: 24px; display: inline-block; animation: pulse 2s ease-in-out infinite;">
+            <span>🤖</span>
           </div>
-          <p style="font-size: 14px; color: #6b7280;">
-            Analyzing ${this.currentBoard.stickyNotes.length} notes across ${this.currentBoard.columns.length} columns...
-          </p>
-          <p style="font-size: 13px; color: #9ca3af; margin-top: 8px;">
-            This may take a few moments
-          </p>
-          <style>
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-          </style>
+          <h4 style="font-weight: 800; font-size: 16px; color: #1e293b; margin-bottom: 8px;">Analyzing Notes...</h4>
+          <p style="color: #64748b; font-size: 14px; margin: 0;">Retrofy AI is clustering similar items and sorting them by team priority. This will only take a moment.</p>
         </div>
       `,
       nzOkText: 'Working...',
@@ -760,19 +757,16 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       
       setTimeout(() => {
         this.modal.success({
-          nzTitle: '✨ AI Grouping & Sorting Complete!',
+          nzTitle: '✨ AI Grouping Complete!',
+          nzClassName: 'premium-modal',
+          nzWrapClassName: 'premium-modal',
           nzContent: `
-            <div style="padding: 12px;">
-              <p style="margin-bottom: 12px;">Successfully analyzed, grouped, and sorted ${this.currentBoard?.stickyNotes.length} notes by category and votes.</p>
-              <div style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                <strong style="display: block; margin-bottom: 8px;">Groups Identified:</strong>
-                <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
-                  ${this.getUniqueGroups().map(group => `<li>${group}</li>`).join('')}
-                </ul>
+            <div style="padding: 4px;">
+              <p style="margin-bottom: 16px; color: #475569; line-height: 1.6;">Successfully analyzed, grouped, and sorted <strong>${this.currentBoard?.stickyNotes.length} notes</strong> by category and priority.</p>
+              <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;">
+                <span style="font-size: 20px;">🛡️</span>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">You can still manually group items or move them between columns if needed.</p>
               </div>
-              <p style="margin-top: 12px; font-size: 13px; color: #6b7280;">
-                Notes have been tagged and reordered with highest-voted items at the top of each group.
-              </p>
             </div>
           `,
           nzOkText: 'Great!',
