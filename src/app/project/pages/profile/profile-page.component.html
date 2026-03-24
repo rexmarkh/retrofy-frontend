@@ -1,6 +1,6 @@
 <div class="profile-page-wrapper bg-[#f8f9fa] min-h-screen grid-stack" *ngIf="currentUser">
-  <!-- Full-Page Skeleton Layer -->
-  <div *ngIf="showSkeleton$ | async" class="stack-item bg-[#f8f9fa] z-50 p-8" [@fadeAnimation]>
+  <!-- Full-Page Skeleton Layer (Mask) -->
+  <div *ngIf="showSkeleton$ | async" class="stack-item skeleton-mask p-8" [@fadeAnimation]>
     <div class="profile-layout">
       <!-- Sidebar Skeleton -->
       <aside class="profile-sidebar">
@@ -56,7 +56,7 @@
   </div>
 
   <!-- Full-Page Content Layer -->
-  <div *ngIf="dataReady$ | async" class="stack-item p-8">
+  <div *ngIf="dataReady$ | async" class="stack-item content-layer p-8">
     <div class="profile-layout">
       <!-- Sidebar: Profile Card -->
       <aside class="profile-sidebar">

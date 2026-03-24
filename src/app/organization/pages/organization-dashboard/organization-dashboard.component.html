@@ -1,6 +1,6 @@
 <div class="organization-dashboard bg-[#f8f9fa] min-h-screen grid-stack">
-  <!-- Full-Page Skeleton Layer -->
-  <div *ngIf="showSkeleton$ | async" class="stack-item bg-[#f8f9fa] z-50 p-8" [@fadeAnimation]>
+  <!-- Full-Page Skeleton Layer (Mask) -->
+  <div *ngIf="showSkeleton$ | async" class="stack-item skeleton-mask p-8" [@fadeAnimation]>
     <!-- Header Skeleton -->
     <div class="flex items-start justify-between mb-8">
       <div class="flex items-start gap-6 w-full">
@@ -86,7 +86,7 @@
   </div>
 
   <!-- Full-Page Content Layer -->
-  <div *ngIf="currentOrganization && (dataReady$ | async)" class="stack-item p-8">
+  <div *ngIf="currentOrganization && (dataReady$ | async)" class="stack-item content-layer p-8">
     <!-- Organization Header -->
     <div class="flex items-start justify-between mb-8">
       <div class="flex items-center gap-6">

@@ -1,6 +1,6 @@
 <div class="retrospective-dashboard bg-[#f8f9fa] min-h-screen grid-stack">
-  <!-- Full-Page Skeleton Layer -->
-  <div *ngIf="showSkeleton$ | async" class="stack-item bg-[#f8f9fa] z-50 p-8" [@fadeAnimation]>
+  <!-- Full-Page Skeleton Layer (Mask) -->
+  <div *ngIf="showSkeleton$ | async" class="stack-item skeleton-mask p-8" [@fadeAnimation]>
     <!-- Hero Header Skeleton -->
     <div class="mb-8">
       <div class="flex items-start justify-between">
@@ -71,7 +71,7 @@
   </div>
 
   <!-- Full-Page Content Layer -->
-  <div *ngIf="dataReady$ | async" class="stack-item p-8">
+  <div *ngIf="dataReady$ | async" class="stack-item content-layer p-8">
     <!-- Hero Header -->
     <div class="mb-8 relative z-[60]">
       <div class="flex items-start justify-between">
@@ -292,40 +292,44 @@
             </div>
 
             <div class="flex flex-col gap-8">
-              <div *ngFor="let member of getTeamMembers()" class="flex items-center justify-between gap-6">
-                <div class="flex items-center gap-4 min-w-0 flex-1">
-                  <div class="relative flex-shrink-0">
-                    <j-avatar [avatarUrl]="member.avatarUrl" [name]="member.name" [size]="44" [rounded]="true"></j-avatar>
-                    <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white;"></span>
+               <ng-container *ngIf="getTeamMembers().length > 0; else noMembers">
+                <div *ngFor="let member of getTeamMembers()" class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-4 min-w-0 flex-1">
+                    <div class="relative flex-shrink-0">
+                      <j-avatar [avatarUrl]="member.avatarUrl" [name]="member.name" [size]="44" [rounded]="true"></j-avatar>
+                      <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white;"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-bold text-gray-900 m-0 leading-tight truncate">{{ member.name }}</p>
+                      <p class="text-[12px] text-[#7954AA] m-0 font-semibold opacity-70">{{ member.role }}</p>
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-gray-900 m-0 leading-tight truncate">{{ member.name }}</p>
-                    <p class="text-[12px] text-[#7954AA] m-0 font-semibold opacity-70">{{ member.role }}</p>
-                  </div>
-                </div>
 
-                <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0">
-                  <div class="flex items-center justify-end w-full gap-2 font-bold text-[13px]">
-                    <span *ngIf="member.contributionRate > 0" [style.color]="getContributionColor(member.contributionRate)">{{ member.contributionRate }}%</span>
-                    <span *ngIf="member.contributionRate === 0" class="text-gray-400 text-[11px]">No activity yet</span>
-                  </div>
-                  <div class="w-full">
-                    <nz-progress
-                      [nzPercent]="member.contributionRate || 0"
-                      [nzShowInfo]="false"
-                      [nzStrokeColor]="getContributionColor(member.contributionRate)"
-                      [nzStrokeWidth]="8"
-                      nzStrokeLinecap="round"
-                    ></nz-progress>
+                  <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0">
+                    <div class="flex items-center justify-end w-full gap-2 font-bold text-[13px]">
+                      <span *ngIf="member.contributionRate > 0" [style.color]="getContributionColor(member.contributionRate)">{{ member.contributionRate }}%</span>
+                      <span *ngIf="member.contributionRate === 0" class="text-gray-400 text-[11px]">No activity yet</span>
+                    </div>
+                    <div class="w-full">
+                      <nz-progress
+                        [nzPercent]="member.contributionRate || 0"
+                        [nzShowInfo]="false"
+                        [nzStrokeColor]="getContributionColor(member.contributionRate)"
+                        [nzStrokeWidth]="8"
+                        nzStrokeLinecap="round"
+                      ></nz-progress>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ng-container>
             </div>
 
             <!-- Empty State for Members -->
-            <div *ngIf="getTeamMembers().length === 0" class="text-center py-10">
-              <p class="text-sm text-gray-400">No members found in this team.</p>
-            </div>
+            <ng-template #noMembers>
+              <div class="text-center py-10">
+                <p class="text-sm text-gray-400">No members found in this team.</p>
+              </div>
+            </ng-template>
           </div>
         </div>
       </div>
