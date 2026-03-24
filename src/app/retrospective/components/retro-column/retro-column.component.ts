@@ -177,17 +177,11 @@ export class RetroColumnComponent {
   }
 
   onDragStarted(event: CdkDragStart) {
-    // Hide scrollbar during drag for cleaner visual
-    if (this.notesContainer?.nativeElement) {
-      this.renderer.setStyle(this.notesContainer.nativeElement, 'overflow', 'hidden');
-    }
+    // Scrollbar hiding removed as it might interfere with placeholder rendering
   }
 
   onDragEnded(event: CdkDragEnd) {
-    // Restore scrollbar after drag completes
-    if (this.notesContainer?.nativeElement) {
-      this.renderer.setStyle(this.notesContainer.nativeElement, 'overflow-y', 'auto');
-    }
+    // Scrollbar restoration removed
   }
 
   trackByNoteId(index: number, note: StickyNote): string {

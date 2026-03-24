@@ -76,8 +76,11 @@
 
     <!-- Note Content - Takes most space -->
     <div class="note-content-wrapper">
-      <div class="note-content">
+      <div class="note-content" #contentElement>
         {{ note.content }}
+      </div>
+      <div *ngIf="isTruncated" (click)="showFullNote()" class="show-more-link">
+        Show more
       </div>
     </div>
 
@@ -151,4 +154,45 @@
       </div>
     </div>
   </nz-card>
+
+<!-- Note Detailed View Modal Template -->
+<ng-template #noteModalContent>
+  <div class="premium-note-modal-content">
+    <div class="modal-note-body">
+      {{ note.content }}
+    </div>
+    
+    <div class="modal-note-footer">
+      <div class="footer-left">
+        <span class="note-id">NT-{{ note.noteNumber }}</span>
+        <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
+          <span *ngFor="let tag of note.tags" 
+                class="note-tag" 
+                [style.background-color]="getTagBackgroundColor(tag)"
+                [style.color]="getTagTextColor(tag)">
+            {{ tag }}
+          </span>
+        </div>
+      </div>
+
+      <div class="footer-right">
+        <div class="author-info">
+          <ng-container *ngIf="shouldShowAuthor(); else anonymousTpl">
+            <img [src]="note.authorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + note.authorId" class="modal-avatar" />
+            <span class="author-name">{{ note.authorName }}</span>
+          </ng-container>
+          <ng-template #anonymousTpl>
+            <div class="modal-avatar anonymous-placeholder">👤</div>
+            <span class="author-name">Anonymous</span>
+          </ng-template>
+        </div>
+        
+        <div class="modal-vote-badge">
+          <span>{{ note.votes }}</span>
+          <span class="vote-icon">👍</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
 </div>

@@ -79,6 +79,7 @@
           cdkDropList
           [id]="'drop-list-' + column.id"
           [cdkDropListData]="stickyNotes"
+          cdkDropListOrientation="vertical"
           (cdkDropListDropped)="onNoteDrop($event)"
         >
           <app-sticky-note 
@@ -166,89 +167,65 @@
 <!-- Add/Edit Note Modal -->
 <nz-modal
   [(nzVisible)]="isAddNoteModalVisible"
-  nzClosable="false"
-  [nzFooter]="noteModalFooter"
-  nzWidth="600px"
+  [nzTitle]="isEditMode ? 'Edit Note' : 'Add New Note'"
+  [nzFooter]="null"
+  (nzOnCancel)="cancelAddNote()"
+  nzWidth="520px"
+  nzWrapClassName="premium-modal"
 >
   <ng-container *nzModalContent>
-    <div class="">
-      <div class="flex items-center py-3 text-textDarkest">
-        <div class="text-xl">
-          {{ isEditMode ? 'Edit Note' : 'Add New Note' }}
-        </div>
-        <div class="flex-auto"></div>
-        <j-button icon="times"
-                  [iconSize]="24"
-                  (click)="cancelAddNote()"
-                  [className]="'btn-empty'">
-        </j-button>
-      </div>
-      <form class="note-form retro-modal-form">
+    <div class="note-form p-2">
+      <form (submit)="(isEditMode ? saveEditedNote() : addNote()); $event.preventDefault()" class="space-y-6">
         <div class="form-group">
-          <!--<label class="label">
-            Note Content
-          </label> -->
+          <label class="label mb-2 block font-bold text-gray-700 uppercase text-[11px] tracking-wider text-opacity-70">Note Content</label>
           <textarea
+            nz-input
             [(ngModel)]="newNoteContent"
             name="noteContent"
-            class="form-input"
-            cdkTextareaAutosize
-            #cdkTextareaAutosize="cdkTextareaAutosize"
-            [cdkAutosizeMinRows]="3"
-            [cdkAutosizeMaxRows]="6"
+            [nzAutosize]="{ minRows: 3, maxRows: 6 }"
             placeholder="What would you like to share?"
+            class="w-full"
             #noteInput
           ></textarea>
         </div>
 
-        <div class="mt-3 form-group">
-          <label class="label flex items-center justify-between">
-            <span>Anonymous Note</span>
-            <nz-switch 
-              [(ngModel)]="isAnonymous"
-              name="anonymous"
-              [nzCheckedChildren]="checkedTemplate"
-              [nzUnCheckedChildren]="unCheckedTemplate"
-            ></nz-switch>
-          </label>
-          <div class="text-xs text-gray-500 mt-1">
-            Your identity will be hidden for all phases
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div>
+            <div class="font-bold text-gray-900 text-sm mb-0.5">Anonymous Note</div>
+            <div class="text-[11px] text-gray-500">Your identity will be hidden for all phases</div>
           </div>
+          <nz-switch 
+            [(ngModel)]="isAnonymous"
+            name="anonymous"
+            [nzCheckedChildren]="checkedTemplate"
+            [nzUnCheckedChildren]="unCheckedTemplate"
+          ></nz-switch>
         </div>
         
-        <div class="mt-3 form-group">
-          <label class="label">
-            Color
-          </label>
-          <div class="flex gap-2">
+        <div class="form-group">
+          <label class="label mb-3 block font-bold text-gray-700 uppercase text-[11px] tracking-wider">Note Color</label>
+          <div class="flex gap-3">
             <div 
               *ngFor="let color of colorOptions"
-              class="w-8 h-8 rounded-lg cursor-pointer border-2 hover:scale-110 transition-transform"
+              class="w-10 h-10 rounded-xl cursor-pointer border-2 transition-all duration-200 hover:scale-105"
               [style.background-color]="getColorValue(color)"
-              [class.border-gray-800]="selectedColor === color"
-              [class.border-gray-300]="selectedColor !== color"
+              [class.border-purple-600]="selectedColor === color"
+              [class.border-transparent]="selectedColor !== color"
+              [class.shadow-lg]="selectedColor === color"
               (click)="selectedColor = color"
             ></div>
           </div>
         </div>
+
+        <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
+          <button nz-button (click)="cancelAddNote()" type="button">Cancel</button>
+          <button nz-button nzType="primary" type="submit" [disabled]="!newNoteContent.trim()" class="bg-[#7954AA]">
+            {{ isEditMode ? 'Save Changes' : 'Add Note' }}
+          </button>
+        </div>
       </form>
     </div>
   </ng-container>
-  
-  <ng-template #noteModalFooter>
-    <div class="modal-footer-buttons">
-      <j-button className="btn-primary mr-2"
-                type="button"
-                [disabled]="!newNoteContent.trim()"
-                (click)="isEditMode ? saveEditedNote() : addNote()">
-        {{ isEditMode ? 'Save Changes' : 'Add Note' }}
-      </j-button>
-      <j-button className="btn-empty"
-                (click)="cancelAddNote()">
-        Cancel
-      </j-button>
-    </div>
-  </ng-template>
 </nz-modal>
 
 <!-- Switch Templates -->

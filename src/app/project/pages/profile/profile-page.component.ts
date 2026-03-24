@@ -6,20 +6,44 @@ import { AuthQuery } from '@trungk18/project/auth/auth.query';
 import { AuthService } from '@trungk18/project/auth/auth.service';
 import { ProjectQuery } from '@trungk18/project/state/project/project.query';
 import { RetrospectiveService } from '@trungk18/retrospective/state/retrospective.service';
-import { Observable, forkJoin, of } from 'rxjs';
-import { filter, distinctUntilKeyChanged } from 'rxjs/operators';
+import { Observable, forkJoin, of, BehaviorSubject, combineLatest, timer } from 'rxjs';
+import { filter, distinctUntilKeyChanged, map, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-profile-page',
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.scss'],
-  standalone: false
+  standalone: false,
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('200ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 @UntilDestroy()
 export class ProfilePageComponent implements OnInit {
   user$: Observable<JUser | null>;
   currentUser: JUser | null = null;
   isEditing = false;
+  
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  isLoading$ = this.loadingSubject.asObservable();
+  
+  showSkeleton$ = combineLatest([
+    this.isLoading$,
+    timer(1000).pipe(startWith(null))
+  ]).pipe(
+    map(([loading, timerDone]) => loading || timerDone === null),
+    distinctUntilChanged()
+  );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   
   // Retro stats
   retrosJoined = 0;
@@ -42,7 +66,6 @@ export class ProfilePageComponent implements OnInit {
   activeIssues = 0;
   loginEmail = '';
   lastLoginTime = new Date();
-  isLoading = false;
 
   constructor(
     private authQuery: AuthQuery,
@@ -61,7 +84,7 @@ export class ProfilePageComponent implements OnInit {
       untilDestroyed(this)
     ).subscribe(async user => {
       if (!user) {
-        this.isLoading = false;
+        this.loadingSubject.next(false);
         return;
       }
 
@@ -69,7 +92,7 @@ export class ProfilePageComponent implements OnInit {
       this.loginEmail = user.email || '';
       this.lastLoginTime = new Date(); 
       
-      this.isLoading = true;
+      this.loadingSubject.next(true);
       try {
         // Load retro stats
         const stats = await this.retrospectiveService.getUserRetroStats(user.id);
@@ -108,7 +131,7 @@ export class ProfilePageComponent implements OnInit {
       } catch (err) {
         console.error('[Profile] Loading failed:', err);
       } finally {
-        this.isLoading = false;
+        this.loadingSubject.next(false);
       }
 
       this.calculateUserStats(user);
@@ -168,7 +191,9 @@ export class ProfilePageComponent implements OnInit {
   }
 
   formatJoinDate(dateString: string): string {
+    if (!dateString) return 'recently';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'recently';
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 

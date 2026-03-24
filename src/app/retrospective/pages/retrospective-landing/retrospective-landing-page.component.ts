@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, combineLatest, timer, map, startWith, distinctUntilChanged } from 'rxjs';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -17,6 +18,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
+import { NzProgressModule } from 'ng-zorro-antd/progress';
 
 import { RetrospectiveService } from '../../state/retrospective.service';
 import { RetrospectiveQuery } from '../../state/retrospective.query';
@@ -50,10 +52,22 @@ import { SupabaseService } from '../../../core/services/supabase.service';
     NzToolTipModule,
     NzAvatarModule,
     NzSkeletonModule,
+    NzProgressModule,
     JiraControlModule
   ],
   templateUrl: './retrospective-landing-page.component.html',
-  styleUrls: ['./retrospective-landing-page.component.scss']
+  styleUrls: ['./retrospective-landing-page.component.scss'],
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('100ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -64,6 +78,15 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   newBoardDescription = '';
   favoriteBoards: Set<string> = new Set();
   isLoading$ = this.retrospectiveQuery.isLoading$;
+  
+  showSkeleton$ = combineLatest([
+    this.isLoading$,
+    timer(1000).pipe(startWith(null))
+  ]).pipe(
+    map(([loading, timerDone]) => loading || timerDone === null),
+    distinctUntilChanged()
+  );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
   currentTeam$ = this.organizationQuery.currentTeam$;
@@ -267,7 +290,18 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       return;
     }
     this.isSearchingMembers = true;
-    this.memberSearchResults = await this.organizationService.searchOrgMembers(this.memberSearchQuery);
+    const results = await this.organizationService.searchOrgMembers(this.memberSearchQuery);
+    
+    // Cross-reference with current team members
+    const currentTeam = this.organizationQuery.getValue().currentTeam;
+    const teamMembers = currentTeam ? this.teamMembers.filter(m => m.teamId === currentTeam.id) : [];
+    const memberUserIds = new Set(teamMembers.map(m => (m as any).userId || m.id));
+
+    this.memberSearchResults = results.map(r => ({
+      ...r,
+      isAdded: memberUserIds.has(r.userId)
+    }));
+    
     this.isSearchingMembers = false;
   }
 
@@ -451,6 +485,15 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       [RetroPhase.COMPLETED]: 'Completed'
     };
     return labels[phase] || 'Unknown';
+  }
+
+  getPhaseClass(phase: string): Record<string, boolean> {
+    return {
+      'bg-blue-50 text-blue-600': phase === 'brainstorming',
+      'bg-amber-50 text-amber-600': phase === 'grouping' || phase === 'voting',
+      'bg-purple-50 text-[#7954AA]': phase === 'discussion',
+      'bg-green-50 text-green-600': phase === 'completed'
+    };
   }
 
   getPhaseDescription(phase: RetroPhase): string {

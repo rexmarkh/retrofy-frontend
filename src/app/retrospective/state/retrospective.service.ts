@@ -598,27 +598,25 @@ export class RetrospectiveService {
   }
 
   async updateStickyNote(noteId: string, updates: Partial<StickyNote>): Promise<void> {
+    return this.updateStickyNoteBatch([{ id: noteId, updates }]);
+  }
+
+  async updateStickyNoteBatch(updates: Array<{ id: string, updates: Partial<StickyNote> }>): Promise<void> {
     const currentState = this.store.getValue();
-    
     if (!currentState.currentBoard) return;
 
-    // Map to DB fields
-    const dbUpdates: any = {};
-    if (updates.content !== undefined) dbUpdates.content = updates.content;
-    if (updates.columnId !== undefined) dbUpdates.category = this.mapColumnIdToCategory(updates.columnId);
-    if (updates.votes !== undefined) dbUpdates.votes = updates.votes;
-    if (updates.voterIds !== undefined) dbUpdates.voter_ids = updates.voterIds;
-    if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
-    if (updates.groupId !== undefined) dbUpdates.group_id = updates.groupId;
+    // 1. Optimistically update local state in one go
+    const updatedStickyNotes = currentState.currentBoard.stickyNotes.map(note => {
+      const update = updates.find(u => u.id === note.id);
+      if (update) {
+        return { ...note, ...update.updates, updatedAt: new Date().toISOString() };
+      }
+      return note;
+    });
 
-    // We update local state optimistically
     const updatedBoard = {
       ...currentState.currentBoard,
-      stickyNotes: currentState.currentBoard.stickyNotes.map(note =>
-        note.id === noteId 
-          ? { ...note, ...updates, updatedAt: new Date().toISOString() }
-          : note
-      ),
+      stickyNotes: updatedStickyNotes,
       updatedAt: new Date().toISOString()
     };
 
@@ -630,16 +628,33 @@ export class RetrospectiveService {
       )
     }));
 
-    if (Object.keys(dbUpdates).length > 0) {
-      try {
-        await this.supabaseService.client
+    // 2. Perform DB updates (individual calls since retro_items doesn't have a RPC for batch update yet, 
+    // but the store emission is now just once)
+    const dbUpdatePromises = updates.map(async ({ id, updates: noteUpdates }) => {
+      const dbUpdates: any = {};
+      if (noteUpdates.content !== undefined) dbUpdates.content = noteUpdates.content;
+      if (noteUpdates.columnId !== undefined) dbUpdates.category = this.mapColumnIdToCategory(noteUpdates.columnId);
+      if (noteUpdates.votes !== undefined) dbUpdates.votes = noteUpdates.votes;
+      if (noteUpdates.voterIds !== undefined) dbUpdates.voter_ids = noteUpdates.voterIds;
+      if (noteUpdates.tags !== undefined) dbUpdates.tags = noteUpdates.tags;
+      if (noteUpdates.groupId !== undefined) dbUpdates.group_id = noteUpdates.groupId;
+      if (noteUpdates.position !== undefined) {
+        // Position isn't shared in DB yet, but let's keep it here if future compatible
+      }
+
+      if (Object.keys(dbUpdates).length > 0) {
+        return this.supabaseService.client
           .from('retro_items')
           .update(dbUpdates)
-          .eq('id', noteId);
-      } catch (error) {
-        console.error('Error updating sticky note in Supabase:', error);
-        // In a perfect world, rollback on failure...
+          .eq('id', id);
       }
+      return Promise.resolve({ error: null });
+    });
+
+    try {
+      await Promise.all(dbUpdatePromises);
+    } catch (error) {
+      console.error('Error in batch updating sticky notes:', error);
     }
   }
 

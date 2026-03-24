@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, combineLatest, timer, map, startWith, distinctUntilChanged } from 'rxjs';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -54,7 +55,18 @@ import { JUser } from '../../../interface/user';
     JiraControlModule
   ],
   templateUrl: './retrospective-board-page.component.html',
-  styleUrls: ['./retrospective-board-page.component.scss']
+  styleUrls: ['./retrospective-board-page.component.scss'],
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('200ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -71,6 +83,15 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   settingsTitle = '';
   settingsDescription = '';
   isLoading$ = this.retrospectiveQuery.isLoading$;
+
+  showSkeleton$ = combineLatest([
+    this.isLoading$,
+    timer(1000).pipe(startWith(null))
+  ]).pipe(
+    map(([loading, timerDone]) => loading || timerDone === null),
+    distinctUntilChanged()
+  );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   
   // User data
   users: JUser[] = [];
@@ -174,11 +195,23 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
     // Sort notes by position within each column initially
     Object.keys(this.columnDataArrays).forEach(columnId => {
-      this.columnDataArrays[columnId].sort((a, b) => a.position.y - b.position.y);
+      this.columnDataArrays[columnId].sort((a, b) => {
+        // Handle undefined or missing position
+        const posA = a.position?.y ?? 0;
+        const posB = b.position?.y ?? 0;
+        return posA - posB;
+      });
     });
 
-    // If beyond BRAINSTORMING phase, sort by vote count descending instead
-    if (this.currentBoard.currentPhase !== RetroPhase.BRAINSTORMING) {
+    // If in VOTING phase or beyond, sort by importance (votes and groups)
+    const sortingPhases = [
+      RetroPhase.VOTING,
+      RetroPhase.DISCUSSION,
+      RetroPhase.ACTION_ITEMS,
+      RetroPhase.COMPLETED
+    ];
+
+    if (this.currentBoard && sortingPhases.includes(this.currentBoard.currentPhase)) {
       Object.keys(this.columnDataArrays).forEach(columnId => {
         const notes = this.columnDataArrays[columnId];
         
@@ -394,21 +427,24 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     if (phase === RetroPhase.GROUPING && this.currentBoard?.currentPhase === RetroPhase.BRAINSTORMING) {
       const modal = this.modal.create({
         nzTitle: `Switch to ${this.getPhaseTitle(phase)} Phase?`,
+        nzClassName: 'premium-modal',
+        nzWrapClassName: 'premium-modal',
         nzContent: this.getPhaseChangeWarning(phase) + `
-          <div style="margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #7954AA 0%, #5a3d82 100%); border-radius: 8px; color: white;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 18px;">💡</span>
-              <strong>AI-Powered Grouping Available!</strong>
+          <div style="margin-top: 16px; padding: 20px; background: linear-gradient(135deg, #7954AA 0%, #5a3d82 100%); border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(121, 84, 170, 0.2);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <span style="font-size: 24px;">💡</span>
+              <span style="font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px;">AI Opportunity</span>
             </div>
-            <p style="margin: 0; font-size: 13px; opacity: 0.95;">
-              Would you like AI to automatically analyze and group similar notes with tags?
-            </p>
+            <p style="margin: 0; font-size: 13px; line-height: 1.5; opacity: 0.9;">The <strong>Grouping</strong> phase is where Retrofy AI shines. We can automatically group similar stickers and sort them by team priority for you!</p>
           </div>
         `,
         nzFooter: [
           {
-            label: 'Cancel',
-            onClick: () => modal.destroy()
+            label: 'Maybe Later',
+            onClick: () => {
+              this.retrospectiveService.updatePhase(phase);
+              modal.destroy();
+            }
           },
           {
             label: '✨ Use AI Grouping',
@@ -427,6 +463,8 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     // Show confirmation modal for other phases
     const modal = this.modal.create({
       nzTitle: `Switch to ${this.getPhaseTitle(phase)} Phase?`,
+      nzClassName: 'premium-modal',
+      nzWrapClassName: 'premium-modal',
       nzContent: this.getPhaseChangeWarning(phase),
       nzFooter: [
         {
@@ -624,20 +662,26 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
   onNoteDrop(event: CdkDragDrop<StickyNote[]>) {
     const draggedNote = event.item.data as StickyNote;
+    const updates: Array<{ id: string, updates: Partial<StickyNote> }> = [];
     
     if (event.previousContainer === event.container) {
       // Same column - reorder notes
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       
-      // Update positions for all notes in the column
+      // Update positions for all notes in the column to persist the new order
       event.container.data.forEach((note, index) => {
-        this.retrospectiveService.updateStickyNote(note.id, {
-          position: { x: note.position.x, y: index * 120 + 10 },
-          updatedAt: new Date().toISOString()
+        updates.push({
+          id: note.id,
+          updates: { 
+            position: { x: note.position.x, y: index * 120 + 10 }
+          }
         });
       });
     } else {
       // Different column - transfer note
+      const oldColumnId = event.previousContainer.id.replace('drop-list-', '');
+      const newColumnId = event.container.id.replace('drop-list-', '');
+      
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
@@ -645,35 +689,33 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
         event.currentIndex
       );
       
-      // Get the new column ID from the container ID
-      const newColumnId = event.container.id.replace('drop-list-', '');
-      
-      if (draggedNote && newColumnId && newColumnId !== draggedNote.columnId) {
-        // Update the note's column and position
-        this.retrospectiveService.updateStickyNote(draggedNote.id, {
-          columnId: newColumnId,
-          position: {
-            x: 0,
-            y: event.currentIndex * 120 + 10
-          },
-          updatedAt: new Date().toISOString()
-        });
-        
-        // Update positions for all notes in both columns
+      // Update the dragged note's column
+      if (draggedNote && newColumnId && newColumnId !== oldColumnId) {
+        // Prepare updates for all items in both columns to ensure their position.y values are updated
         event.previousContainer.data.forEach((note, index) => {
-          this.retrospectiveService.updateStickyNote(note.id, {
-            position: { x: note.position.x, y: index * 120 + 10 },
-            updatedAt: new Date().toISOString()
+          updates.push({
+            id: note.id,
+            updates: { position: { x: note.position.x, y: index * 120 + 10 } }
           });
         });
         
         event.container.data.forEach((note, index) => {
-          this.retrospectiveService.updateStickyNote(note.id, {
-            position: { x: note.position.x, y: index * 120 + 10 },
-            updatedAt: new Date().toISOString()
+          const noteUpdates: Partial<StickyNote> = {
+            position: { x: note.position.x, y: index * 120 + 10 }
+          };
+          if (note.id === draggedNote.id) {
+            noteUpdates.columnId = newColumnId;
+          }
+          updates.push({
+            id: note.id,
+            updates: noteUpdates
           });
         });
       }
+    }
+
+    if (updates.length > 0) {
+      this.retrospectiveService.updateStickyNoteBatch(updates);
     }
   }
 
@@ -696,23 +738,15 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     // Show loading notification
     this.modal.info({
       nzTitle: '🤖 AI Grouping in Progress',
+      nzClassName: 'premium-modal',
+      nzWrapClassName: 'premium-modal',
       nzContent: `
-        <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">
-            <span style="display: inline-block; animation: spin 2s linear infinite;">🔄</span>
+        <div style="text-align: center; padding: 32px 20px;">
+          <div style="font-size: 56px; margin-bottom: 24px; display: inline-block; animation: pulse 2s ease-in-out infinite;">
+            <span>🤖</span>
           </div>
-          <p style="font-size: 14px; color: #6b7280;">
-            Analyzing ${this.currentBoard.stickyNotes.length} notes across ${this.currentBoard.columns.length} columns...
-          </p>
-          <p style="font-size: 13px; color: #9ca3af; margin-top: 8px;">
-            This may take a few moments
-          </p>
-          <style>
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-          </style>
+          <h4 style="font-weight: 800; font-size: 16px; color: #1e293b; margin-bottom: 8px;">Analyzing Notes...</h4>
+          <p style="color: #64748b; font-size: 14px; margin: 0;">Retrofy AI is clustering similar items and sorting them by team priority. This will only take a moment.</p>
         </div>
       `,
       nzOkText: 'Working...',
@@ -739,19 +773,16 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       
       setTimeout(() => {
         this.modal.success({
-          nzTitle: '✨ AI Grouping & Sorting Complete!',
+          nzTitle: '✨ AI Grouping Complete!',
+          nzClassName: 'premium-modal',
+          nzWrapClassName: 'premium-modal',
           nzContent: `
-            <div style="padding: 12px;">
-              <p style="margin-bottom: 12px;">Successfully analyzed, grouped, and sorted ${this.currentBoard?.stickyNotes.length} notes by category and votes.</p>
-              <div style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                <strong style="display: block; margin-bottom: 8px;">Groups Identified:</strong>
-                <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
-                  ${this.getUniqueGroups().map(group => `<li>${group}</li>`).join('')}
-                </ul>
+            <div style="padding: 4px;">
+              <p style="margin-bottom: 16px; color: #475569; line-height: 1.6;">Successfully analyzed, grouped, and sorted <strong>${this.currentBoard?.stickyNotes.length} notes</strong> by category and priority.</p>
+              <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;">
+                <span style="font-size: 20px;">🛡️</span>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">You can still manually group items or move them between columns if needed.</p>
               </div>
-              <p style="margin-top: 12px; font-size: 13px; color: #6b7280;">
-                Notes have been tagged and reordered with highest-voted items at the top of each group.
-              </p>
             </div>
           `,
           nzOkText: 'Great!',

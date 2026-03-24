@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, timer, combineLatest, map, startWith, distinctUntilChanged } from 'rxjs';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -55,12 +56,32 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
     JiraControlModule
   ],
   templateUrl: './organization-dashboard.component.html',
-  styleUrls: ['./organization-dashboard.component.scss']
+  styleUrls: ['./organization-dashboard.component.scss'],
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('200ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
   isLoading$ = this.organizationQuery.loading$;
+  
+  showSkeleton$ = combineLatest([
+    this.isLoading$,
+    timer(1000).pipe(startWith(null))
+  ]).pipe(
+    map(([loading, timerDone]) => loading || timerDone === null),
+    distinctUntilChanged()
+  );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   organizations: Organization[] = [];
   teams: Team[] = [];
   members: OrganizationMember[] = [];

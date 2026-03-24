@@ -1,20 +1,46 @@
 .retrospective-dashboard {
-  .board-card {
-    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-
-    &:hover {
-      box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.10), 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-      border-color: #7954AA !important;
-      transform: translateY(-2px);
-    }
+  position: relative;
+  
+  .grid-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    width: 100%;
+    position: relative;
   }
 
-  .add-member-dropdown {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
-    width: 360px;
-    z-index: 1000;
-    transform-origin: top right;
+  .stack-item {
+    grid-area: 1 / 1;
+    width: 100%;
+    min-height: 100vh;
   }
+
+  /* Force Opaque Mask for Skeleton */
+  .skeleton-mask {
+    background-color: #f8f9fa !important;
+    z-index: 50 !important;
+    position: relative;
+    pointer-events: none; /* Let clicks fall through if needed, but usually we want to block them */
+  }
+
+  .content-layer {
+    z-index: 10;
+    position: relative;
+  }
+}
+
+.board-card {
+  transition: all 0.2s ease-in-out;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    border-color: #7954AA !important;
+  }
+}
+
+.add-member-dropdown {
+  min-width: 320px;
 }

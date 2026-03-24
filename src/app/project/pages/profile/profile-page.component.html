@@ -1,150 +1,199 @@
-<div class="profile-container" *ngIf="currentUser">
-  <!-- Breadcrumbs / Back button removed per user request -->
-
-  <div *ngIf="isLoading" class="loading-overlay">
-    <div class="spinner"></div>
-    <div class="loading-content">Tailoring your experience...</div>
-  </div>
-
-  <div *ngIf="!isLoading" class="profile-layout">
-    <!-- Sidebar: Profile Card -->
-    <aside class="profile-sidebar">
-      <div class="profile-card">
-        <div class="avatar-wrapper" (click)="onAvatarClick()">
-          <img *ngIf="currentUser.avatarUrl" [src]="currentUser.avatarUrl" alt="Avatar" class="profile-avatar">
-          <div *ngIf="!currentUser.avatarUrl" class="avatar-initials">
-            {{ getUserInitials(currentUser) }}
+<div class="profile-page-wrapper bg-[#f8f9fa] min-h-screen grid-stack" *ngIf="currentUser">
+  <!-- Full-Page Skeleton Layer (Mask) -->
+  <div *ngIf="showSkeleton$ | async" class="stack-item skeleton-mask p-8" [@fadeAnimation]>
+    <div class="profile-layout">
+      <!-- Sidebar Skeleton -->
+      <aside class="profile-sidebar">
+        <div class="profile-card">
+          <div class="avatar-wrapper">
+            <nz-skeleton-element nzType="avatar" [nzActive]="true" [nzSize]="'large'" style="width: 120px; height: 120px;"></nz-skeleton-element>
           </div>
+          <div class="flex flex-col items-center gap-2 mb-6">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 180px; height: 32px;"></nz-skeleton-element>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 18px;"></nz-skeleton-element>
+          </div>
+          <div class="profile-meta">
+            <div *ngFor="let _ of [1,2]" class="meta-item">
+              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" style="width: 16px; height: 16px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 16px;"></nz-skeleton-element>
+            </div>
+          </div>
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 100%; height: 40px; margin-top: 16px;"></nz-skeleton-element>
         </div>
-        <h1 class="profile-name">{{ currentUser.name }}</h1>
-        <span class="profile-role">{{ userRole }}</span>
+      </aside>
 
-        <div class="profile-meta">
-          <div class="meta-item">
-            <i class="far fa-envelope"></i>
-            <span>{{ loginEmail }}</span>
-          </div>
-          <div class="meta-item">
-            <i class="far fa-calendar-alt"></i>
-            <span>Joined {{ formatJoinDate(currentUser.createdAt) }}</span>
-          </div>
-          <div class="meta-item">
-            <i class="fas fa-shield-alt"></i>
-            <span>{{ getLoginBadgeText() }}</span>
-          </div>
-        </div>
-
-        <button class="edit-profile-btn" (click)="toggleEditMode()">
-          Edit Profile
-        </button>
-
-        <button class="logout-btn" (click)="logout()">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
-    </aside>
-
-    <!-- Main Content: Stats and Activity -->
-    <main class="profile-main-content">
-      <!-- 4 High-level Stats -->
-      <section class="section-group">
-        <!-- <h2 class="section-title">Overview</h2> -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-label">Retros Joined</span>
-            <span class="stat-value">{{ retrosJoined }}</span>
-            <span class="stat-trend up"><i class="fas fa-chart-line"></i> {{ retrosTrend }}</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Notes Added</span>
-            <span class="stat-value">{{ notesAdded }}</span>
-            <span class="stat-trend neutral">{{ notesTrend }}</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Votes Cast</span>
-            <span class="stat-value">{{ votesCast }}</span>
-            <span class="stat-trend neutral">{{ votesTrend }}</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Action Items</span>
-            <span class="stat-value">{{ actionItems }}</span>
-            <span class="stat-trend neutral">{{ actionItemsTrend }}</span>
-          </div>
-        </div>
-      </section>
-
-      <div class="content-split">
-        <!-- Recent Activity (INVERTED POSITION) -->
+      <!-- Main Content Skeleton -->
+      <main class="profile-main-content">
         <section class="section-group">
-          <div class="activity-card">
-            <h2 class="section-title">Recent Activity</h2>
-            <div class="activity-timeline">
-              <div class="timeline-group" *ngFor="let group of getGroupedActivity()">
-                <div class="group-header">
-                  <span class="group-target">{{ group.target }}</span>
-                  <span class="group-date">{{ group.date | date: 'MMM d' }}</span>
-                </div>
-                <div class="timeline-item" *ngFor="let item of group.activities" [ngClass]="item.type">
-                  <div class="item-content">
-                    <div class="item-title">
-                      <span *ngIf="item.type === 'added_note'">
-                        Added a note to
-                      </span>
-                      <span *ngIf="item.type === 'voted'">Cast {{ item.count }} {{ item.count === 1 ? 'vote' : 'votes' }}</span>
-                      
-                      <span *ngIf="item.type === 'added_note'" class="category-highlight" [ngClass]="item.categoryClass">
-                        {{ item.category }}
-                      </span>
-                    </div>
-                    <div class="item-detail" *ngIf="item.content">{{ item.content }}</div>
+          <div class="stats-grid">
+            <div *ngFor="let _ of [1,2,3,4]" class="stat-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 16px; margin-bottom: 8px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 60px; height: 32px; margin-bottom: 8px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 16px;"></nz-skeleton-element>
+            </div>
+          </div>
+        </section>
+
+        <div class="content-split">
+          <section class="section-group">
+            <div class="activity-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="medium" style="width: 140px; height: 24px; margin-bottom: 24px;"></nz-skeleton-element>
+              <div class="activity-timeline">
+                <div *ngFor="let _ of [1,2]" class="timeline-group">
+                  <div class="group-header">
+                    <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 18px;"></nz-skeleton-element>
+                  </div>
+                  <div class="timeline-item">
+                    <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2 }"></nz-skeleton>
                   </div>
                 </div>
               </div>
-              <div *ngIf="activityHistory.length === 0" class="empty-state p-4 text-center text-muted">
-                No recent activity recorded.
+            </div>
+          </section>
+
+          <section class="section-group">
+            <div class="contribution-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="medium" style="width: 140px; height: 24px; margin-bottom: 24px;"></nz-skeleton-element>
+              <div class="contribution-bars">
+                <div *ngFor="let _ of [1,2,3]" class="bar-item">
+                  <nz-skeleton [nzActive]="true" [nzTitle]="true" [nzParagraph]="{ rows: 1 }"></nz-skeleton>
+                </div>
               </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Full-Page Content Layer -->
+  <div *ngIf="dataReady$ | async" class="stack-item content-layer p-8">
+    <div class="profile-layout">
+      <!-- Sidebar: Profile Card -->
+      <aside class="profile-sidebar">
+        <div class="profile-card">
+          <div class="avatar-wrapper" (click)="onAvatarClick()">
+            <img *ngIf="currentUser.avatarUrl" [src]="currentUser.avatarUrl" alt="Avatar" class="profile-avatar">
+            <div *ngIf="!currentUser.avatarUrl" class="avatar-initials">
+              {{ getUserInitials(currentUser) }}
+            </div>
+          </div>
+          <h1 class="profile-name">{{ currentUser.name }}</h1>
+          <span class="profile-role">{{ userRole }}</span>
+
+          <div class="profile-meta">
+            <div class="meta-item">
+              <i class="far fa-envelope"></i>
+              <span>{{ loginEmail }}</span>
+            </div>
+            <div class="meta-item">
+              <i class="far fa-calendar-alt"></i>
+              <span>Joined {{ formatJoinDate(currentUser.createdAt) }}</span>
+            </div>
+          </div>
+
+          <button class="edit-profile-btn" (click)="toggleEditMode()">Edit Profile</button>
+          <button class="logout-btn" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="profile-main-content">
+        <section class="section-group">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Retros Joined</span>
+              <span class="stat-value">{{ retrosJoined }}</span>
+              <span class="stat-trend up"><i class="fas fa-chart-line"></i> {{ retrosTrend }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Notes Added</span>
+              <span class="stat-value">{{ notesAdded }}</span>
+              <span class="stat-trend neutral">{{ notesTrend }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Votes Cast</span>
+              <span class="stat-value">{{ votesCast }}</span>
+              <span class="stat-trend neutral">{{ votesTrend }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Action Items</span>
+              <span class="stat-value">{{ actionItems }}</span>
+              <span class="stat-trend neutral">{{ actionItemsTrend }}</span>
             </div>
           </div>
         </section>
 
-        <!-- Contribution Distribution (INVERTED POSITION) -->
-        <section class="section-group">
-          <div class="contribution-card">
-            <div class="contribution-header">
-              <h2 class="card-title">Retrospective Contribution</h2>
-            </div>
-            <div class="contribution-bars">
-              <div class="bar-item">
-                <div class="bar-info">
-                  <span class="label">What went well</span>
-                  <span class="count">{{ categoryDistribution['What went well'] || 0 }} items</span>
+        <div class="content-split">
+          <!-- Recent Activity -->
+          <section class="section-group">
+            <div class="activity-card">
+              <h2 class="section-title">Recent Activity</h2>
+              <div class="activity-timeline">
+                <div class="timeline-group" *ngFor="let group of getGroupedActivity()">
+                  <div class="group-header">
+                    <span class="group-target">{{ group.target }}</span>
+                    <span class="group-date">{{ group.date | date: 'MMM d' }}</span>
+                  </div>
+                  <div class="timeline-item" *ngFor="let item of group.activities" [ngClass]="item.type">
+                    <div class="item-content">
+                      <div class="item-title">
+                        <span *ngIf="item.type === 'added_note'">Added a note to</span>
+                        <span *ngIf="item.type === 'voted'">Cast {{ item.count }} {{ item.count === 1 ? 'vote' : 'votes' }}</span>
+                        <span *ngIf="item.type === 'added_note'" class="category-highlight" [ngClass]="item.categoryClass">{{ item.category }}</span>
+                      </div>
+                      <div class="item-detail" *ngIf="item.content">{{ item.content }}</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="bar-track">
-                  <div class="bar-fill green" [style.width.%]="(categoryDistribution['What went well'] || 0) / (notesAdded || 1) * 100"></div>
-                </div>
-              </div>
-              <div class="bar-item">
-                <div class="bar-info">
-                  <span class="label">What can be improved</span>
-                  <span class="count">{{ categoryDistribution['What can be improved'] || 0 }} items</span>
-                </div>
-                <div class="bar-track">
-                  <div class="bar-fill amber" [style.width.%]="(categoryDistribution['What can be improved'] || 0) / (notesAdded || 1) * 100"></div>
-                </div>
-              </div>
-              <div class="bar-item">
-                <div class="bar-info">
-                  <span class="label">Action Items</span>
-                  <span class="count">{{ categoryDistribution['Action Items'] || 0 }} items</span>
-                </div>
-                <div class="bar-track">
-                  <div class="bar-fill blue" [style.width.%]="(categoryDistribution['Action Items'] || 0) / (notesAdded || 1) * 100"></div>
+                <div *ngIf="activityHistory.length === 0" class="empty-state p-8 text-center text-gray-400">
+                  No recent activity recorded yet.
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
-    </main>
+          </section>
+
+          <!-- Contribution Distribution -->
+          <section class="section-group">
+            <div class="contribution-card">
+              <div class="contribution-header">
+                <h2 class="card-title">Retrospective Contribution</h2>
+              </div>
+              <div class="contribution-bars">
+                <div class="bar-item">
+                  <div class="bar-info">
+                    <span class="label">What went well</span>
+                    <span class="count">{{ categoryDistribution['What went well'] || 0 }} items</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill green" [style.width.%]="(categoryDistribution['What went well'] || 0) / (notesAdded || 1) * 100"></div>
+                  </div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar-info">
+                    <span class="label">What can be improved</span>
+                    <span class="count">{{ categoryDistribution['What can be improved'] || 0 }} items</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill amber" [style.width.%]="(categoryDistribution['What can be improved'] || 0) / (notesAdded || 1) * 100"></div>
+                  </div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar-info">
+                    <span class="label">Action Items</span>
+                    <span class="count">{{ categoryDistribution['Action Items'] || 0 }} items</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill blue" [style.width.%]="(categoryDistribution['Action Items'] || 0) / (notesAdded || 1) * 100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
   </div>
 </div>

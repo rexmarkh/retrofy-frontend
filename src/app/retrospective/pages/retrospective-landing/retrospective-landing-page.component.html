@@ -1,527 +1,387 @@
-<div class="retrospective-dashboard p-8 bg-[#f8f9fa] min-h-screen">
-  <!-- Hero Header -->
-  <div class="mb-8 fade-in relative z-[60]">
-    <div class="flex items-start justify-between">
-      <div class="flex items-start gap-4">
-        <!-- Gray Avatar Block -->
-        <div class="w-16 h-16 bg-[#e2e8f0] flex items-center justify-center text-[#7954aa] text-2xl font-bold rounded-sm uppercase">
-          <ng-container *ngIf="currentTeam$ | async as team; else defaultHeader">
-            {{ getMemberInitials(team.name) }}
-          </ng-container>
-          <ng-template #defaultHeader>
-            <span nz-icon nzType="project" nzTheme="outline"></span>
-          </ng-template>
+<div class="retrospective-dashboard bg-[#f8f9fa] min-h-screen grid-stack">
+  <!-- Full-Page Skeleton Layer (Mask) -->
+  <div *ngIf="showSkeleton$ | async" class="stack-item skeleton-mask p-8" [@fadeAnimation]>
+    <!-- Hero Header Skeleton -->
+    <div class="mb-8">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start gap-4">
+          <nz-skeleton-element nzType="avatar" [nzActive]="true" nzShape="square" style="width: 64px; height: 64px; border-radius: 4px;"></nz-skeleton-element>
+          <div class="pt-1">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 300px; height: 32px; margin-bottom: 8px;"></nz-skeleton-element>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 250px; height: 18px;"></nz-skeleton-element>
+          </div>
         </div>
-        <div class="pt-1">
-          <h1 class="text-[28px] font-bold text-gray-900 leading-tight mb-1 tracking-tight">
-            {{ (currentTeam$ | async)?.name || 'Sprint' }} Retrospectives
-          </h1>
-          <p class="text-[14px] font-medium text-gray-500">Transform team insights into actionable improvements</p>
+        <div class="flex items-center gap-3">
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 140px; height: 40px;"></nz-skeleton-element>
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 140px; height: 40px;"></nz-skeleton-element>
         </div>
       </div>
+    </div>
+    <hr class="border-gray-200 my-6 w-full border-t">
 
-      <div class="flex items-center gap-3">
-        <button
-          nz-button
-          nzSize="large"
-          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm"
-          (click)="showCreateBoardModal()"
-        >
-          <span nz-icon nzType="plus"></span>
-          <span>Create Board</span>
-        </button>
-
-        <div class="relative">
-          <button
-            nz-button
-            nzType="default"
-            nzSize="large"
-            class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm"
-            (click)="toggleAddMember()"
-          >
-            <span nz-icon nzType="plus" nzTheme="outline" *ngIf="!showAddMember"></span>
-            <span>{{ showAddMember ? '✕' : 'Add member' }}</span>
-          </button>
-
-          <!-- Add Member Dropdown Panel -->
-          <div *ngIf="showAddMember" class="add-member-dropdown bg-white p-6 rounded-2xl border border-gray-100 fade-in shadow-xl animate-in zoom-in duration-200">
-            <div class="relative">
-              <span nz-icon nzType="search" nzTheme="outline"
-                style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 16px; z-index: 1;"
-              ></span>
-              <input
-                type="text"
-                [(ngModel)]="memberSearchQuery"
-                (ngModelChange)="onMemberSearch()"
-                placeholder="Search by name or email…"
-                class="w-full text-[14px] rounded-xl border border-gray-100 bg-white focus:outline-none focus:border-[#7954AA] transition-all"
-                style="padding: 10px 10px 10px 42px;"
-                autofocus
-              />
-            </div>
-
-            <!-- Success toast -->
-            <div *ngIf="addMemberSuccess" class="mt-3 px-3 py-2 bg-green-50 text-green-700 text-xs rounded-xl font-bold border border-green-100">
-              ✓ {{ addMemberSuccess }} added to team
-            </div>
-
-            <!-- Search results -->
-            <div class="mt-4" *ngIf="!isSearchingMembers">
-              <div *ngIf="memberSearchQuery && memberSearchResults.length === 0" class="text-xs text-gray-400 text-center py-4 font-medium">
-                No matching members found
-              </div>
-              <div *ngIf="!memberSearchQuery" class="text-xs text-gray-400 text-center py-4 font-medium">
-                Type a name or email to search
-              </div>
-              <div class="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-                <div
-                  *ngFor="let result of memberSearchResults"
-                  class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer hover:bg-gray-50 hover:shadow-sm"
-                  [class.opacity-60]="result.isAdded"
-                  [class.pointer-events-none]="result.isAdded"
-                  (click)="!result.isAdded && addMember(result)"
-                >
-                  <div
-                    class="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
-                    style="background: #7954AA;"
-                  >{{ getMemberInitials(result.name) }}</div>
-                  <div class="flex-1 min-w-0 text-left">
-                    <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
-                    <p class="text-[10px] text-gray-400 m-0 truncate font-semibold">{{ result.email }}</p>
-                  </div>
-                  <span *ngIf="!result.isAdded" class="text-[11px] font-bold text-[#7954AA]">+ Add</span>
-                  <span *ngIf="result.isAdded" class="text-[9px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Added</span>
-                </div>
-              </div>
-
-              <div *ngIf="isAddingMember" class="text-center py-4">
-                <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
-              </div>
-            </div>
-
-            <div *ngIf="isSearchingMembers" class="text-center py-4">
-              <span nz-icon nzType="loading" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
+    <!-- Content Grid Skeleton -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <span nz-icon nzType="appstore" class="text-[#7954AA] text-xl opacity-30"></span>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 150px; height: 24px;"></nz-skeleton-element>
+          </div>
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 160px; height: 32px; border-radius: 8px;"></nz-skeleton-element>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div *ngFor="let _ of [1, 2]" class="bg-white rounded-xl p-5 border border-gray-100 flex flex-col gap-4">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 80px; height: 24px;"></nz-skeleton-element>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 200px; height: 18px;"></nz-skeleton-element>
+            <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2 }"></nz-skeleton>
+            <div class="flex gap-4 mt-auto">
+               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 14px;"></nz-skeleton-element>
+               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 14px;"></nz-skeleton-element>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl p-6 border border-gray-100 h-full">
+           <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 14px; margin-bottom: 24px;"></nz-skeleton-element>
+           <div class="grid grid-cols-2 gap-4 mb-8">
+              <div class="bg-gray-50 h-24 rounded-lg flex flex-col items-center justify-center gap-2">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 10px;"></nz-skeleton-element>
+              </div>
+              <div class="bg-gray-50 h-24 rounded-lg flex flex-col items-center justify-center gap-2">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 10px;"></nz-skeleton-element>
+              </div>
+           </div>
+           <hr class="border-gray-200 my-8 w-full border-t">
+           <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 18px; margin-bottom: 24px;"></nz-skeleton-element>
+           <div class="flex flex-col gap-6">
+              <div *ngFor="let _ of [1,2,3]" class="flex items-center gap-4">
+                 <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="circle" style="width: 44px; height: 44px;"></nz-skeleton-element>
+                 <div class="flex-1">
+                   <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 14px; margin-bottom: 8px;"></nz-skeleton-element>
+                   <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 8px; border-radius: 4px;"></nz-skeleton-element>
+                 </div>
+              </div>
+           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <hr class="border-gray-200 my-6 w-full border-t">
-
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in" *ngIf="{ isLoading: isLoading$ | async } as state">
-
-    <!-- Left Column: Boards -->
-    <div class="lg:col-span-2">
-
-      <!-- Boards Section Header with Tabs -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-2">
-          <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
-          <h2 class="text-xl font-bold text-gray-900 leading-tight m-0">Your Boards</h2>
+  <!-- Full-Page Content Layer -->
+  <div *ngIf="dataReady$ | async" class="stack-item content-layer p-8">
+    <!-- Hero Header -->
+    <div class="mb-8 relative z-[60]">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start gap-4">
+          <!-- Team Avatar Block -->
+          <div class="w-16 h-16 bg-[#e2e8f0] flex items-center justify-center text-[#7954aa] text-2xl font-bold rounded-sm uppercase">
+            <ng-container *ngIf="currentTeam$ | async as team; else defaultHeader">
+              {{ getMemberInitials(team.name) }}
+            </ng-container>
+            <ng-template #defaultHeader>
+              <span nz-icon nzType="project" nzTheme="outline"></span>
+            </ng-template>
+          </div>
+          <div class="pt-1">
+            <h1 class="text-[28px] font-bold text-gray-900 leading-tight mb-1 tracking-tight">
+              {{ (currentTeam$ | async)?.name || 'Sprint' }} Retrospectives
+            </h1>
+            <p class="text-[14px] font-medium text-gray-500">Transform team insights into actionable improvements</p>
+          </div>
         </div>
 
-        <!-- Active / Completed Tabs -->
-        <div class="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+        <div class="flex items-center gap-3">
           <button
-            (click)="activeTab = 'active'"
-            class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
-            [style.background]="activeTab === 'active' ? 'white' : 'transparent'"
-            [style.color]="activeTab === 'active' ? '#7954AA' : '#6b7280'"
-            [style.box-shadow]="activeTab === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
-          >Active</button>
-          <button
-            (click)="activeTab = 'completed'"
-            class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
-            [style.background]="activeTab === 'completed' ? 'white' : 'transparent'"
-            [style.color]="activeTab === 'completed' ? '#7954AA' : '#6b7280'"
-            [style.box-shadow]="activeTab === 'completed' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
-          >Completed</button>
-        </div>
-      </div>
+            nz-button
+            nzType="primary"
+            nzSize="large"
+            class="bg-[#7954AA] text-white hover:bg-[#6b4299] border-none flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm transition-all"
+            (click)="showCreateBoardModal()"
+          >
+            <span nz-icon nzType="plus"></span>
+            <span>Create Board</span>
+          </button>
 
-      <!-- Loading State: Boards Grid Skeletons -->
-      <div *ngIf="state.isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div *ngFor="let _ of [1, 2, 3, 4]" class="bg-white rounded-xl h-full flex flex-col" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
-          <div class="p-5 flex flex-col flex-grow">
-            <!-- Phase Badge Skeleton -->
-            <div class="flex justify-between mb-4">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 80px; height: 24px;"></nz-skeleton-element>
-            </div>
-            <!-- Title Skeleton -->
-            <div class="mb-1">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 160px; height: 18px;"></nz-skeleton-element>
-            </div>
-            <!-- Description Skeleton -->
-            <div class="mb-5 flex-grow">
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['90%', '75%'] }"></nz-skeleton>
-            </div>
-            <!-- Two-Tier Metrics Skeleton -->
-            <div class="flex items-center gap-6">
-              <div class="flex flex-col gap-1">
-                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 40px; height: 10px;"></nz-skeleton-element>
-                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 16px;"></nz-skeleton-element>
+          <div class="relative">
+            <button
+              nz-button
+              nzType="default"
+              nzSize="large"
+              class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm transition-all"
+              (click)="toggleAddMember()"
+            >
+              <span>{{ showAddMember ? '✕' : 'Add member' }}</span>
+            </button>
+
+            <!-- Add Member Dropdown -->
+            <div *ngIf="showAddMember" class="add-member-dropdown bg-white p-6 rounded-2xl border border-gray-100 shadow-xl absolute right-0 mt-2 z-[100] w-80">
+              <div class="relative">
+                <span nz-icon nzType="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></span>
+                <input
+                  type="text"
+                  [(ngModel)]="memberSearchQuery"
+                  (ngModelChange)="onMemberSearch()"
+                  placeholder="Search by name or email…"
+                  class="w-full text-[14px] rounded-xl border border-gray-100 bg-white focus:outline-none focus:border-[#7954AA] transition-all p-2 pl-10"
+                />
               </div>
-              <div class="flex flex-col gap-1">
-                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 70px; height: 10px;"></nz-skeleton-element>
-                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 16px;"></nz-skeleton-element>
+              <div class="mt-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div *ngFor="let result of memberSearchResults" 
+                     class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                     [class.hover:bg-gray-50]="!result.isAdded"
+                     [class.cursor-not-allowed]="result.isAdded"
+                     [class.opacity-50]="result.isAdded"
+                     [class.cursor-pointer]="!result.isAdded"
+                     (click)="!result.isAdded && addMember(result)">
+                  <div class="w-8 h-8 rounded-full bg-[#7954AA] text-white text-[11px] flex items-center justify-center font-bold">
+                    {{ getMemberInitials(result.name) }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                       <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
+                       <span *ngIf="result.isAdded" class="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shrink-0">Added</span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 m-0 truncate">{{ result.email }}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Footer Skeleton -->
-          <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between rounded-b-xl">
-            <div class="flex items-center gap-1.5">
-              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 14px; height: 14px;"></nz-skeleton-element>
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 10px;"></nz-skeleton-element>
-            </div>
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 32px; border-radius: 8px;"></nz-skeleton-element>
-          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Boards Grid -->
-      <div *ngIf="!state.isLoading && getFilteredBoards().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5 fade-in">
+    <hr class="border-gray-200 my-6 w-full border-t">
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Column: Boards -->
+      <div class="lg:col-span-2">
+        <!-- Boards Section Header -->
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight m-0">Your Boards</h2>
+          </div>
+
+          <!-- Active / Completed Tabs -->
+          <div class="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+            <button
+              (click)="activeTab = 'active'"
+              class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
+              [style.background]="activeTab === 'active' ? 'white' : 'transparent'"
+              [style.color]="activeTab === 'active' ? '#7954AA' : '#6b7280'"
+              [style.box-shadow]="activeTab === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
+            >Active</button>
+            <button
+              (click)="activeTab = 'completed'"
+              class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
+              [style.background]="activeTab === 'completed' ? 'white' : 'transparent'"
+              [style.color]="activeTab === 'completed' ? '#7954AA' : '#6b7280'"
+              [style.box-shadow]="activeTab === 'completed' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
+            >Completed</button>
+          </div>
+        </div>
+
+        <!-- Boards Grid -->
+        <div *ngIf="getFilteredBoards().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div
             *ngFor="let board of getFilteredBoards(); trackBy: trackByBoardId"
             class="board-card bg-white rounded-xl cursor-pointer h-full flex flex-col relative"
             style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
             (click)="openBoard(board.id)"
           >
-            <!-- Actions (Edit / Delete) - Top Right Corner -->
+            <!-- Actions (Edit / Delete) -->
             <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()">
-              <button
-                nz-button
-                nzType="text"
-                nzSize="small"
-                (click)="editBoard(board)"
-                class="text-gray-300 hover:text-[#7954AA] transition-colors p-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
-              >
-                <span nz-icon nzType="edit" nzTheme="outline" class="text-base"></span>
+              <button nz-button nzType="text" nzSize="small" (click)="editBoard(board)" class="text-gray-300 hover:text-[#7954AA] p-1 w-8 h-8 rounded-full hover:bg-gray-100">
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
               </button>
-              <button
-                nz-button
-                nzType="text"
-                nzSize="small"
-                (click)="deleteBoard(board.id)"
-                class="text-gray-300 hover:text-red-500 transition-colors p-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100"
-              >
-                <span nz-icon nzType="delete" nzTheme="outline" class="text-base"></span>
+              <button nz-button nzType="text" nzSize="small" (click)="deleteBoard(board.id)" class="text-gray-300 hover:text-red-500 p-1 w-8 h-8 rounded-full hover:bg-gray-100">
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
               </button>
             </div>
 
             <!-- Card Body -->
             <div class="p-5 flex flex-col flex-grow">
-              <!-- Card Header -->
               <div class="flex items-start justify-between mb-4">
                 <!-- Phase Badge -->
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                  [ngClass]="{
-                    'bg-blue-50 text-blue-600': board.currentPhase === 'brainstorming',
-                    'bg-amber-50 text-amber-600': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-                    'bg-purple-50 text-[#7954AA]': board.currentPhase === 'discussion',
-                    'bg-green-50 text-green-600': board.currentPhase === 'completed'
-                  }">
-                  <div class="w-1.5 h-1.5 rounded-full"
-                    [ngClass]="{
-                      'bg-blue-500': board.currentPhase === 'brainstorming',
-                      'bg-amber-500': board.currentPhase === 'grouping' || board.currentPhase === 'voting',
-                      'bg-[#7954AA]': board.currentPhase === 'discussion',
-                      'bg-green-500': board.currentPhase === 'completed'
-                    }"></div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold" [ngClass]="getPhaseClass(board.currentPhase)">
+                  <div class="w-1.5 h-1.5 rounded-full" [style.background-color]="getPhaseColor(board.currentPhase) === 'blue' ? '#3b82f6' : (getPhaseColor(board.currentPhase) === 'cyan' ? '#06b6d4' : (getPhaseColor(board.currentPhase) === 'purple' ? '#7954AA' : '#10b981'))"></div>
                   {{ getPhaseLabel(board.currentPhase) }}
                 </div>
               </div>
 
-            <!-- Card Title -->
-            <div class="mb-1">
-              <h3 class="text-[16px] font-bold text-gray-900 leading-tight m-0 pr-24">{{ board.title }}</h3>
-            </div>
+              <!-- Title -->
+              <div class="mb-1">
+                <h3 class="text-[16px] font-bold text-gray-900 leading-tight m-0 pr-24">{{ board.title }}</h3>
+              </div>
 
-            <!-- Board Description -->
-            <div class="mb-5 flex-grow">
-              <p class="text-[13px] text-gray-500 line-clamp-2 m-0 leading-relaxed pr-8" [nz-tooltip]="(board.description?.length || 0) > 80 ? board.description : ''">
-                {{ board.description || 'No description provided' }}
-              </p>
-            </div>
+              <!-- Description -->
+              <div class="mb-5 flex-grow">
+                <p class="text-[13px] text-gray-500 line-clamp-2 m-0 leading-relaxed pr-8" [nz-tooltip]="(board.description?.length || 0) > 80 ? board.description : ''">
+                  {{ board.description || 'No description provided' }}
+                </p>
+              </div>
 
-            <!-- Board Metrics -->
-            <div class="flex items-center gap-6">
-              <div class="flex flex-col gap-1">
-                <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
-                <div class="flex items-center gap-1.5">
-                  <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7954AA] text-base"></span>
-                  <span class="font-bold text-gray-900 text-sm">{{ getStickyNotesCount(board.id) }}</span>
+              <!-- Metrics -->
+              <div class="flex items-center gap-6">
+                <div class="flex flex-col gap-1">
+                  <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
+                  <div class="flex items-center gap-1.5">
+                    <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7954AA] text-base"></span>
+                    <span class="font-bold text-gray-900 text-sm">{{ getStickyNotesCount(board.id) }}</span>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
+                  <div class="flex items-center gap-1.5">
+                    <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-base"></span>
+                    <span class="font-bold text-gray-900 text-sm">{{ board.participants.length }}</span>
+                  </div>
                 </div>
               </div>
-              <div class="flex flex-col gap-1">
-                <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
-                <div class="flex items-center gap-1.5">
-                  <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-base"></span>
-                  <span class="font-bold text-gray-900 text-sm">{{ board.participants.length }}</span>
-                </div>
-              </div>
             </div>
-          </div>
 
-          <!-- Footer -->
-          <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between rounded-b-xl">
-            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-              <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
-              Updated {{ getTimeAgo(board.updatedAt) }}
+            <!-- Footer -->
+            <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between rounded-b-xl">
+              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                Updated {{ getTimeAgo(board.updatedAt) }}
+              </div>
+              <button
+                nz-button
+                class="text-white border-none text-xs font-semibold rounded-sm px-4 h-8"
+                style="background: #7954AA;"
+                (click)="openBoard(board.id); $event.stopPropagation()"
+              >
+                {{ board.currentPhase === 'completed' ? 'View Report' : 'Join Session' }}
+              </button>
             </div>
-            <button
-              nz-button
-              class="text-white border-none text-xs font-semibold rounded-sm px-4 h-8"
-              style="background: #7954AA;"
-              (click)="openBoard(board.id); $event.stopPropagation()"
-            >
-              {{ board.currentPhase === 'completed' ? 'View Report' : 'Join Session' }}
-            </button>
           </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="getFilteredBoards().length === 0" class="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-gray-100">
+          <div class="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mb-5">
+            <span nz-icon nzType="appstore-add" class="text-3xl text-[#7954AA]"></span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">No boards yet</h3>
+          <p class="text-gray-500 mb-6">Create your first board to start a retrospective.</p>
+          <button nz-button nzType="primary" class="bg-[#7954AA] border-none" (click)="showCreateBoardModal()">Create Board</button>
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div *ngIf="!state.isLoading && getFilteredBoards().length === 0" class="flex flex-col items-center justify-center py-20 bg-white rounded-xl fade-in" style="border: 1px solid #edf2f7;">
-        <div class="w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mb-5">
-          <span nz-icon nzType="appstore-add" nzTheme="outline" class="text-3xl text-[#7954AA]"></span>
-        </div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">
-          {{ activeTab === 'active' ? 'No active boards' : 'No completed boards' }}
-        </h3>
-        <p class="text-gray-500 text-center max-w-xs mb-6 text-sm">
-          {{ activeTab === 'active' ? 'Create your first board to start a retrospective session with your team.' : 'Boards will appear here once a session is completed.' }}
-        </p>
-        <button
-          *ngIf="activeTab === 'active'"
-          nz-button
-          nzSize="large"
-          class="bg-[#7954AA] text-white hover:bg-[#6b4299] hover:text-white border-none flex items-center gap-2 font-medium px-5 h-9 rounded-sm"
-          (click)="showCreateBoardModal()"
-        >
-          <span nz-icon nzType="plus"></span>
-          <span>Create Board</span>
-        </button>
-      </div>
-
-    </div> <!-- End Left Column -->
-
-    <div class="lg:col-span-1">
-      <div class="bg-white rounded-xl p-5 flex flex-col sticky top-8" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
-        <!-- Quick Stats -->
-        <div class="border-b border-gray-100">
-          <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">Quick Stats</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100 rounded-lg">
-              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ totalBoardsCount }}</span>
-              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL BOARDS</span>
-            </div>
-            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100 rounded-lg">
-              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teamMembersCount }}</span>
-              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TEAM MEMBERS</span>
-            </div>
-          </div>
-        </div>
-        <hr class="border-gray-200 my-8 w-full border-t">
-
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-          <div class="flex items-center gap-2">
-            <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
-            <h3 class="text-base font-bold text-gray-900 m-0 leading-none">Team Members</h3>
-          </div>
-          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">CONTRIBUTIONS</span>
-        </div>
-
-        <!-- Inline Add Member Search (Moved below header based on image context) -->
-
-        <!-- Member List -->
-        <div style="min-height: 200px;">
-          <!-- Skeleton Loading -->
-          <div *ngIf="state.isLoading" class="flex flex-col gap-8">
-            <div *ngFor="let _ of [1, 2, 3]" class="flex items-center justify-between gap-6">
-              <div class="flex items-center gap-4 flex-1">
-                <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="circle" style="width: 44px; height: 44px;"></nz-skeleton-element>
-                <div class="flex-1">
-                  <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100px', '60px'] }"></nz-skeleton>
-                </div>
+      <!-- Right Column: Stats & Team -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl p-5 border border-gray-100 sticky top-8 shadow-sm">
+          <!-- Quick Stats -->
+          <div class="border-b border-gray-100 pb-8">
+            <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">Quick Stats</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center rounded-lg border border-gray-50">
+                <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ totalBoardsCount }}</span>
+                <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL BOARDS</span>
               </div>
-              <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0 pt-2">
-                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 40px; height: 14px;"></nz-skeleton-element>
-                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 160px; height: 6px;"></nz-skeleton-element>
+              <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center rounded-lg border border-gray-50">
+                <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teamMembersCount }}</span>
+                <span class="text-[9px] font-bold text-gray-500 tracking-wider">TEAM MEMBERS</span>
               </div>
             </div>
           </div>
 
-          <ng-container *ngIf="!state.isLoading && getTeamMembers().length > 0; else noMembers">
+          <!-- Team Members -->
+          <div class="pt-8">
+            <div class="flex items-center justify-between mb-8">
+              <div class="flex items-center gap-2">
+                <span nz-icon nzType="team" class="text-[#7954AA] text-lg"></span>
+                <h3 class="text-base font-bold text-gray-900 m-0">Team Members</h3>
+              </div>
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">CONTRIBUTIONS</span>
+            </div>
+
             <div class="flex flex-col gap-8">
-              <div *ngFor="let member of getTeamMembers()" class="flex items-center justify-between gap-6">
-                <!-- Member Base Info -->
-                <div class="flex items-center gap-4 min-w-0 flex-1">
-                  <div class="relative flex-shrink-0">
-                    <j-avatar
-                      [avatarUrl]="member.avatarUrl"
-                      [name]="member.name"
-                      [size]="44"
-                      [rounded]="true"
-                    ></j-avatar>
-                    <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white;"></span>
+               <ng-container *ngIf="getTeamMembers().length > 0; else noMembers">
+                <div *ngFor="let member of getTeamMembers()" class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-4 min-w-0 flex-1">
+                    <div class="relative flex-shrink-0">
+                      <j-avatar [avatarUrl]="member.avatarUrl" [name]="member.name" [size]="44" [rounded]="true"></j-avatar>
+                      <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white;"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-bold text-gray-900 m-0 leading-tight truncate">{{ member.name }}</p>
+                      <p class="text-[12px] text-[#7954AA] m-0 font-semibold opacity-70">{{ member.role }}</p>
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-gray-900 m-0 leading-tight truncate mb-0.5">{{ member.name }}</p>
-                    <p class="text-[12px] text-[#7954AA] m-0 leading-tight capitalize font-semibold opacity-70">{{ member.role }}</p>
+
+                  <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0">
+                    <div class="flex items-center justify-end w-full gap-2 font-bold text-[13px]">
+                      <span *ngIf="member.contributionRate > 0" [style.color]="getContributionColor(member.contributionRate)">{{ member.contributionRate }}%</span>
+                      <span *ngIf="member.contributionRate === 0" class="text-gray-400 text-[11px]">No activity yet</span>
+                    </div>
+                    <div class="w-full">
+                      <nz-progress
+                        [nzPercent]="member.contributionRate || 0"
+                        [nzShowInfo]="false"
+                        [nzStrokeColor]="getContributionColor(member.contributionRate)"
+                        [nzStrokeWidth]="8"
+                        nzStrokeLinecap="round"
+                      ></nz-progress>
+                    </div>
                   </div>
                 </div>
-
-                <!-- Progress / Contribution Section -->
-                <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0 pt-2">
-                  <div class="flex items-center justify-end w-full gap-2">
-                    <span *ngIf="member.contributionRate === 0" class="text-[12px] font-bold text-gray-500">No activity yet</span>
-                    <span
-                      class="text-[13px] font-extrabold"
-                      [style.color]="getContributionColor(member.contributionRate)"
-                      style="opacity: 1 !important;"
-                    >{{ member.contributionRate }}%</span>
-                  </div>
-                  <!-- Progress Bar Track -->
-                  <div class="w-full h-[6px] bg-gray-100 rounded-full overflow-hidden">
-                    <!-- Progress Bar Fill -->
-                    <div
-                      class="h-full rounded-full transition-all duration-500 ease-out"
-                      [style.width.%]="member.contributionRate"
-                      [style.background-color]="getContributionColor(member.contributionRate)"
-                    ></div>
-                  </div>
-                </div>
-              </div>
+              </ng-container>
             </div>
-          </ng-container>
 
-          <ng-template #noMembers>
-            <div class="flex flex-col items-center justify-center text-center" style="min-height: 200px;">
-              <div class="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mb-3">
-                <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
+            <!-- Empty State for Members -->
+            <ng-template #noMembers>
+              <div class="text-center py-10">
+                <p class="text-sm text-gray-400">No members found in this team.</p>
               </div>
-              <p class="text-sm font-semibold text-gray-700 mb-1">No members yet</p>
-              <p class="text-xs text-gray-400">Invite team members to collaborate</p>
-            </div>
-          </ng-template>
+            </ng-template>
+          </div>
         </div>
-    </div> <!-- End Right Column -->
-
-  </div> <!-- End Grid -->
-</div> <!-- End Retrospective Dashboard -->
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Create Board Modal -->
-<nz-modal
-  [(nzVisible)]="isCreateModalVisible"
-  nzTitle="Create New Board"
-  [nzFooter]="null"
-  (nzOnCancel)="cancelCreateBoard()"
-  nzWidth="520px"
-  nzWrapClassName="create-board-modal"
->
+<nz-modal [(nzVisible)]="isCreateModalVisible" nzTitle="Create New Retrospective" [nzFooter]="null" (nzOnCancel)="cancelCreateBoard()" nzWidth="520px" nzWrapClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form">
-      <div class="form-group">
-        <label class="label">Board Title *</label>
-        <input
-          nz-input
-          [(ngModel)]="newBoardTitle"
-          name="title"
-          placeholder="e.g., Sprint 23 Retrospective"
-          class="form-input"
-          (keyup.enter)="createBoard()"
-        />
+      <div class="form-group mb-4">
+        <label class="label mb-2 block font-medium text-gray-700">Board Title *</label>
+        <input nz-input [(ngModel)]="newBoardTitle" name="boardTitle" placeholder="e.g., Sprint 42 Retrospective" class="w-full text-base" />
       </div>
-
       <div class="form-group">
-        <label class="label">Description</label>
-        <textarea
-          nz-input
-          [(ngModel)]="newBoardDescription"
-          name="description"
-          placeholder="What is the goal of this retrospective?"
-          [nzAutosize]="{ minRows: 3, maxRows: 6 }"
-          class="form-input"
-          cdkTextareaAutosize
-        ></textarea>
+        <label class="label mb-2 block font-medium text-gray-700">Description</label>
+        <textarea nz-input [(ngModel)]="newBoardDescription" name="boardDescription" placeholder="What's this retrospective about?" [nzAutosize]="{ minRows: 3 }" class="w-full text-base"></textarea>
       </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-        <button
-          nz-button
-          nzType="default"
-          (click)="cancelCreateBoard()"
-        >
-          Cancel
-        </button>
-        <button
-          nz-button
-          nzType="primary"
-          (click)="createBoard()"
-          [disabled]="!newBoardTitle.trim()"
-        >
-          <span nz-icon nzType="plus" nzTheme="outline"></span>
-          Create Board
-        </button>
+      <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+        <button nz-button nzType="default" (click)="cancelCreateBoard()" class="px-6">Cancel</button>
+        <button nz-button nzType="primary" [disabled]="!newBoardTitle.trim()" (click)="createBoard()" class="bg-[#7954AA] border-none px-6">Create Board</button>
       </div>
     </form>
   </ng-container>
 </nz-modal>
+
 <!-- Edit Board Modal -->
-<nz-modal
-  [(nzVisible)]="isEditBoardModalVisible"
-  nzTitle="Edit Board"
-  [nzFooter]="null"
-  (nzOnCancel)="cancelEditBoard()"
-  nzWidth="520px"
-  nzWrapClassName="edit-board-modal"
->
+<nz-modal [(nzVisible)]="isEditBoardModalVisible" nzTitle="Edit Retrospective" [nzFooter]="null" (nzOnCancel)="cancelEditBoard()" nzWidth="520px" nzWrapClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form">
-      <div class="form-group">
-        <label class="label">Board Title *</label>
-        <input
-          nz-input
-          [(ngModel)]="editBoardTitle"
-          name="editTitle"
-          placeholder="e.g., Sprint 23 Retrospective"
-          class="form-input"
-          (keyup.enter)="updateBoard()"
-        />
+      <div class="form-group mb-4">
+        <label class="label mb-2 block font-medium text-gray-700">Board Title *</label>
+        <input nz-input [(ngModel)]="editBoardTitle" name="editBoardTitle" placeholder="Retrospective title" class="w-full text-base" />
       </div>
-
       <div class="form-group">
-        <label class="label">Description</label>
-        <textarea
-          nz-input
-          [(ngModel)]="editBoardDescription"
-          name="editDescription"
-          placeholder="What is the goal of this retrospective?"
-          [nzAutosize]="{ minRows: 3, maxRows: 6 }"
-          class="form-input"
-          cdkTextareaAutosize
-        ></textarea>
+        <label class="label mb-2 block font-medium text-gray-700">Description</label>
+        <textarea nz-input [(ngModel)]="editBoardDescription" name="editBoardDescription" placeholder="Description" [nzAutosize]="{ minRows: 3 }" class="w-full text-base"></textarea>
       </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-        <button
-          nz-button
-          nzType="default"
-          (click)="cancelEditBoard()"
-        >
-          Cancel
-        </button>
-        <button
-          nz-button
-          nzType="primary"
-          (click)="updateBoard()"
-          [disabled]="!editBoardTitle.trim()"
-        >
-          Save Changes
-        </button>
+      <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+        <button nz-button nzType="default" (click)="cancelEditBoard()" class="px-6">Cancel</button>
+        <button nz-button nzType="primary" [disabled]="!editBoardTitle.trim()" (click)="updateBoard()" class="bg-[#7954AA] border-none px-6">Save Changes</button>
       </div>
     </form>
   </ng-container>

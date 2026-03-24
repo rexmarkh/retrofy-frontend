@@ -432,12 +432,7 @@
 }
 
 .cdk-drag-placeholder {
-  opacity: 0.3;
-  background: #f9fafb;
-  border: 2px dashed #e5e7eb;
-  border-radius: 0;
-  min-height: 120px;
-  margin: 0 0 12px 0;
+  opacity: 0.5 !important;
 }
 
 .cdk-drag-animating {
