@@ -102,7 +102,8 @@
 }
 
 .show-more-link {
-  display: inline-block;
+  display: block;
+  text-align: right;
   font-size: 13px;
   color: #7954AA;
   font-weight: 700;
@@ -113,7 +114,6 @@
   transition: all 0.2s ease;
   
   &:hover {
-    background-color: rgba(121, 84, 170, 0.1);
     color: #6b4a9a;
     text-decoration: underline;
   }

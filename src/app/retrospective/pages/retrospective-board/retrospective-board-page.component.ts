@@ -83,7 +83,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   settingsTitle = '';
   settingsDescription = '';
   isLoading$ = this.retrospectiveQuery.isLoading$;
-  
+
   showSkeleton$ = combineLatest([
     this.isLoading$,
     timer(1000).pipe(startWith(null))
