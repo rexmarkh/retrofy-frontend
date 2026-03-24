@@ -18,6 +18,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
+import { NzProgressModule } from 'ng-zorro-antd/progress';
 
 import { RetrospectiveService } from '../../state/retrospective.service';
 import { RetrospectiveQuery } from '../../state/retrospective.query';
@@ -51,6 +52,7 @@ import { SupabaseService } from '../../../core/services/supabase.service';
     NzToolTipModule,
     NzAvatarModule,
     NzSkeletonModule,
+    NzProgressModule,
     JiraControlModule
   ],
   templateUrl: './retrospective-landing-page.component.html',
@@ -59,10 +61,10 @@ import { SupabaseService } from '../../../core/services/supabase.service';
     trigger('fadeAnimation', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('250ms ease-in', style({ opacity: 1 }))
+        animate('100ms ease-in', style({ opacity: 1 }))
       ]),
       transition(':leave', [
-        animate('250ms ease-out', style({ opacity: 0 }))
+        animate('200ms ease-out', style({ opacity: 0 }))
       ])
     ])
   ]
@@ -472,6 +474,15 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       [RetroPhase.COMPLETED]: 'Completed'
     };
     return labels[phase] || 'Unknown';
+  }
+
+  getPhaseClass(phase: string): Record<string, boolean> {
+    return {
+      'bg-blue-50 text-blue-600': phase === 'brainstorming',
+      'bg-amber-50 text-amber-600': phase === 'grouping' || phase === 'voting',
+      'bg-purple-50 text-[#7954AA]': phase === 'discussion',
+      'bg-green-50 text-green-600': phase === 'completed'
+    };
   }
 
   getPhaseDescription(phase: RetroPhase): string {
