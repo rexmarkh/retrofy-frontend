@@ -19,6 +19,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { QuillModule } from 'ngx-quill';
+import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { JiraControlModule } from '../jira-control/jira-control.module';
 import { AddIssueModalComponent } from './components/add-issue-modal/add-issue-modal.component';
 import { IssueAssigneesSelectComponent } from './components/add-issue-modal/issue-assignees-select/issue-assignees-select.component';
@@ -83,6 +84,7 @@ import { ProjectComponent } from './project.component';
     ReactiveFormsModule,
     JiraControlModule,
     ContentLoaderModule,
+    NzSkeletonModule,
     QuillModule
   ],
   exports: [

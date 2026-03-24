@@ -2,9 +2,84 @@
   <!-- Breadcrumbs / Back button removed per user request -->
 
   <div class="grid-stack">
-    <div *ngIf="showSkeleton$ | async" class="stack-item loading-overlay" [@fadeAnimation]>
-      <div class="spinner"></div>
-      <div class="loading-content">Tailoring your experience...</div>
+    <div *ngIf="showSkeleton$ | async" class="stack-item profile-layout skeleton-loader" [@fadeAnimation]>
+      <!-- Sidebar Skeleton -->
+      <aside class="profile-sidebar">
+        <div class="profile-card">
+          <div class="avatar-wrapper">
+            <nz-skeleton-element nzType="avatar" [nzActive]="true" [nzSize]="'large'" style="width: 120px; height: 120px;"></nz-skeleton-element>
+          </div>
+          <div class="flex flex-col items-center gap-2 mb-6">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 180px; height: 32px;"></nz-skeleton-element>
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 18px;"></nz-skeleton-element>
+          </div>
+          <div class="profile-meta">
+            <div *ngFor="let _ of [1,2,3]" class="meta-item">
+              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" style="width: 16px; height: 16px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 16px;"></nz-skeleton-element>
+            </div>
+          </div>
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 100%; height: 40px; margin-top: 16px;"></nz-skeleton-element>
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 100%; height: 40px; margin-top: 12px;"></nz-skeleton-element>
+        </div>
+      </aside>
+
+      <!-- Main Content Skeleton -->
+      <main class="profile-main-content">
+        <!-- Stats Grid Skeleton -->
+        <section class="section-group">
+          <div class="stats-grid">
+            <div *ngFor="let _ of [1,2,3,4]" class="stat-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 16px; margin-bottom: 8px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 60px; height: 32px; margin-bottom: 8px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 16px;"></nz-skeleton-element>
+            </div>
+          </div>
+        </section>
+
+        <div class="content-split">
+          <!-- Recent Activity Skeleton -->
+          <section class="section-group">
+            <div class="activity-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="medium" style="width: 140px; height: 24px; margin-bottom: 24px;"></nz-skeleton-element>
+              <div class="activity-timeline">
+                <div *ngFor="let _ of [1,2]" class="timeline-group">
+                  <div class="group-header">
+                    <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 18px;"></nz-skeleton-element>
+                    <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 18px;"></nz-skeleton-element>
+                  </div>
+                  <div *ngFor="let _ of [1,2]" class="timeline-item">
+                    <div class="item-content">
+                      <div class="item-title">
+                        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 200px; height: 16px;"></nz-skeleton-element>
+                      </div>
+                      <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100%; height: 40px; margin-top: 8px;"></nz-skeleton-element>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Contribution Distribution Skeleton -->
+          <section class="section-group">
+            <div class="contribution-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="medium" style="width: 180px; height: 24px; margin-bottom: 24px;"></nz-skeleton-element>
+              <div class="contribution-bars">
+                <div *ngFor="let _ of [1,2,3]" class="bar-item">
+                  <div class="bar-info">
+                    <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; height: 16px;"></nz-skeleton-element>
+                    <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 60px; height: 16px;"></nz-skeleton-element>
+                  </div>
+                  <div class="bar-track">
+                     <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100%; height: 10px;"></nz-skeleton-element>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
 
     <div *ngIf="! (showSkeleton$ | async)" class="stack-item profile-layout" [@fadeAnimation]>
