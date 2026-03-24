@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TextFieldModule } from '@angular/cdk/text-field';
@@ -6,7 +6,7 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
@@ -49,6 +49,14 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   @Output() noteEdit = new EventEmitter<StickyNote>();
 
   colorOptions = Object.values(StickyNoteColor);
+  
+  @ViewChild('contentElement') contentElement?: ElementRef;
+  isTruncated = false;
+
+  constructor(
+    private modal: NzModalService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     // Component initialization
@@ -56,6 +64,44 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     // Clean up any subscriptions if needed
+  }
+
+  ngAfterViewChecked() {
+    this.checkTruncation();
+  }
+
+  checkTruncation() {
+    if (this.contentElement) {
+      const el = this.contentElement.nativeElement;
+      const truncated = el.scrollHeight > el.offsetHeight;
+      if (truncated !== this.isTruncated) {
+        this.isTruncated = truncated;
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  showFullNote() {
+    this.modal.create({
+      nzTitle: `Note NT-${this.note.noteNumber}`,
+      nzContent: `
+        <div class="premium-note-modal-content">
+          <div style="font-size: 16px; line-height: 1.8; color: #1e293b; white-space: pre-wrap; padding: 10px 0;">
+            ${this.note.content}
+          </div>
+        </div>
+      `,
+      nzFooter: [
+        {
+          label: 'Close',
+          onClick: (instance: any) => instance?.destroy()
+        }
+      ],
+      nzClassName: 'premium-modal',
+      nzWrapClassName: 'premium-modal',
+      nzCentered: true,
+      nzWidth: 600
+    });
   }
 
   getBackgroundColor(): string {

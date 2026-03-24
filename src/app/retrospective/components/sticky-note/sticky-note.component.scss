@@ -91,6 +91,32 @@
   word-wrap: break-word;
   white-space: pre-wrap;
   padding: 4px 0;
+  
+  // Truncation to 3 lines
+  line-clamp: 3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.show-more-link {
+  display: inline-block;
+  font-size: 13px;
+  color: #7954AA;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(121, 84, 170, 0.1);
+    color: #6b4a9a;
+    text-decoration: underline;
+  }
 }
 
 /* Single Row Footer - Everything inline */

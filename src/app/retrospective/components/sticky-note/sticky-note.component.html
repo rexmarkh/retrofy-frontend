@@ -76,8 +76,11 @@
 
     <!-- Note Content - Takes most space -->
     <div class="note-content-wrapper">
-      <div class="note-content">
+      <div class="note-content" #contentElement>
         {{ note.content }}
+      </div>
+      <div *ngIf="isTruncated" (click)="showFullNote()" class="show-more-link">
+        Show more
       </div>
     </div>
 
