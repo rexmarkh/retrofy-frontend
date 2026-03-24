@@ -136,7 +136,19 @@
     }
   }
 
-  .ant-modal-footer, .flex.justify-end {
+  .ant-modal-footer {
+    padding: 20px 24px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    background: #f8fafc !important;
+    display: flex !important;
+    justify-content: end !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    border-radius: 0 0 12px 12px !important;
+  }
+
+  // Support for custom footers inside modal body
+  .ant-modal-body .flex.justify-end {
     padding: 16px 24px 24px 24px !important;
     border-top: 1px solid #f1f5f9;
     margin: 12px -24px -24px -24px;

@@ -30,12 +30,11 @@
 }
 
 .cdk-drag-placeholder {
-  opacity: 0.4;
-  background: rgba(0, 0, 0, 0.05) !important;
-  border: 2px dashed rgba(0, 0, 0, 0.1) !important;
+  background: transparent !important;
+  border: none !important;
   min-height: 100px;
-  border-radius: 8px;
   margin-bottom: 12px;
+  opacity: 0;
 }
 
 .cdk-drag-animating {
