@@ -34,7 +34,10 @@ import { environment } from '../../../../environments/environment';
     JiraControlModule
   ],
   templateUrl: './sticky-note.component.html',
-  styleUrls: ['./sticky-note.component.scss']
+  styleUrls: ['./sticky-note.component.scss'],
+  host: {
+    'style': 'display: block;'
+  }
 })
 export class StickyNoteComponent implements OnInit, OnDestroy {
   @Input() note!: StickyNote;

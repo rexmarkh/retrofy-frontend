@@ -79,6 +79,7 @@
           cdkDropList
           [id]="'drop-list-' + column.id"
           [cdkDropListData]="stickyNotes"
+          cdkDropListOrientation="vertical"
           (cdkDropListDropped)="onNoteDrop($event)"
         >
           <app-sticky-note 
