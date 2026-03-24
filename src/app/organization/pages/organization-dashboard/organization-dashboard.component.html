@@ -212,7 +212,7 @@
 </div>
 
 <!-- Modals -->
-<nz-modal [(nzVisible)]="isCreateOrgModalVisible" nzTitle="Create New Organization" [nzFooter]="null" (nzOnCancel)="cancelCreateOrg()" nzWidth="520px">
+<nz-modal [(nzVisible)]="isCreateOrgModalVisible" nzTitle="Create New Organization" [nzFooter]="null" (nzOnCancel)="cancelCreateOrg()" nzWidth="520px" nzClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form">
       <div class="form-group mb-4">
@@ -231,7 +231,7 @@
   </ng-container>
 </nz-modal>
 
-<nz-modal [(nzVisible)]="isCreateTeamModalVisible" nzTitle="Create New Team" [nzFooter]="null" (nzOnCancel)="cancelCreateTeam()" nzWidth="520px">
+<nz-modal [(nzVisible)]="isCreateTeamModalVisible" nzTitle="Create New Team" [nzFooter]="null" (nzOnCancel)="cancelCreateTeam()" nzWidth="520px" nzClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form">
       <div class="form-group mb-4">
@@ -260,7 +260,7 @@
   </div>
 </ng-template>
 
-<nz-modal [(nzVisible)]="isInviteMemberModalVisible" [nzTitle]="'Invite Member'" [nzFooter]="null" (nzOnCancel)="cancelInviteMember()" nzWidth="520px">
+<nz-modal [(nzVisible)]="isInviteMemberModalVisible" [nzTitle]="'Invite Member'" [nzFooter]="null" (nzOnCancel)="cancelInviteMember()" nzWidth="520px" nzClassName="premium-modal">
   <ng-container *nzModalContent>
     <form class="board-form" (submit)="inviteMember(); $event.preventDefault()">
       <div class="form-group mb-4">

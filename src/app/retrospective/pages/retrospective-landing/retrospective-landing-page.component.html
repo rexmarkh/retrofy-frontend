@@ -127,13 +127,22 @@
                   class="w-full text-[14px] rounded-xl border border-gray-100 bg-white focus:outline-none focus:border-[#7954AA] transition-all p-2 pl-10"
                 />
               </div>
-              <div class="mt-4 max-h-[300px] overflow-y-auto">
-                <div *ngFor="let result of memberSearchResults" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer" (click)="addMember(result)">
+              <div class="mt-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div *ngFor="let result of memberSearchResults" 
+                     class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                     [class.hover:bg-gray-50]="!result.isAdded"
+                     [class.cursor-not-allowed]="result.isAdded"
+                     [class.opacity-50]="result.isAdded"
+                     [class.cursor-pointer]="!result.isAdded"
+                     (click)="!result.isAdded && addMember(result)">
                   <div class="w-8 h-8 rounded-full bg-[#7954AA] text-white text-[11px] flex items-center justify-center font-bold">
                     {{ getMemberInitials(result.name) }}
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
+                    <div class="flex items-center justify-between gap-2">
+                       <p class="text-sm font-bold text-gray-900 m-0 truncate">{{ result.name }}</p>
+                       <span *ngIf="result.isAdded" class="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shrink-0">Added</span>
+                    </div>
                     <p class="text-[10px] text-gray-400 m-0 truncate">{{ result.email }}</p>
                   </div>
                 </div>
@@ -336,3 +345,43 @@
     </div>
   </div>
 </div>
+
+<!-- Create Board Modal -->
+<nz-modal [(nzVisible)]="isCreateModalVisible" nzTitle="Create New Retrospective" [nzFooter]="null" (nzOnCancel)="cancelCreateBoard()" nzWidth="520px" nzClassName="premium-modal">
+  <ng-container *nzModalContent>
+    <form class="board-form">
+      <div class="form-group mb-4">
+        <label class="label mb-2 block font-medium text-gray-700">Board Title *</label>
+        <input nz-input [(ngModel)]="newBoardTitle" name="boardTitle" placeholder="e.g., Sprint 42 Retrospective" class="w-full text-base" />
+      </div>
+      <div class="form-group">
+        <label class="label mb-2 block font-medium text-gray-700">Description</label>
+        <textarea nz-input [(ngModel)]="newBoardDescription" name="boardDescription" placeholder="What's this retrospective about?" [nzAutosize]="{ minRows: 3 }" class="w-full text-base"></textarea>
+      </div>
+      <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+        <button nz-button nzType="default" (click)="cancelCreateBoard()" class="px-6">Cancel</button>
+        <button nz-button nzType="primary" [disabled]="!newBoardTitle.trim()" (click)="createBoard()" class="bg-[#7954AA] border-none px-6">Create Board</button>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>
+
+<!-- Edit Board Modal -->
+<nz-modal [(nzVisible)]="isEditBoardModalVisible" nzTitle="Edit Retrospective" [nzFooter]="null" (nzOnCancel)="cancelEditBoard()" nzWidth="520px" nzClassName="premium-modal">
+  <ng-container *nzModalContent>
+    <form class="board-form">
+      <div class="form-group mb-4">
+        <label class="label mb-2 block font-medium text-gray-700">Board Title *</label>
+        <input nz-input [(ngModel)]="editBoardTitle" name="editBoardTitle" placeholder="Retrospective title" class="w-full text-base" />
+      </div>
+      <div class="form-group">
+        <label class="label mb-2 block font-medium text-gray-700">Description</label>
+        <textarea nz-input [(ngModel)]="editBoardDescription" name="editBoardDescription" placeholder="Description" [nzAutosize]="{ minRows: 3 }" class="w-full text-base"></textarea>
+      </div>
+      <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+        <button nz-button nzType="default" (click)="cancelEditBoard()" class="px-6">Cancel</button>
+        <button nz-button nzType="primary" [disabled]="!editBoardTitle.trim()" (click)="updateBoard()" class="bg-[#7954AA] border-none px-6">Save Changes</button>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>

@@ -290,7 +290,18 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       return;
     }
     this.isSearchingMembers = true;
-    this.memberSearchResults = await this.organizationService.searchOrgMembers(this.memberSearchQuery);
+    const results = await this.organizationService.searchOrgMembers(this.memberSearchQuery);
+    
+    // Cross-reference with current team members
+    const currentTeam = this.organizationQuery.getValue().currentTeam;
+    const teamMembers = currentTeam ? this.teamMembers.filter(m => m.teamId === currentTeam.id) : [];
+    const memberUserIds = new Set(teamMembers.map(m => (m as any).userId || m.id));
+
+    this.memberSearchResults = results.map(r => ({
+      ...r,
+      isAdded: memberUserIds.has(r.userId)
+    }));
+    
     this.isSearchingMembers = false;
   }
 
