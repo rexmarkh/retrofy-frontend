@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TextFieldModule } from '@angular/cdk/text-field';
@@ -51,6 +51,7 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   colorOptions = Object.values(StickyNoteColor);
   
   @ViewChild('contentElement') contentElement?: ElementRef;
+  @ViewChild('noteModalContent') noteModalContent?: TemplateRef<any>;
   isTruncated = false;
 
   constructor(
@@ -82,26 +83,17 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   }
 
   showFullNote() {
-    this.modal.create({
-      nzTitle: `Note NT-${this.note.noteNumber}`,
-      nzContent: `
-        <div class="premium-note-modal-content">
-          <div style="font-size: 16px; line-height: 1.8; color: #1e293b; white-space: pre-wrap; padding: 10px 0;">
-            ${this.note.content}
-          </div>
-        </div>
-      `,
-      nzFooter: [
-        {
-          label: 'Close',
-          onClick: (instance: any) => instance?.destroy()
-        }
-      ],
-      nzClassName: 'premium-modal',
-      nzWrapClassName: 'premium-modal',
-      nzCentered: true,
-      nzWidth: 600
-    });
+    if (this.noteModalContent) {
+      this.modal.create({
+        nzTitle: `Note NT-${this.note.noteNumber}`,
+        nzContent: this.noteModalContent,
+        nzFooter: null,
+        nzClassName: 'premium-modal',
+        nzWrapClassName: 'premium-modal',
+        nzCentered: true,
+        nzWidth: 600
+      });
+    }
   }
 
   getBackgroundColor(): string {

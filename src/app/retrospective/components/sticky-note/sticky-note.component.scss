@@ -252,3 +252,85 @@
   font-size: 13px !important;
   vertical-align: middle;
 }
+
+/* Modal Detailed View Styles */
+.premium-note-modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-note-body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #1e293b;
+  white-space: pre-wrap;
+  padding: 10px 0 40px 0;
+}
+
+.modal-note-footer {
+  margin: 0 -24px -24px -24px;
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0 0 12px 12px;
+}
+
+.modal-note-footer .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-note-footer .footer-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-note-footer .author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid white;
+}
+
+.anonymous-placeholder {
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.author-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+}
+
+.modal-vote-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7954AA;
+  background: rgba(121, 84, 170, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.modal-vote-badge .vote-icon {
+  font-size: 12px;
+}
