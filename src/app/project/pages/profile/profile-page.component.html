@@ -26,7 +26,7 @@
       <main class="profile-main-content">
         <section class="section-group">
           <div class="stats-grid">
-            <div *ngFor="let _ of [1,2]" class="stat-card">
+            <div *ngFor="let _ of [1,2,3,4]" class="stat-card">
               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 16px; margin-bottom: 8px;"></nz-skeleton-element>
               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 60px; height: 32px; margin-bottom: 8px;"></nz-skeleton-element>
               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 16px;"></nz-skeleton-element>
@@ -46,6 +46,17 @@
                   <div class="timeline-item">
                     <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2 }"></nz-skeleton>
                   </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-group">
+            <div class="contribution-card">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="medium" style="width: 140px; height: 24px; margin-bottom: 24px;"></nz-skeleton-element>
+              <div class="contribution-bars">
+                <div *ngFor="let _ of [1,2,3]" class="bar-item">
+                  <nz-skeleton [nzActive]="true" [nzTitle]="true" [nzParagraph]="{ rows: 1 }"></nz-skeleton>
                 </div>
               </div>
             </div>
@@ -107,10 +118,16 @@
               <span class="stat-value">{{ votesCast }}</span>
               <span class="stat-trend neutral">{{ votesTrend }}</span>
             </div>
+            <div class="stat-card">
+              <span class="stat-label">Action Items</span>
+              <span class="stat-value">{{ actionItems }}</span>
+              <span class="stat-trend neutral">{{ actionItemsTrend }}</span>
+            </div>
           </div>
         </section>
 
         <div class="content-split">
+          <!-- Recent Activity -->
           <section class="section-group">
             <div class="activity-card">
               <h2 class="section-title">Recent Activity</h2>
@@ -129,6 +146,47 @@
                       </div>
                       <div class="item-detail" *ngIf="item.content">{{ item.content }}</div>
                     </div>
+                  </div>
+                </div>
+                <div *ngIf="activityHistory.length === 0" class="empty-state p-8 text-center text-gray-400">
+                  No recent activity recorded yet.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Contribution Distribution -->
+          <section class="section-group">
+            <div class="contribution-card">
+              <div class="contribution-header">
+                <h2 class="card-title">Retrospective Contribution</h2>
+              </div>
+              <div class="contribution-bars">
+                <div class="bar-item">
+                  <div class="bar-info">
+                    <span class="label">What went well</span>
+                    <span class="count">{{ categoryDistribution['What went well'] || 0 }} items</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill green" [style.width.%]="(categoryDistribution['What went well'] || 0) / (notesAdded || 1) * 100"></div>
+                  </div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar-info">
+                    <span class="label">What can be improved</span>
+                    <span class="count">{{ categoryDistribution['What can be improved'] || 0 }} items</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill amber" [style.width.%]="(categoryDistribution['What can be improved'] || 0) / (notesAdded || 1) * 100"></div>
+                  </div>
+                </div>
+                <div class="bar-item">
+                  <div class="bar-info">
+                    <span class="label">Action Items</span>
+                    <span class="count">{{ categoryDistribution['Action Items'] || 0 }} items</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill blue" [style.width.%]="(categoryDistribution['Action Items'] || 0) / (notesAdded || 1) * 100"></div>
                   </div>
                 </div>
               </div>

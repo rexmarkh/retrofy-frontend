@@ -191,7 +191,9 @@ export class ProfilePageComponent implements OnInit {
   }
 
   formatJoinDate(dateString: string): string {
+    if (!dateString) return 'recently';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'recently';
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
