@@ -195,11 +195,23 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
     // Sort notes by position within each column initially
     Object.keys(this.columnDataArrays).forEach(columnId => {
-      this.columnDataArrays[columnId].sort((a, b) => a.position.y - b.position.y);
+      this.columnDataArrays[columnId].sort((a, b) => {
+        // Handle undefined or missing position
+        const posA = a.position?.y ?? 0;
+        const posB = b.position?.y ?? 0;
+        return posA - posB;
+      });
     });
 
-    // If beyond BRAINSTORMING phase, sort by vote count descending instead
-    if (this.currentBoard.currentPhase !== RetroPhase.BRAINSTORMING) {
+    // If in VOTING phase or beyond, sort by importance (votes and groups)
+    const sortingPhases = [
+      RetroPhase.VOTING,
+      RetroPhase.DISCUSSION,
+      RetroPhase.ACTION_ITEMS,
+      RetroPhase.COMPLETED
+    ];
+
+    if (this.currentBoard && sortingPhases.includes(this.currentBoard.currentPhase)) {
       Object.keys(this.columnDataArrays).forEach(columnId => {
         const notes = this.columnDataArrays[columnId];
         
@@ -650,20 +662,26 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
 
   onNoteDrop(event: CdkDragDrop<StickyNote[]>) {
     const draggedNote = event.item.data as StickyNote;
+    const updates: Array<{ id: string, updates: Partial<StickyNote> }> = [];
     
     if (event.previousContainer === event.container) {
       // Same column - reorder notes
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       
-      // Update positions for all notes in the column
+      // Update positions for all notes in the column to persist the new order
       event.container.data.forEach((note, index) => {
-        this.retrospectiveService.updateStickyNote(note.id, {
-          position: { x: note.position.x, y: index * 120 + 10 },
-          updatedAt: new Date().toISOString()
+        updates.push({
+          id: note.id,
+          updates: { 
+            position: { x: note.position.x, y: index * 120 + 10 }
+          }
         });
       });
     } else {
       // Different column - transfer note
+      const oldColumnId = event.previousContainer.id.replace('drop-list-', '');
+      const newColumnId = event.container.id.replace('drop-list-', '');
+      
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
@@ -671,35 +689,33 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
         event.currentIndex
       );
       
-      // Get the new column ID from the container ID
-      const newColumnId = event.container.id.replace('drop-list-', '');
-      
-      if (draggedNote && newColumnId && newColumnId !== draggedNote.columnId) {
-        // Update the note's column and position
-        this.retrospectiveService.updateStickyNote(draggedNote.id, {
-          columnId: newColumnId,
-          position: {
-            x: 0,
-            y: event.currentIndex * 120 + 10
-          },
-          updatedAt: new Date().toISOString()
-        });
-        
-        // Update positions for all notes in both columns
+      // Update the dragged note's column
+      if (draggedNote && newColumnId && newColumnId !== oldColumnId) {
+        // Prepare updates for all items in both columns to ensure their position.y values are updated
         event.previousContainer.data.forEach((note, index) => {
-          this.retrospectiveService.updateStickyNote(note.id, {
-            position: { x: note.position.x, y: index * 120 + 10 },
-            updatedAt: new Date().toISOString()
+          updates.push({
+            id: note.id,
+            updates: { position: { x: note.position.x, y: index * 120 + 10 } }
           });
         });
         
         event.container.data.forEach((note, index) => {
-          this.retrospectiveService.updateStickyNote(note.id, {
-            position: { x: note.position.x, y: index * 120 + 10 },
-            updatedAt: new Date().toISOString()
+          const noteUpdates: Partial<StickyNote> = {
+            position: { x: note.position.x, y: index * 120 + 10 }
+          };
+          if (note.id === draggedNote.id) {
+            noteUpdates.columnId = newColumnId;
+          }
+          updates.push({
+            id: note.id,
+            updates: noteUpdates
           });
         });
       }
+    }
+
+    if (updates.length > 0) {
+      this.retrospectiveService.updateStickyNoteBatch(updates);
     }
   }
 
