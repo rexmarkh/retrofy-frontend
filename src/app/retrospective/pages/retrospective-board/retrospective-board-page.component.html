@@ -1,4 +1,6 @@
-    <div class="retrospective-board h-full fade-in" *ngIf="currentBoard && !(isLoading$ | async)">
+  <div class="grid-stack h-full">
+    <!-- Board Content -->
+    <div class="stack-item retrospective-board h-full" *ngIf="currentBoard && !(showSkeleton$ | async)" [@fadeAnimation]>
       <!-- Header -->
       <nz-layout class="h-full">
         <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
@@ -29,7 +31,7 @@
                   ></j-avatar>
                   <div 
                     *ngIf="uniqueParticipants.length > 5"
-                    class="relative z-50 flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 border-2 border-white text-xs font-medium text-white shadow-sm"
+                    class="relative z-50 flex items-center justify-center m-8 h-8 rounded-full bg-gray-300 border-2 border-white text-xs font-medium text-white shadow-sm"
                   >
                     +{{ uniqueParticipants.length - 5 }}
                   </div>
@@ -107,7 +109,6 @@
         </nz-header>
 
         <!-- Board Content -->
-        <!-- Board Content -->
         <nz-content class="overflow-hidden">
           <div class="h-full">
             <!-- Columns Grid -->
@@ -135,7 +136,74 @@
       </nz-layout>
     </div>
 
-    <!-- Phase Management Modal -->
+    <!-- Loading State -->
+    <div *ngIf="!currentBoard || (showSkeleton$ | async)" class="stack-item h-full" [@fadeAnimation]>
+      <nz-layout class="h-full bg-gray-50">
+        <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col gap-1 w-1/3">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 240px; height: 32px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 180px; height: 16px;"></nz-skeleton-element>
+            </div>
+            <div class="flex items-center gap-4">
+               <div class="flex items-center gap-2">
+                  <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 16px;"></nz-skeleton-element>
+                  <div class="flex items-center -space-x-2">
+                    <nz-skeleton-element *ngFor="let _ of [1,2,3]" nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 32px; height: 32px; border: 2px solid white;"></nz-skeleton-element>
+                  </div>
+               </div>
+               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 110px; height: 32px; border-radius: 6px;"></nz-skeleton-element>
+            </div>
+          </div>
+          <!-- Phase Nav Skeleton -->
+          <div class="flex items-center justify-center gap-4 w-full mt-6 mb-2">
+            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 32px; height: 32px;"></nz-skeleton-element>
+            <div class="flex-1 flex gap-2">
+               <nz-skeleton-element *ngFor="let _ of [1,2,3,4,5,6]" nzType="button" [nzActive]="true" nzSize="small" style="flex: 1; height: 40px; border-radius: 8px;"></nz-skeleton-element>
+            </div>
+            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 32px; height: 32px;"></nz-skeleton-element>
+          </div>
+        </nz-header>
+        <nz-content class="overflow-hidden">
+          <div class="h-full">
+            <div class="columns-grid h-full gap-6 pointer-events-none">
+              <div *ngFor="let _ of [1, 2, 3]" class="column-item">
+                <nz-card 
+                  [nzTitle]="skeletonColumnHeader"
+                  [nzBodyStyle]="{ padding: '16px', display: 'flex', 'flex-direction': 'column', height: 'calc(100% - 64px)' }"
+                  class="h-full"
+                >
+                  <div class="column-content h-full flex flex-col gap-4">
+                    <!-- Notes Skeleton -->
+                    <div *ngFor="let __ of [1, 2]" class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                      <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 2 }" [nzTitle]="false"></nz-skeleton>
+                      <div class="mt-4 flex justify-between items-center">
+                         <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 24px; height: 24px;"></nz-skeleton-element>
+                         <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 44px; height: 20px;"></nz-skeleton-element>
+                      </div>
+                    </div>
+                  </div>
+                </nz-card>
+                <ng-template #skeletonColumnHeader>
+                  <div class="flex items-center justify-between">
+                    <div class="flex flex-col gap-1 w-2/3">
+                      <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 20px;"></nz-skeleton-element>
+                      <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 14px;"></nz-skeleton-element>
+                    </div>
+                    <!-- Split Button Skeleton -->
+                    <div class="flex h-[32px]">
+                       <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 32px; height: 32px; border-radius: 4px 0 0 4px;"></nz-skeleton-element>
+                       <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 32px; height: 32px; border-radius: 0 4px 4px 0;"></nz-skeleton-element>
+                    </div>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </nz-content>
+      </nz-layout>
+    </div>
+  </div>
     <nz-modal
       [(nzVisible)]="isPhaseModalVisible"
       nzClosable="false"
@@ -266,74 +334,6 @@
         </div>
       </ng-template>
     </nz-modal>
-
-    <!-- Loading State -->
-    <div *ngIf="!currentBoard || (isLoading$ | async)" class="h-full">
-      <nz-layout class="h-full bg-gray-50">
-        <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex flex-col gap-1 w-1/3">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 240px; height: 32px;"></nz-skeleton-element>
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 180px; height: 16px;"></nz-skeleton-element>
-            </div>
-            <div class="flex items-center gap-4">
-               <div class="flex items-center gap-2">
-                  <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 16px;"></nz-skeleton-element>
-                  <div class="flex items-center -space-x-2">
-                    <nz-skeleton-element *ngFor="let _ of [1,2,3]" nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 32px; height: 32px; border: 2px solid white;"></nz-skeleton-element>
-                  </div>
-               </div>
-               <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 110px; height: 32px; border-radius: 6px;"></nz-skeleton-element>
-            </div>
-          </div>
-          <!-- Phase Nav Skeleton -->
-          <div class="flex items-center justify-center gap-4 w-full mt-6 mb-2">
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 32px; height: 32px;"></nz-skeleton-element>
-            <div class="flex-1 flex gap-2">
-               <nz-skeleton-element *ngFor="let _ of [1,2,3,4,5,6]" nzType="button" [nzActive]="true" nzSize="small" style="flex: 1; height: 40px; border-radius: 8px;"></nz-skeleton-element>
-            </div>
-            <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 32px; height: 32px;"></nz-skeleton-element>
-          </div>
-        </nz-header>
-        <nz-content class="overflow-hidden">
-          <div class="h-full">
-            <div class="columns-grid h-full gap-6 pointer-events-none">
-              <div *ngFor="let _ of [1, 2, 3]" class="column-item">
-                <nz-card 
-                  [nzTitle]="skeletonColumnHeader"
-                  [nzBodyStyle]="{ padding: '16px', display: 'flex', 'flex-direction': 'column', height: 'calc(100% - 64px)' }"
-                  class="h-full"
-                >
-                  <div class="column-content h-full flex flex-col gap-4">
-                    <!-- Notes Skeleton -->
-                    <div *ngFor="let __ of [1, 2]" class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 2 }" [nzTitle]="false"></nz-skeleton>
-                      <div class="mt-4 flex justify-between items-center">
-                         <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="width: 24px; height: 24px;"></nz-skeleton-element>
-                         <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" nzShape="round" style="width: 44px; height: 20px;"></nz-skeleton-element>
-                      </div>
-                    </div>
-                  </div>
-                </nz-card>
-                <ng-template #skeletonColumnHeader>
-                  <div class="flex items-center justify-between">
-                    <div class="flex flex-col gap-1 w-2/3">
-                      <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px; height: 20px;"></nz-skeleton-element>
-                      <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 80px; height: 14px;"></nz-skeleton-element>
-                    </div>
-                    <!-- Split Button Skeleton -->
-                    <div class="flex h-[32px]">
-                       <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 32px; height: 32px; border-radius: 4px 0 0 4px;"></nz-skeleton-element>
-                       <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 32px; height: 32px; border-radius: 0 4px 4px 0;"></nz-skeleton-element>
-                    </div>
-                  </div>
-                </ng-template>
-              </div>
-            </div>
-          </div>
-        </nz-content>
-      </nz-layout>
-    </div>
 
     <!-- Step Description Templates -->
     <ng-template #brainstormingDescTemplate>

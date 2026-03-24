@@ -1,305 +1,274 @@
 <div class="organization-dashboard p-8 bg-[#f8f9fa] min-h-screen">
-  <!-- Skeleton Header -->
-  <div *ngIf="isLoading$ | async" class="mb-8">
-    <div class="flex items-start justify-between">
-      <div class="flex items-start gap-6 w-full">
-        <!-- Avatar Skeleton -->
-        <nz-skeleton-element nzType="avatar" [nzActive]="true" [nzSize]="'large'" nzShape="square" style="width: 80px; height: 80px; border-radius: 2px;"></nz-skeleton-element>
-        
-        <div class="pt-1">
-          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 300px; height: 40px; margin-bottom: 8px;"></nz-skeleton-element>
-          <div class="flex flex-col gap-1">
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 200px; height: 15px;"></nz-skeleton-element>
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 150px; height: 15px;"></nz-skeleton-element>
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 pt-2">
-        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px; height: 40px;"></nz-skeleton-element>
-        <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px; height: 40px;"></nz-skeleton-element>
-      </div>
-    </div>
-    <hr class="border-gray-200 my-8 w-full border-t">
-  </div>
-
-  <!-- Organization Header -->
-  <div *ngIf="currentOrganization && !(isLoading$ | async)" class="mb-8 fade-in">
-    <div class="flex items-start justify-between">
-      <div class="flex items-center gap-6">
-        <!-- Organization Avatar -->
-        <div class="relative group cursor-pointer" (click)="avatarInput.click()">
-          <div class="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 transition-all group-hover:border-[#7954AA]">
-            <img *ngIf="currentOrganization.avatarUrl" [src]="currentOrganization.avatarUrl" class="w-full h-full object-cover">
-            <span *ngIf="!currentOrganization.avatarUrl" class="text-4xl text-gray-300 font-bold uppercase">{{ currentOrganization.name.charAt(0) }}</span>
-            
-            <!-- Upload Overlay -->
-            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span nz-icon [nzType]="isUploadingAvatar ? 'loading' : 'camera'" class="text-white text-2xl"></span>
+  <!-- Header Section with Smooth Transition -->
+  <div class="grid-stack mb-8">
+    <!-- Skeleton Header -->
+    <div *ngIf="showSkeleton$ | async" class="stack-item" [@fadeAnimation]>
+      <div class="flex items-start justify-between">
+        <div class="flex items-start gap-6 w-full">
+          <!-- Avatar Skeleton -->
+          <nz-skeleton-element nzType="avatar" [nzActive]="true" [nzSize]="'large'" nzShape="square" style="width: 80px; height: 80px; border-radius: 2px;"></nz-skeleton-element>
+          
+          <div class="pt-1">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 300px; height: 40px; margin-bottom: 8px;"></nz-skeleton-element>
+            <div class="flex flex-col gap-1">
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 200px; height: 15px;"></nz-skeleton-element>
+              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 150px; height: 15px;"></nz-skeleton-element>
             </div>
           </div>
-          <input type="file" #avatarInput class="hidden" (change)="onAvatarFileSelected($event)" accept="image/*">
         </div>
+        <div class="flex items-center gap-3 pt-2">
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px; height: 40px;"></nz-skeleton-element>
+          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="default" style="width: 140px; height: 40px;"></nz-skeleton-element>
+        </div>
+      </div>
+      <hr class="border-gray-200 my-8 w-full border-t">
+    </div>
 
-        <div class="pt-0">
-          <h1 class="text-[26px] font-bold text-gray-900 leading-tight mb-1.5 tracking-tight">{{ currentOrganization.name }}</h1>
-          <div class="flex flex-col gap-0.5 text-[13px] font-medium text-gray-500">
-            <span class="flex items-center gap-2">
-              <span nz-icon nzType="team" nzTheme="outline" class="text-[14px]"></span>
-              {{ currentOrganization.memberCount }} member{{ currentOrganization.memberCount !== 1 ? 's' : '' }} • {{ currentOrganization.teamCount }} team{{ currentOrganization.teamCount !== 1 ? 's' : '' }}
-            </span>
-            <span class="flex items-center gap-2">
-              <span nz-icon nzType="calendar" nzTheme="outline" class="text-[14px]"></span>
-              Created {{ currentOrganization.createdAt | date:'MMM d, yyyy' }}
-            </span>
+    <!-- Organization Header -->
+    <div *ngIf="currentOrganization && !(showSkeleton$ | async)" class="stack-item" [@fadeAnimation]>
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-6">
+          <!-- Organization Avatar -->
+          <div class="relative group cursor-pointer" (click)="avatarInput.click()">
+            <div class="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 transition-all group-hover:border-[#7954AA]">
+              <img *ngIf="currentOrganization.avatarUrl" [src]="currentOrganization.avatarUrl" class="w-full h-full object-cover">
+              <span *ngIf="!currentOrganization.avatarUrl" class="text-4xl text-gray-300 font-bold uppercase">{{ currentOrganization.name.charAt(0) }}</span>
+              
+              <!-- Upload Overlay -->
+              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span nz-icon [nzType]="isUploadingAvatar ? 'loading' : 'camera'" class="text-white text-2xl"></span>
+              </div>
+            </div>
+            <input type="file" #avatarInput class="hidden" (change)="onAvatarFileSelected($event)" accept="image/*">
           </div>
+
+          <div class="pt-0">
+            <h1 class="text-[26px] font-bold text-gray-900 leading-tight mb-1.5 tracking-tight">{{ currentOrganization.name }}</h1>
+            <div class="flex flex-col gap-0.5 text-[13px] font-medium text-gray-500">
+              <span class="flex items-center gap-2">
+                <span nz-icon nzType="team" nzTheme="outline" class="text-[14px]"></span>
+                {{ currentOrganization.memberCount }} member{{ currentOrganization.memberCount !== 1 ? 's' : '' }} • {{ currentOrganization.teamCount }} team{{ currentOrganization.teamCount !== 1 ? 's' : '' }}
+              </span>
+              <span class="flex items-center gap-2">
+                <span nz-icon nzType="calendar" nzTheme="outline" class="text-[14px]"></span>
+                Created {{ currentOrganization.createdAt | date:'MMM d, yyyy' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button 
+            nz-button 
+            nzType="default"
+            nzSize="medium"
+            (click)="showInviteMemberModal()"
+            class="flex items-center h-[40px] px-6 text-[14px] font-medium text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+          >
+            Invite Members
+          </button>
+          
+          <button 
+            nz-button 
+            nzType="primary"
+            nzSize="medium"
+            (click)="showCreateTeamModal()"
+            class="flex items-center h-[40px] px-6 text-[14px] font-medium text-white bg-[#7954AA] hover:bg-[#6b4299] border-none shadow-sm transition-colors"
+          >
+            Create Team
+          </button>
         </div>
       </div>
       
-      <div class="flex items-center gap-3">
-        <!-- <button 
-          nz-button 
-          nzType="default"
-          nzSize="medium"
-          (click)="showLinkJiraModal()"
-          class="flex items-center gap-2 jira-link-button"
-          [class.linked]="currentOrganization.jiraIntegration?.isConnected"
-        >
-          <span nz-icon nzType="link" nzTheme="outline"></span>
-          {{ currentOrganization.jiraIntegration?.isConnected ? 'Manage Jira' : 'Link Jira' }}
-        </button>
-        
-        <button 
-          nz-button 
-          nzType="default"
-          nzSize="medium"
-          (click)="loadSampleData()"
-          class="flex items-center gap-2"
-        >
-          <span nz-icon nzType="experiment" nzTheme="outline"></span>
-          Load Sample Data
-        </button> -->
-        
-        <button 
-          nz-button 
-          nzType="default"
-          nzSize="medium"
-          (click)="showInviteMemberModal()"
-          class="flex items-center h-[40px] px-6 text-[14px] font-medium text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
-        >
-          Invite Members
-        </button>
-        
-        <button 
-          nz-button 
-          nzType="primary"
-          nzSize="medium"
-          (click)="showCreateTeamModal()"
-          class="flex items-center h-[40px] px-6 text-[14px] font-medium text-white bg-[#7954AA] hover:bg-[#6b4299] border-none shadow-sm transition-colors"
-        >
-          Create Team
-        </button>
-      </div>
+      <!-- Header Separator -->
+      <hr class="border-gray-200 my-8 w-full border-t">
     </div>
-    
-    <!-- Header Separator -->
-    <hr class="border-gray-200 my-8 w-full border-t">
   </div>
 
-  <!-- Skeleton Grid -->
-  <nz-row [nzGutter]="[24, 24]" *ngIf="isLoading$ | async">
-    <!-- Teams Section Skeleton -->
-    <nz-col [nzSpan]="16">
-      <div class="flex items-center gap-2 mb-4">
-        <h2 class="text-xl font-bold text-gray-900 m-0">Teams</h2>
-        <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
-      </div>
-      <div class="grid grid-cols-2 gap-6">
-        <div *ngFor="let _ of [1, 2, 3, 4]">
-          <div class="bg-white rounded-xl p-6 flex flex-col h-full" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
-            <!-- Title -->
-            <div class="mb-2">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 20px;"></nz-skeleton-element>
-            </div>
-            <!-- Description -->
-            <div class="mb-8 flex-grow">
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100%', '80%'] }"></nz-skeleton>
-            </div>
-            <!-- Metrics -->
-            <div class="flex items-center gap-8">
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['60px'] }"></nz-skeleton>
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['60px'] }"></nz-skeleton>
-            </div>
-          </div>
+  <!-- Content Grid Section with Smooth Transition -->
+  <div class="grid-stack">
+    <!-- Skeleton Grid -->
+    <nz-row [nzGutter]="[24, 24]" *ngIf="showSkeleton$ | async" class="stack-item" [@fadeAnimation]>
+      <!-- Teams Section Skeleton -->
+      <nz-col [nzSpan]="16">
+        <div class="flex items-center gap-2 mb-4">
+          <h2 class="text-xl font-bold text-gray-900 m-0">Teams</h2>
+          <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
         </div>
-      </div>
-    </nz-col>
-
-    <!-- Members Section Skeleton -->
-    <nz-col [nzSpan]="8">
-      <div class="bg-white border border-gray-200 p-6 mb-8">
-        <!-- Quick Stats Skeleton -->
-        <div class="mb-2">
-          <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; margin-bottom: 12px;"></nz-skeleton-element>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
-            </div>
-            <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
-              <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
-            </div>
-          </div>
-        </div>
-
-        <hr class="border-gray-100 my-8 w-full border-t">
-
-        <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
-          <div class="flex items-center gap-2">
-            <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
-            <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
-          </div>
-        </div>
-        <div class="member-list space-y-2 mb-6">
-          <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-50">
-            <div class="relative flex-shrink-0">
-              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="square" style="width: 40px; height: 40px;"></nz-skeleton-element>
-              <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border: 2.5px solid white; z-index: 10;"></nz-skeleton-element>
-            </div>
-            <div class="flex-1">
-              <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['120px', '180px'] }"></nz-skeleton>
-            </div>
-          </div>
-        </div>
-        <!-- Add Member Button Skeleton -->
-        <div class="w-full border-2 border-dashed border-gray-100 py-4 mb-2">
-          <div class="flex justify-center">
-            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 120px;"></nz-skeleton-element>
-          </div>
-        </div>
-      </div>
-    </nz-col>
-  </nz-row>
-
-  <!-- Content Grid - Teams and Members -->
-  <nz-row [nzGutter]="[24, 24]" *ngIf="currentOrganization && !(isLoading$ | async)" class="fade-in">
-    <!-- Teams Section -->
-    <nz-col [nzSpan]="16">
-      <div class="flex items-center gap-2 mb-4">
-        <h2 class="text-xl font-bold text-gray-900 m-0">Teams</h2>
-        <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
-      </div>
-      <div class="h-full">
-        <div *ngIf="teams.length > 0" class="grid grid-cols-2 gap-6">
-          <app-team-card
-            *ngFor="let team of teams; trackBy: trackByTeamId"
-            [team]="team"
-            (cardClick)="openTeamManagement($event)"
-            (edit)="showTeamSettings($event)"
-            (delete)="deleteTeam($event)"
-          ></app-team-card>
-        </div>
-
-        <!-- Empty Teams State -->
-        <div *ngIf="teams.length === 0" class="empty-state">
-          <nz-empty nzNotFoundImage="simple">
-            <div nz-empty-content class="text-center py-8">
-              <div class="mb-4">
-                <span nz-icon nzType="team" nzTheme="outline" class="text-4xl text-gray-300"></span>
+        <div class="grid grid-cols-2 gap-6">
+          <div *ngFor="let _ of [1, 2, 3, 4]">
+            <div class="bg-white rounded-xl p-6 flex flex-col h-full" style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+              <!-- Title -->
+              <div class="mb-2">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 140px; height: 20px;"></nz-skeleton-element>
               </div>
-              <h3 class="text-lg font-medium text-gray-900 mb-2">No teams yet</h3>
-              <p class="text-gray-500 mb-4">Create your first team to organize members and projects</p>
-              <button 
-                nz-button 
-                nzType="primary"
-                nzSize="medium"
-                (click)="showCreateTeamModal()"
-                class="flex items-center gap-2 mx-auto"
+              <!-- Description -->
+              <div class="mb-8 flex-grow">
+                <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['100%', '80%'] }"></nz-skeleton>
+              </div>
+              <!-- Metrics -->
+              <div class="flex items-center gap-8">
+                <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['60px'] }"></nz-skeleton>
+                <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 1, width: ['60px'] }"></nz-skeleton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nz-col>
+
+      <!-- Members Section Skeleton -->
+      <nz-col [nzSpan]="8">
+        <div class="bg-white border border-gray-200 p-6 mb-8">
+          <!-- Quick Stats Skeleton -->
+          <div class="mb-2">
+            <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="small" style="width: 100px; margin-bottom: 12px;"></nz-skeleton-element>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+              </div>
+              <div class="bg-gray-50 p-5 flex flex-col items-center border border-gray-50">
+                <nz-skeleton-element nzType="button" [nzActive]="true" nzSize="large" style="width: 40px; height: 32px;"></nz-skeleton-element>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-gray-100 my-8 w-full border-t">
+
+          <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+            <div class="flex items-center gap-2">
+              <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
+              <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
+            </div>
+          </div>
+          <div class="member-list space-y-2 mb-6">
+            <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-50">
+              <div class="relative flex-shrink-0">
+                <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="default" nzShape="square" style="width: 40px; height: 40px;"></nz-skeleton-element>
+                <nz-skeleton-element nzType="avatar" [nzActive]="true" nzSize="small" nzShape="circle" style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border: 2.5px solid white; z-index: 10;"></nz-skeleton-element>
+              </div>
+              <div class="flex-1">
+                <nz-skeleton [nzActive]="true" [nzTitle]="false" [nzParagraph]="{ rows: 2, width: ['120px', '180px'] }"></nz-skeleton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nz-col>
+    </nz-row>
+
+    <!-- Content Grid - Teams and Members -->
+    <nz-row [nzGutter]="[24, 24]" *ngIf="currentOrganization && !(showSkeleton$ | async)" class="stack-item" [@fadeAnimation]>
+      <!-- Teams Section -->
+      <nz-col [nzSpan]="16">
+        <div class="flex items-center gap-2 mb-4">
+          <h2 class="text-xl font-bold text-gray-900 m-0">Teams</h2>
+          <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
+        </div>
+        <div class="h-full">
+          <div *ngIf="teams.length > 0" class="grid grid-cols-2 gap-6">
+            <app-team-card
+              *ngFor="let team of teams; trackBy: trackByTeamId"
+              [team]="team"
+              (cardClick)="openTeamManagement($event)"
+              (edit)="showTeamSettings($event)"
+              (delete)="deleteTeam($event)"
+            ></app-team-card>
+          </div>
+
+          <!-- Empty Teams State -->
+          <div *ngIf="teams.length === 0" class="empty-state">
+            <nz-empty nzNotFoundImage="simple">
+              <div nz-empty-content class="text-center py-8">
+                <div class="mb-4">
+                  <span nz-icon nzType="team" nzTheme="outline" class="text-4xl text-gray-300"></span>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No teams yet</h3>
+                <p class="text-gray-500 mb-4">Create your first team to organize members and projects</p>
+                <button 
+                  nz-button 
+                  nzType="primary"
+                  nzSize="medium"
+                  (click)="showCreateTeamModal()"
+                  class="flex items-center gap-2 mx-auto"
+                >
+                  Create First Team
+                  <span nz-icon nzType="plus" nzTheme="outline"></span>
+                </button>
+              </div>
+            </nz-empty>
+          </div>
+        </div>
+      </nz-col>
+
+      <!-- Members Section -->
+      <nz-col [nzSpan]="8">
+        
+        <!-- Members Card -->
+        <div class="bg-white border border-gray-200 !shadow-none p-6 mb-8">
+          <!-- Quick Stats -->
+          <div class="mb-2">
+            <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">QUICK STATS</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
+                <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teams.length < 10 ? '0' + teams.length : teams.length }}</span>
+                <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL TEAMS</span>
+              </div>
+              <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
+                <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ activeMembersCount() < 10 ? '0' + activeMembersCount() : activeMembersCount() }}</span>
+                <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL USERS</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-gray-200 my-8 w-full border-t">
+
+          <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+            <div class="flex items-center gap-2">
+              <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
+              <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
+            </div>
+            <a class="text-[#7954AA] text-xs font-bold hover:text-[#6b4299] transition-colors">View All</a>
+          </div>
+
+          <div *ngIf="members.length > 0">
+            <div class="member-list space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              <div 
+                *ngFor="let member of members; trackBy: trackByMemberId"
+                class="flex items-center justify-between p-2 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-50 mb-1"
               >
-                Create First Team
-                <span nz-icon nzType="plus" nzTheme="outline"></span>
-              </button>
-            </div>
-          </nz-empty>
-        </div>
-      </div>
-    </nz-col>
-
-    <!-- Members Section -->
-    <nz-col [nzSpan]="8">
-      
-      <!-- Members Card -->
-      <div class="bg-white border border-gray-200 !shadow-none p-6 mb-8">
-        <!-- Quick Stats -->
-        <div class="mb-2">
-          <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-4">QUICK STATS</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
-              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ teams.length < 10 ? '0' + teams.length : teams.length }}</span>
-              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL TEAMS</span>
-            </div>
-            <div class="bg-[#fafafb] p-5 flex flex-col items-center justify-center border border-gray-100">
-              <span class="text-3xl font-bold text-[#7954AA] mb-1">{{ activeMembersCount() < 10 ? '0' + activeMembersCount() : activeMembersCount() }}</span>
-              <span class="text-[9px] font-bold text-gray-500 tracking-wider">TOTAL USERS</span>
-            </div>
-          </div>
-        </div>
-
-        <hr class="border-gray-200 my-8 w-full border-t">
-
-        <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
-          <div class="flex items-center gap-2">
-            <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
-            <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
-          </div>
-          <a class="text-[#7954AA] text-xs font-bold hover:text-[#6b4299] transition-colors">View All</a>
-        </div>
-
-        <div *ngIf="members.length > 0">
-          <div class="member-list space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            <div 
-              *ngFor="let member of members; trackBy: trackByMemberId"
-              class="flex items-center justify-between p-2 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-50 mb-1"
-            >
-              <div class="flex items-center gap-3">
-                <div class="relative flex-shrink-0">
-                  <j-avatar 
-                    [avatarUrl]="member.user.avatarUrl"
-                    [name]="member.user.name"
-                    [size]="40"
-                    className="rounded-sm">
-                  </j-avatar>
-                  <span style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white; z-index: 10;"></span>
-                </div>
-                <div>
-                  <div class="font-bold text-gray-900 text-sm flex items-center gap-2">
-                    {{ member.user.name }}
-                    <span class="bg-[#f1f5f9] text-gray-500 text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">{{ member.role }}</span>
+                <div class="flex items-center gap-3">
+                  <div class="relative flex-shrink-0">
+                    <j-avatar 
+                      [avatarUrl]="member.user.avatarUrl"
+                      [name]="member.user.name"
+                      [size]="40"
+                      className="rounded-sm">
+                    </j-avatar>
+                    <span style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: #22c55e; border-radius: 9999px; border: 2.5px solid white; z-index: 10;"></span>
                   </div>
-                  <div class="text-[11px] text-gray-500">{{ member.user.email }}</div>
+                  <div>
+                    <div class="font-bold text-gray-900 text-sm flex items-center gap-2">
+                      {{ member.user.name }}
+                      <span class="bg-[#f1f5f9] text-gray-500 text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">{{ member.role }}</span>
+                    </div>
+                    <div class="text-[11px] text-gray-500">{{ member.user.email }}</div>
+                  </div>
                 </div>
-              </div>
-              <div class="flex flex-col items-end gap-1">
-                 <button nz-button nzType="text" nzSize="small" class="text-gray-400 hover:text-gray-600">
-                   <span nz-icon nzType="ellipsis" nzTheme="outline" class="text-lg rotate-90"></span>
-                 </button>
+                <div class="flex flex-col items-end gap-1">
+                   <button nz-button nzType="text" nzSize="small" class="text-gray-400 hover:text-gray-600">
+                     <span nz-icon nzType="ellipsis" nzTheme="outline" class="text-lg rotate-90"></span>
+                   </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- <button 
-          (click)="showInviteMemberModal()"
-          class="w-full border-2 border-dashed border-gray-200 py-4 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm hover:border-[#7954AA] hover:text-[#7954AA] transition-all bg-white hover:bg-purple-50"
-        >
-          <span nz-icon nzType="user-add" nzTheme="outline"></span>
-          Add new member
-        </button> -->
-      </div>
-
-    </nz-col>
-  </nz-row>
+      </nz-col>
+    </nz-row>
+  </div>
 
   <!-- Empty Organization State -->
-  <div *ngIf="!currentOrganization && !(isLoading$ | async)" class="empty-state fade-in">
+  <div *ngIf="!currentOrganization && !(showSkeleton$ | async)" class="empty-state" [@fadeAnimation]>
     <nz-empty 
       [nzNotFoundContent]="emptyOrganizationsTemplate"
       nzNotFoundImage="simple"

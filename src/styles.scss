@@ -233,3 +233,15 @@
     }
   }
 }
+
+/* Grid Stack for Overlapping Transitions (Cross-fade) */
+.grid-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+.stack-item {
+  grid-area: 1 / 1;
+  width: 100%;
+}

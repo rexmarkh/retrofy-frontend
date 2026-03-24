@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, combineLatest, timer, map, startWith, distinctUntilChanged } from 'rxjs';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -53,7 +54,18 @@ import { SupabaseService } from '../../../core/services/supabase.service';
     JiraControlModule
   ],
   templateUrl: './retrospective-landing-page.component.html',
-  styleUrls: ['./retrospective-landing-page.component.scss']
+  styleUrls: ['./retrospective-landing-page.component.scss'],
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('250ms ease-in', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('250ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -64,6 +76,14 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   newBoardDescription = '';
   favoriteBoards: Set<string> = new Set();
   isLoading$ = this.retrospectiveQuery.isLoading$;
+  
+  showSkeleton$ = combineLatest([
+    this.isLoading$,
+    timer(1000).pipe(startWith(null))
+  ]).pipe(
+    map(([loading, timerDone]) => loading || timerDone === null),
+    distinctUntilChanged()
+  );
   activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
   currentTeam$ = this.organizationQuery.currentTeam$;
