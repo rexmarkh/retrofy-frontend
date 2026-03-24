@@ -96,8 +96,9 @@
         <div class="flex items-center gap-3">
           <button
             nz-button
+            nzType="primary"
             nzSize="large"
-            class="bg-[#7954AA] text-white hover:bg-[#6b4299] border-none flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm"
+            class="bg-[#7954AA] text-white hover:bg-[#6b4299] border-none flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm transition-all"
             (click)="showCreateBoardModal()"
           >
             <span nz-icon nzType="plus"></span>
@@ -109,7 +110,7 @@
               nz-button
               nzType="default"
               nzSize="large"
-              class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm"
+              class="border-[#7954AA] text-[#7954AA] hover:bg-purple-50 flex items-center gap-2 text-[14px] font-medium px-6 h-10 rounded-sm shadow-sm transition-all"
               (click)="toggleAddMember()"
             >
               <span>{{ showAddMember ? '✕' : 'Add member' }}</span>

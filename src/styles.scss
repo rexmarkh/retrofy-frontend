@@ -11,22 +11,31 @@
   border-radius: 2px !important;
 }
 
-/* Global Ant Design Primary Color Override */
+/* Global Ant Design Button Overrides - Standardizing on Project Purple (#7954AA) */
 .ant-btn-primary {
   background-color: #7954AA !important;
   border-color: #7954AA !important;
+  box-shadow: none !important;
   
   &:hover:not([disabled]),
-  &:focus:not([disabled]) {
-    background-color: #6a4899 !important;
-    border-color: #6a4899 !important;
+  &:focus:not([disabled]),
+  &:active:not([disabled]) {
+    background-color: #6b4a9a !important;
+    border-color: #6b4a9a !important;
+    color: white !important;
   }
-  
-  &[disabled] {
-    opacity: 0.5 !important;
-    background-color: #7954AA !important;
+}
+
+.ant-btn:not(.ant-btn-primary):not(.ant-btn-danger):not(.ant-btn-text) {
+  &:hover, &:focus, &:active {
     border-color: #7954AA !important;
+    color: #7954AA !important;
   }
+}
+
+/* Fix for focus ring across all components */
+*:focus {
+  outline: none !important;
 }
 
 .pre-bootstrapping-container {
@@ -40,7 +49,7 @@
 }
 
 .ant-select-selection-item {
-  line-height: 0 !important;
+  line-height: inherit !important;
 }
 
 /* Premium Modal Styling - Standardized for all dashboard popups */
@@ -123,10 +132,7 @@
     }
 
     .ant-select-selector {
-      padding: 4px 14px !important;
-      height: auto !important;
-      display: flex !important;
-      align-items: center !important;
+      padding: 0 14px !important;
     }
   }
 
