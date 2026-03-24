@@ -43,6 +43,7 @@ export class ProfilePageComponent implements OnInit {
     map(([loading, timerDone]) => loading || timerDone === null),
     distinctUntilChanged()
   );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   
   // Retro stats
   retrosJoined = 0;

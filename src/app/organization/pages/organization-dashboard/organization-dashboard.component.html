@@ -25,7 +25,11 @@
     </div>
 
     <!-- Organization Header -->
-    <div *ngIf="currentOrganization && !(showSkeleton$ | async)" class="stack-item" [@fadeAnimation]>
+    <div *ngIf="currentOrganization && (dataReady$ | async)" 
+         class="stack-item"
+         [style.opacity]="(showSkeleton$ | async) ? 0 : 1"
+         [style.pointer-events]="(showSkeleton$ | async) ? 'none' : 'auto'"
+         style="transition: opacity 250ms ease-in-out">
       <div class="flex items-start justify-between">
         <div class="flex items-center gap-6">
           <!-- Organization Avatar -->
@@ -156,7 +160,11 @@
     </nz-row>
 
     <!-- Content Grid - Teams and Members -->
-    <nz-row [nzGutter]="[24, 24]" *ngIf="currentOrganization && !(showSkeleton$ | async)" class="stack-item" [@fadeAnimation]>
+    <nz-row [nzGutter]="[24, 24]" *ngIf="currentOrganization && (dataReady$ | async)" 
+            class="stack-item"
+            [style.opacity]="(showSkeleton$ | async) ? 0 : 1"
+            [style.pointer-events]="(showSkeleton$ | async) ? 'none' : 'auto'"
+            style="transition: opacity 250ms ease-in-out">
       <!-- Teams Section -->
       <nz-col [nzSpan]="16">
         <div class="flex items-center gap-2 mb-4">
@@ -268,7 +276,11 @@
   </div>
 
   <!-- Empty Organization State -->
-  <div *ngIf="!currentOrganization && !(showSkeleton$ | async)" class="empty-state" [@fadeAnimation]>
+  <div *ngIf="!currentOrganization && (dataReady$ | async)" 
+       class="empty-state"
+       [style.opacity]="(showSkeleton$ | async) ? 0 : 1"
+       [style.pointer-events]="(showSkeleton$ | async) ? 'none' : 'auto'"
+       style="transition: opacity 250ms ease-in-out">
     <nz-empty 
       [nzNotFoundContent]="emptyOrganizationsTemplate"
       nzNotFoundImage="simple"

@@ -84,6 +84,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     map(([loading, timerDone]) => loading || timerDone === null),
     distinctUntilChanged()
   );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
   currentTeam$ = this.organizationQuery.currentTeam$;

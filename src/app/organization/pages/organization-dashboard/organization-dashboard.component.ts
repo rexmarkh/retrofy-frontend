@@ -81,6 +81,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     map(([loading, timerDone]) => loading || timerDone === null),
     distinctUntilChanged()
   );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   organizations: Organization[] = [];
   teams: Team[] = [];
   members: OrganizationMember[] = [];

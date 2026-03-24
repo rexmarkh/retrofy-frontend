@@ -91,6 +91,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     map(([loading, timerDone]) => loading || timerDone === null),
     distinctUntilChanged()
   );
+  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
   
   // User data
   users: JUser[] = [];

@@ -1,6 +1,10 @@
   <div class="grid-stack h-full">
     <!-- Board Content -->
-    <div class="stack-item retrospective-board h-full" *ngIf="currentBoard && !(showSkeleton$ | async)" [@fadeAnimation]>
+    <div class="stack-item retrospective-board h-full" 
+         *ngIf="currentBoard && (dataReady$ | async)"
+         [style.opacity]="(showSkeleton$ | async) ? 0 : 1"
+         [style.pointer-events]="(showSkeleton$ | async) ? 'none' : 'auto'"
+         style="transition: opacity 250ms ease-in-out">
       <!-- Header -->
       <nz-layout class="h-full">
         <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
@@ -137,7 +141,7 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="!currentBoard || (showSkeleton$ | async)" class="stack-item h-full" [@fadeAnimation]>
+    <div *ngIf="showSkeleton$ | async" class="stack-item h-full" [@fadeAnimation]>
       <nz-layout class="h-full bg-gray-50">
         <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
           <div class="flex items-center justify-between mb-4">

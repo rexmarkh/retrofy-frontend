@@ -82,7 +82,11 @@
       </main>
     </div>
 
-    <div *ngIf="! (showSkeleton$ | async)" class="stack-item profile-layout" [@fadeAnimation]>
+    <div *ngIf="dataReady$ | async" 
+         class="stack-item profile-layout" 
+         [style.opacity]="(showSkeleton$ | async) ? 0 : 1"
+         [style.pointer-events]="(showSkeleton$ | async) ? 'none' : 'auto'"
+         style="transition: opacity 250ms ease-in-out">
       <!-- Sidebar: Profile Card -->
       <aside class="profile-sidebar">
         <div class="profile-card">
