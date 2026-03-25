@@ -20,6 +20,8 @@ export class RetrospectiveQuery extends Query<RetrospectiveState> {
     const currentBoard = this.getCurrentBoard();
     if (!currentBoard) return [];
     
-    return currentBoard.stickyNotes.filter(note => note.columnId === columnId);
+    return currentBoard.stickyNotes
+      .filter(note => note.columnId === columnId)
+      .sort((a, b) => (a.position?.y || 0) - (b.position?.y || 0));
   }
 }
