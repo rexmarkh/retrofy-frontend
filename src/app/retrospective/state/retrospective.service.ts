@@ -268,7 +268,7 @@ export class RetrospectiveService {
       }
 
       if (!board) return;
-
+      
       // Always ensure we have default columns
       if (!board.columns || board.columns.length === 0) {
         board.columns = [
@@ -295,6 +295,9 @@ export class RetrospectiveService {
           }
         ];
       }
+      
+      // Update store with board metadata early so the layout can render
+      this.store.update({ currentBoard: board });
 
       // Fetch items from retro_items and join with profiles
       const { data: itemsData, error: itemsError } = await this.supabaseService.client
