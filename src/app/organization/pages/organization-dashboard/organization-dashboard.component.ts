@@ -191,6 +191,11 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     try {
       // 1. Update Role if changed
       if (this.editingRole !== this.selectedMember.role) {
+        // Extra guard: only owners can promote to owner
+        if (this.editingRole === 'owner' && !this.isOwner) {
+          throw new Error('Only owners can assign the owner role');
+        }
+
         const success = await this.organizationService.updateMemberRole(
           this.selectedMember.userId,
           this.currentOrganization.id,

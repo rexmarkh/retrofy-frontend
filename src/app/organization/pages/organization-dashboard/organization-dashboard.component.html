@@ -335,6 +335,7 @@
           nzPlaceHolder="Select teams"
           class="w-full h-auto"
           [nzMaxTagCount]="5"
+          [nzDisabled]="!canManageMember(selectedMember)"
         >
           <nz-option *ngFor="let team of allTeams" [nzValue]="team.id" [nzLabel]="team.name"></nz-option>
         </nz-select>
