@@ -5,6 +5,7 @@ import { NzDrawerService } from 'ng-zorro-antd/drawer';
 import { SearchDrawerComponent } from '../../search/search-drawer/search-drawer.component';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { AddIssueModalComponent } from '../../add-issue-modal/add-issue-modal.component';
+import { AuthService } from '@trungk18/project/auth/auth.service';
 
 @Component({
     selector: 'app-navbar-left',
@@ -18,6 +19,7 @@ export class NavbarLeftComponent implements OnInit {
     public authQuery: AuthQuery,
     private _drawerService: NzDrawerService,
     private _modalService: NzModalService,
+    private _authService: AuthService,
     private router: Router
   ) {}
 
@@ -54,6 +56,10 @@ export class NavbarLeftComponent implements OnInit {
 
   navigateToOrganization() {
     this.router.navigate(['/organization']);
+  }
+
+  logout() {
+    this._authService.logout();
   }
 }
 

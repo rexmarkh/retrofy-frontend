@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { JUser } from '@trungk18/interface/user';
 import { AuthQuery } from '@trungk18/project/auth/auth.query';
-import { AuthService } from '@trungk18/project/auth/auth.service';
 import { ProjectQuery } from '@trungk18/project/state/project/project.query';
 import { RetrospectiveService } from '@trungk18/retrospective/state/retrospective.service';
 import { Observable, forkJoin, of, BehaviorSubject, combineLatest, timer } from 'rxjs';
@@ -69,7 +68,6 @@ export class ProfilePageComponent implements OnInit {
 
   constructor(
     private authQuery: AuthQuery,
-    private authService: AuthService,
     private projectQuery: ProjectQuery,
     private retrospectiveService: RetrospectiveService,
     private router: Router
@@ -170,10 +168,6 @@ export class ProfilePageComponent implements OnInit {
     this.isEditing = false;
     // You can add actual save logic here
     console.log('Profile saved');
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 
   cancelEdit(): void {
