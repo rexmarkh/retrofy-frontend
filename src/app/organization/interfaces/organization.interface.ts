@@ -11,6 +11,7 @@ export interface Organization {
   isPrivate: boolean;
   settings?: OrganizationSettings;
   jiraIntegration?: JiraIntegration;
+  currentUserRole?: string | OrganizationRole;
 }
 
 export interface Team {
@@ -33,6 +34,7 @@ export interface Team {
   isPrivate: boolean;
   settings?: TeamSettings;
   isMember?: boolean;
+  currentUserRole?: string;
 }
 
 export interface TeamMember {
@@ -77,6 +79,7 @@ export interface OrganizationMember {
     email: string;
     avatarUrl?: string;
   };
+  isGlobal?: boolean;
 }
 
 export interface OrganizationSettings {

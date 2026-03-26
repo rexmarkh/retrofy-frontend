@@ -14,7 +14,7 @@
   <!-- Card Body -->
   <div class="p-6 flex flex-col flex-grow">
     <!-- Actions (Edit / Delete) - Top Right Corner -->
-    <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" *ngIf="team.isMember">
+    <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" *ngIf="team.isMember && canManage">
       <button 
         nz-button 
         nzType="text" 

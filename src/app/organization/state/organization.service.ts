@@ -3,6 +3,7 @@ import { OrganizationStore } from './organization.store';
 import { Organization, Team, OrganizationMember, TeamMember, OrganizationInvite, TeamInvite, OrganizationRole, TeamRole, MemberStatus, InviteStatus, OrganizationSettings, TeamSettings, Project } from '../interfaces/organization.interface';
 import { AuthQuery } from '../../project/auth/auth.query';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { Permission, ROLE_PERMISSIONS } from '../../core/constants/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -11,6 +12,96 @@ export class OrganizationService {
     private authQuery: AuthQuery,
     private supabaseService: SupabaseService
   ) {}
+
+  /**
+   * Check if the current user has a specific permission in the current organization context.
+   */
+  hasPermission(permission: Permission, teamId?: string): boolean {
+    if (permission === Permission.CREATE_ORG) {
+      // Always allow organization creation if the user is authenticated,
+      // regardless of their role in the current organization context.
+      return !!this.getCurrentUserId();
+    }
+
+    const state = this.store.getValue();
+    const currentOrgId = state.currentOrganization?.id;
+    const currentUserId = this.getCurrentUserId();
+
+    if (!currentOrgId || !currentUserId) return false;
+
+    // 1. Check Organization-level Role
+    const member = state.organizationMembers.find(
+      m => m.organizationId === currentOrgId && m.userId === currentUserId
+    );
+
+    if (member) {
+      // Owners have all permissions
+      if (member.role === OrganizationRole.OWNER) return true;
+      
+      // Global Admins have all permissions (isGlobal is true for memberships with null team_id)
+      if (member.role === OrganizationRole.ADMIN && member.isGlobal) {
+        const permissions = ROLE_PERMISSIONS[OrganizationRole.ADMIN];
+        if (permissions?.includes(permission)) return true;
+      }
+    }
+
+    // 2. Check Team-level Role contextually
+    if (teamId) {
+      const team = state.teams.find(t => t.id === teamId);
+      const teamRole = team?.currentUserRole;
+      if (teamRole) {
+        const permissions = ROLE_PERMISSIONS[teamRole as OrganizationRole];
+        if (permissions?.includes(permission)) return true;
+      }
+    }
+
+    // 3. Fallback to Member permissions
+    if (member) {
+      const memberPermissions = ROLE_PERMISSIONS[OrganizationRole.MEMBER];
+      return memberPermissions?.includes(permission) || false;
+    }
+
+    return false;
+  }
+
+  /**
+   * Get the current user ID, with fallback to localStorage for session restoration resilience.
+   */
+  getCurrentUserId(): string | null {
+    let currentUserId = this.authQuery.getValue()?.id;
+    
+    // Safely try to get user from localStorage if not in authQuery
+    if (!currentUserId) {
+      try {
+        const tokenStr = localStorage.getItem('sb-cjoigydcgkkmlikacmtt-auth-token');
+        if (tokenStr) {
+          const tokenData = JSON.parse(tokenStr);
+          currentUserId = tokenData?.user?.id;
+        }
+      } catch (e) {
+        console.warn('[OrganizationService] Failed to parse auth token from localStorage', e);
+      }
+    }
+    
+    return currentUserId || null;
+  }
+
+  /**
+   * Get the current user's role in the currently selected organization.
+   */
+  getCurrentUserRole(): OrganizationRole | null {
+    const state = this.store.getValue();
+    const currentOrgId = state.currentOrganization?.id;
+    const currentUserId = this.getCurrentUserId();
+
+    if (!currentOrgId || !currentUserId) return null;
+
+    const member = state.organizationMembers.find(
+      m => m.organizationId === currentOrgId && m.userId === currentUserId
+    );
+
+    return member ? member.role : null;
+  }
 
   async inviteMember(email: string, orgId: string, orgName: string): Promise<{ success: boolean; error?: any }> {
     try {
@@ -74,6 +165,11 @@ export class OrganizationService {
         return ids.concat((org.teams || []).map((t: any) => t.id));
       }, [] as string[]);
       
+      let query = `org_id.in.(${orgIds.join(',')})`;
+      if (teamIds.length > 0) {
+        query += `,team_id.in.(${teamIds.join(',')})`;
+      }
+      
       const { data: allMemberships, error: membershipsError } = await this.supabaseService.client
         .from('memberships')
         .select(`
@@ -84,7 +180,7 @@ export class OrganizationService {
             avatar_url
           )
         `)
-        .or(`org_id.in.(${orgIds.join(',')}),team_id.in.(${teamIds.join(',')})`);
+        .or(query);
 
       if (membershipsError) throw membershipsError;
 
@@ -97,10 +193,32 @@ export class OrganizationService {
         
         // Deduplicate by user_id to ensure a unique member list for the organization
         const uniqueUserMemberships = new Map<string, any>();
+        const rolePriority: Record<string, number> = {
+          'owner': 1,
+          'admin': 2,
+          'member': 3
+        };
+
         allMemberships?.forEach(m => {
           if (m.org_id === org.id || (m.team_id && orgTeamIds.includes(m.team_id))) {
-            if (!uniqueUserMemberships.has(m.user_id)) {
+            const existing = uniqueUserMemberships.get(m.user_id);
+            if (!existing) {
               uniqueUserMemberships.set(m.user_id, m);
+            } else {
+              const currentRole = m.user_id === org.owner_id ? 'owner' : (m.role?.toLowerCase() || 'member');
+              const existingRole = existing.user_id === org.owner_id ? 'owner' : (existing.role?.toLowerCase() || 'member');
+              
+              const currentPriority = rolePriority[currentRole] || 4;
+              const existingPriority = rolePriority[existingRole] || 4;
+
+              // Prioritize higher role
+              if (currentPriority < existingPriority) {
+                uniqueUserMemberships.set(m.user_id, m);
+              } 
+              // If same role, prioritize organization-level membership (null team_id)
+              else if (currentPriority === existingPriority && !m.team_id && existing.team_id) {
+                uniqueUserMemberships.set(m.user_id, m);
+              }
             }
           }
         });
@@ -139,6 +257,7 @@ export class OrganizationService {
             userId: m.user_id,
             organizationId: org.id,
             role: m.user_id === org.owner_id ? OrganizationRole.OWNER : (m.role || OrganizationRole.MEMBER),
+            isGlobal: !m.team_id,
             joinedAt: m.created_at || org.created_at || new Date().toISOString(),
             status: m.status as MemberStatus || MemberStatus.ACTIVE,
             user: userDetails
@@ -168,22 +287,27 @@ export class OrganizationService {
             allowPublicTeams: false,
             requireApprovalForMembers: true,
             defaultTeamVisibility: 'private'
-          }
+          },
+          currentUserRole: activeMembers.find(m => m.userId === currentUserId)?.role || OrganizationRole.MEMBER
         };
       });
 
-      const mappedTeams: Team[] = allTeams.map(team => ({
-        id: team.id,
-        name: team.name,
-        description: team.description || '',
-        organizationId: team.org_id || '',
-        createdAt: team.created_at || new Date().toISOString(),
-        updatedAt: team.created_at || new Date().toISOString(),
-        memberCount: (team.memberships || []).length,
-        boardCount: team.retro_boards?.[0]?.count ?? 0,
-        isPrivate: true,
-        isMember: (team.memberships || []).some((m: any) => m.user_id === currentUserId)
-      }));
+      const mappedTeams: Team[] = allTeams.map(team => {
+        const userMembership = (team.memberships || []).find((m: any) => m.user_id === currentUserId);
+        return {
+          id: team.id,
+          name: team.name,
+          description: team.description || '',
+          organizationId: team.org_id || '',
+          createdAt: team.created_at || new Date().toISOString(),
+          updatedAt: team.created_at || new Date().toISOString(),
+          memberCount: (team.memberships || []).length,
+          boardCount: team.retro_boards?.[0]?.count ?? 0,
+          isPrivate: true,
+          isMember: !!userMembership,
+          currentUserRole: userMembership?.role
+        };
+      });
 
       // Update state with organizations, teams AND members
       this.store.update(state => ({
@@ -739,6 +863,79 @@ export class OrganizationService {
           : org
       )
     }));
+  }
+
+  async updateMemberRole(userId: string, orgId: string, role: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabaseService.client
+        .from('memberships')
+        .update({ role })
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+        .is('team_id', null);
+
+      if (error) throw error;
+      
+      // Refresh to update local state
+      await this.loadOrganizationsFromSupabase();
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] updateMemberRole failed:', err);
+      return false;
+    }
+  }
+
+  async updateTeamMemberships(userId: string, orgId: string, teamIds: string[]): Promise<boolean> {
+    try {
+      // 1. Fetch current team memberships for this user in this org
+      const { data: currentMemberships, error: fetchError } = await this.supabaseService.client
+        .from('memberships')
+        .select('team_id')
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+        .not('team_id', 'is', null);
+
+      if (fetchError) throw fetchError;
+
+      const currentTeamIds = currentMemberships?.map(m => m.team_id) || [];
+      
+      // 2. Identify additions and removals
+      const teamsToAdd = teamIds.filter(id => !currentTeamIds.includes(id));
+      const teamsToRemove = currentTeamIds.filter(id => !teamIds.includes(id));
+
+      // 3. Perform removals
+      if (teamsToRemove.length > 0) {
+        const { error: removeError } = await this.supabaseService.client
+          .from('memberships')
+          .delete()
+          .eq('user_id', userId)
+          .eq('org_id', orgId)
+          .in('team_id', teamsToRemove);
+        if (removeError) throw removeError;
+      }
+
+      // 4. Perform additions
+      if (teamsToAdd.length > 0) {
+        const insertData = teamsToAdd.map(id => ({
+          user_id: userId,
+          org_id: orgId,
+          team_id: id,
+          role: 'member', // Default to member for new team assignments
+          status: 'active'
+        }));
+        const { error: addError } = await this.supabaseService.client
+          .from('memberships')
+          .insert(insertData);
+        if (addError) throw addError;
+      }
+
+      // 5. Refresh to update local state
+      await this.loadOrganizationsFromSupabase();
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] updateTeamMemberships failed:', err);
+      return false;
+    }
   }
 
   addTeamMemberDirect(teamId: string, organizationId: string, name: string, email: string, role: 'team_lead' | 'senior' | 'developer' | 'designer' | 'qa' | 'member'): void {

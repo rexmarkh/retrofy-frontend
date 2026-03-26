@@ -50,6 +50,8 @@ export interface RetrospectiveBoard {
   isActive: boolean;
   timerDuration?: number;
   currentPhase: RetroPhase;
+  orgId?: string;
+  teamId?: string;
   createdAt: string;
   updatedAt: string;
 }

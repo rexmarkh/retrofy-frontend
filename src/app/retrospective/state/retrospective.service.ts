@@ -69,7 +69,9 @@ export class RetrospectiveService {
           isActive: row.status === 'active',
           currentPhase: this.mapPhaseFromDb(row.current_stage),
           createdAt: row.created_at || new Date().toISOString(),
-          updatedAt: finalUpdatedAt
+          updatedAt: finalUpdatedAt,
+          orgId: row.org_id,
+          teamId: row.team_id
         };
       });
 
@@ -140,6 +142,8 @@ export class RetrospectiveService {
         notesCount: 0,
         isActive: true,
         currentPhase: RetroPhase.BRAINSTORMING,
+        orgId: data.org_id,
+        teamId: data.team_id,
         createdAt: data.created_at,
         updatedAt: data.created_at
       };
@@ -255,6 +259,8 @@ export class RetrospectiveService {
             aiSummary: boardData.ai_summary || {},
             isActive: boardData.status === 'active',
             currentPhase: this.mapPhaseFromDb(boardData.current_stage),
+            orgId: boardData.org_id,
+            teamId: boardData.team_id,
             createdAt: boardData.created_at || new Date().toISOString(),
             updatedAt: boardData.created_at || new Date().toISOString()
           };
@@ -325,7 +331,7 @@ export class RetrospectiveService {
           isAnonymous: !!item.is_anonymous,
           columnId: mapCategoryToColumnId(item.category),
           color: item.color_code || StickyNoteColor.YELLOW,
-          position: { x: 0, y: 0 },
+          position: { x: item.position_x || 0, y: item.position_y || 0 },
           votes: item.votes || 0,
           voterIds: item.voter_ids || [],
           tags: item.tags || [],
@@ -434,9 +440,9 @@ export class RetrospectiveService {
            authorAvatar: newItem.is_anonymous ? '' : (author?.avatarUrl || ''),
            isAnonymous: !!newItem.is_anonymous,
            columnId: this.mapCategoryToColumnId(newItem.category),
-           color: newItem.color_code || StickyNoteColor.YELLOW,
-           position: { x: 0, y: 0 },
-           votes: newItem.votes || 0,
+            color: newItem.color_code || StickyNoteColor.YELLOW,
+            position: { x: newItem.position_x || 0, y: newItem.position_y || 0 },
+            votes: newItem.votes || 0,
            voterIds: newItem.voter_ids || [],
            tags: newItem.tags || [],
            groupId: newItem.group_id || null,
@@ -486,7 +492,8 @@ export class RetrospectiveService {
                     tags: updatedItem.tags || note.tags,
                     groupId: updatedItem.group_id !== undefined ? updatedItem.group_id : note.groupId,
                     updatedAt: updatedItem.updated_at,
-                    noteNumber: updatedItem.sequence_number || note.noteNumber
+                    noteNumber: updatedItem.sequence_number || note.noteNumber,
+                    position: updatedItem.position_x !== undefined ? { x: updatedItem.position_x, y: updatedItem.position_y } : note.position
                   }
                 : note
             )
@@ -639,7 +646,8 @@ export class RetrospectiveService {
       if (noteUpdates.tags !== undefined) dbUpdates.tags = noteUpdates.tags;
       if (noteUpdates.groupId !== undefined) dbUpdates.group_id = noteUpdates.groupId;
       if (noteUpdates.position !== undefined) {
-        // Position isn't shared in DB yet, but let's keep it here if future compatible
+        dbUpdates.position_x = noteUpdates.position.x;
+        dbUpdates.position_y = noteUpdates.position.y;
       }
 
       if (Object.keys(dbUpdates).length > 0) {

@@ -25,6 +25,7 @@ import { RetrospectiveQuery } from '../../state/retrospective.query';
 import { AuthQuery } from '../../../project/auth/auth.query';
 import { OrganizationQuery } from '../../../organization/state/organization.query';
 import { OrganizationService } from '../../../organization/state/organization.service';
+import { Permission } from '../../../core/constants/permissions';
 import { RetrospectiveBoard, RetroPhase } from '../../interfaces/retrospective.interface';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 
@@ -107,6 +108,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   editingBoard: RetrospectiveBoard | null = null;
   editBoardTitle = '';
   editBoardDescription = '';
+
+  readonly Permission = Permission;
 
   constructor(
     private router: Router,
@@ -300,7 +303,11 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     this.memberSearchResults = results.map(r => ({
       ...r,
       isAdded: memberUserIds.has(r.userId)
-    }));
+    })).sort((a, b) => {
+      // Sort new members (isAdded false/undefined) to the top
+      if (a.isAdded === b.isAdded) return 0;
+      return a.isAdded ? 1 : -1;
+    });
     
     this.isSearchingMembers = false;
   }
@@ -357,6 +364,11 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  hasPermission(permission: Permission): boolean {
+    const currentTeam = this.organizationQuery.getValue().currentTeam;
+    return this.organizationService.hasPermission(permission, currentTeam?.id);
+  }
+
 
   // Utility Methods
   trackByBoardId(index: number, board: RetrospectiveBoard): string {
@@ -388,16 +400,25 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       : this.teamMembers;
 
     let result: any[] = [];
+    const orgMembers = this.organizationQuery.getValue().organizationMembers;
+
     if (members.length > 0) {
-      result = members.map((m, i) => ({
-        ...m,
-        id: m.id,
-        name: m.name || m.email || 'Team Member',
-        role: this.formatRole(m.role),
-        color: roleColors[i % roleColors.length],
-        avatarUrl: m.avatarUrl,
-        contributionRate: this.memberContributionStats.get((m as any).userId || m.id) || 0
-      }));
+      result = members.map((m, i) => {
+        const userId = (m as any).userId || m.id;
+        // Find this user in organization members to get their highest (org-level) role
+        const orgMember = orgMembers.find(om => om.userId === userId);
+        const effectiveRole = orgMember ? orgMember.role : m.role;
+
+        return {
+          ...m,
+          id: m.id,
+          name: m.name || m.email || 'Team Member',
+          role: this.formatRole(effectiveRole),
+          color: roleColors[i % roleColors.length],
+          avatarUrl: m.avatarUrl,
+          contributionRate: this.memberContributionStats.get(userId) || 0
+        };
+      });
     } else {
       // Last-resort fallback: use current user only
       const team = currentTeam as any;

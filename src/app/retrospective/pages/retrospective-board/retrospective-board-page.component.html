@@ -236,7 +236,7 @@
           <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
             <button nz-button (click)="cancelPhaseChange()">Cancel</button>
             <button nz-button nzType="primary" 
-                    [disabled]="selectedPhase === currentBoard?.currentPhase"
+                    [disabled]="selectedPhase === currentBoard?.currentPhase || !canChangePhase()"
                     (click)="updatePhase()" class="bg-[#7954AA]">
               Update Phase
             </button>

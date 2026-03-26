@@ -71,6 +71,19 @@
                 </j-avatar>
             </div>
         </div>
+        <div class="item"
+             *ngIf="authQuery.user$ | async as user">
+            <div (click)="logout()"
+                 nz-tooltip
+                 nzTooltipTitle="Logout"
+                 nzTooltipPlacement="right"
+                 class="itemIcon">
+                 <i class="text-xl text-white"
+                    nz-icon
+                    nzType="logout"
+                    nzTheme="outline"></i>
+            </div>
+        </div>
         <!-- <div class="item">
             <a nz-popover
                nzPopoverPlacement="rightBottom"

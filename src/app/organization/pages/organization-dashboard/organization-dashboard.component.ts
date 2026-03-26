@@ -20,11 +20,14 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 
 import { OrganizationService } from '../../state/organization.service';
 import { OrganizationQuery } from '../../state/organization.query';
 import { AuthQuery } from '../../../project/auth/auth.query';
 import { Organization, Team, OrganizationMember, OrganizationSettings, TeamSettings, MemberStatus } from '../../interfaces/organization.interface';
+import { Permission } from '../../../core/constants/permissions';
 import { TeamCardComponent } from '../../components/team-card/team-card.component';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
@@ -50,8 +53,9 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
     NzFormModule,
     NzTagModule,
     NzAvatarModule,
-    NzGridModule,
     NzSkeletonModule,
+    NzDropDownModule,
+    NzMenuModule,
     TeamCardComponent,
     JiraControlModule
   ],
@@ -113,6 +117,111 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   newOrgName = '';
   newOrgDescription = '';
 
+  // Member Management
+  isEditMembershipModalVisible = false;
+  selectedMember: OrganizationMember | null = null;
+  editingRole: string = '';
+  editingTeamIds: string[] = [];
+  isUpdatingMembership = false;
+  allTeams: Team[] = [];
+
+  get isOwner(): boolean {
+    return this.currentOrganization?.currentUserRole === 'owner';
+  }
+
+  get isAdmin(): boolean {
+    return this.currentOrganization?.currentUserRole === 'admin';
+  }
+
+  canManageMember(member: OrganizationMember): boolean {
+    if (!this.currentOrganization) return false;
+    
+    // Current user can only manage others if they are owner or admin
+    const myRole = this.currentOrganization.currentUserRole;
+    if (myRole !== 'owner' && myRole !== 'admin') return false;
+
+    // Owners can manage everyone except maybe themselves in some contexts, but usually OK
+    if (myRole === 'owner') return true;
+
+    // Admins can manage members and other admins, but not owners
+    if (myRole === 'admin') {
+      return member.role !== 'owner';
+    }
+    
+    return false;
+  }
+
+  canChangeRole(member: OrganizationMember): boolean {
+    if (!this.currentOrganization) return false;
+    const myRole = this.currentOrganization.currentUserRole;
+
+    // Only owners can promote/demote owners
+    if (member.role === 'owner') return myRole === 'owner';
+    
+    // Owners and Admins can change roles of members/admins
+    return myRole === 'owner' || myRole === 'admin';
+  }
+
+  showEditMembershipModal(member: OrganizationMember): void {
+    this.selectedMember = member;
+    this.editingRole = member.role;
+    this.isEditMembershipModalVisible = true;
+    this.allTeams = this.teams;
+    
+    // Find teams where this user is present
+    this.editingTeamIds = this.teams
+      .filter(team => {
+        const teamMembers = this.organizationQuery.getValue().teamMembers;
+        return teamMembers.some(tm => tm.teamId === team.id && (tm as any).userId === member.userId);
+      })
+      .map(team => team.id);
+  }
+
+  cancelEditMembership(): void {
+    this.isEditMembershipModalVisible = false;
+    this.selectedMember = null;
+    this.editingRole = '';
+    this.editingTeamIds = [];
+  }
+
+  async saveMembershipChanges(): Promise<void> {
+    if (!this.selectedMember || !this.currentOrganization) return;
+
+    this.isUpdatingMembership = true;
+    try {
+      // 1. Update Role if changed
+      if (this.editingRole !== this.selectedMember.role) {
+        // Extra guard: only owners can promote to owner
+        if (this.editingRole === 'owner' && !this.isOwner) {
+          throw new Error('Only owners can assign the owner role');
+        }
+
+        const success = await this.organizationService.updateMemberRole(
+          this.selectedMember.userId,
+          this.currentOrganization.id,
+          this.editingRole
+        );
+        if (!success) throw new Error('Failed to update role');
+      }
+
+      // 2. Update Teams
+      const successTeams = await this.organizationService.updateTeamMemberships(
+        this.selectedMember.userId,
+        this.currentOrganization.id,
+        this.editingTeamIds
+      );
+      if (!successTeams) throw new Error('Failed to update team memberships');
+
+      this.message.success('Membership updated successfully');
+      this.cancelEditMembership();
+    } catch (error) {
+      console.error('[OrganizationDashboard] Failed to save membership changes:', error);
+      this.message.error('Failed to update membership');
+    } finally {
+      this.isUpdatingMembership = false;
+    }
+  }
+
   // Invite Member Modal
   isInviteMemberModalVisible = false;
   inviteEmail = '';
@@ -127,6 +236,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   editTeamDescription = '';
 
   isUploadingAvatar = false;
+  readonly Permission = Permission;
 
   constructor(
     private router: Router,
@@ -137,19 +247,30 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     private message: NzMessageService
   ) {}
 
+  hasPermission(permission: Permission, teamId?: string): boolean {
+    return this.organizationService.hasPermission(permission, teamId);
+  }
+
   ngOnInit() {
-    // Fetch data from Supabase into local store
-    this.organizationService.loadOrganizationsFromSupabase();
+    // React to auth status and load data
+    this.authQuery.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        if (user) {
+          this.organizationService.loadOrganizationsFromSupabase();
+        }
+      });
 
     // Subscribe to organizations
     this.organizationQuery.organizations$
       .pipe(takeUntil(this.destroy$))
       .subscribe(organizations => {
-        this.organizations = organizations;
+        this.organizations = organizations || [];
         
-        // Auto-select first/only organization
-        if (organizations.length > 0 && !this.currentOrganization) {
-          this.setCurrentOrganization(organizations[0]);
+        // Auto-select first/only organization if one isn't already selected in store
+        const currentOrgId = this.organizationQuery.getValue().currentOrganization?.id;
+        if (this.organizations.length > 0 && !currentOrgId) {
+          this.setCurrentOrganization(this.organizations[0]);
         }
       });
 
@@ -178,6 +299,10 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     }
   }
   
+  switchOrganization(org: Organization) {
+    this.setCurrentOrganization(org);
+  }
+
   private setCurrentOrganization(org: Organization) {
     this.currentOrganization = org;
     this.organizationService.setCurrentOrganization(org.id);
@@ -188,6 +313,10 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.organizationQuery.getTeamsByOrganization(orgId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(teams => {
+        if (!teams) {
+          this.teams = [];
+          return;
+        }
         this.teams = [...teams].sort((a, b) => {
           if ((b.boardCount || 0) !== (a.boardCount || 0)) {
             return (b.boardCount || 0) - (a.boardCount || 0);
@@ -206,11 +335,39 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.organizationQuery.getMembersByOrganization(orgId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(members => {
+        if (!members) {
+          this.members = [];
+          return;
+        }
         // Deduplicate by userId – a user can appear multiple times if they belong
-        // to multiple teams within the same org.
         const seen = new Map<string, OrganizationMember>();
-        members.forEach(m => { if (!seen.has(m.userId)) seen.set(m.userId, m); });
-        this.members = Array.from(seen.values());
+        const roleOrder: Record<string, number> = {
+          'owner': 1,
+          'admin': 2,
+          'member': 3
+        };
+
+        members.forEach(m => {
+          if (m?.userId) {
+            const existing = seen.get(m.userId);
+            if (!existing) {
+              seen.set(m.userId, m);
+            } else {
+              // Prioritize higher role (lower number = higher priority)
+              const currentPriority = roleOrder[m.role?.toLowerCase()] || 4;
+              const existingPriority = roleOrder[existing.role?.toLowerCase()] || 4;
+              if (currentPriority < existingPriority) {
+                seen.set(m.userId, m);
+              }
+            }
+          }
+        });
+
+        this.members = Array.from(seen.values()).sort((a, b) => {
+          const priorityA = roleOrder[a.role?.toLowerCase()] || 4;
+          const priorityB = roleOrder[b.role?.toLowerCase()] || 4;
+          return priorityA - priorityB;
+        });
       });
   }
 
