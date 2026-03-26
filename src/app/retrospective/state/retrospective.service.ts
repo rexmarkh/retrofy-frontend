@@ -26,7 +26,8 @@ export class RetrospectiveService {
         .select(`
           *,
           retro_items (
-            created_at
+            created_at,
+            user_id
           )
         `);
       
@@ -56,12 +57,22 @@ export class RetrospectiveService {
         const latestActivityTime = Math.max(boardUpdateAt, boardCreateAt, ...noteDates);
         const finalUpdatedAt = latestActivityTime > 0 ? new Date(latestActivityTime).toISOString() : new Date().toISOString();
 
+        // Accurate unique participants calculation from metadata, creator, and contributors
+        const participantIds = new Set<string>();
+        if (row.created_by) participantIds.add(row.created_by);
+        row.retro_items?.forEach((item: any) => {
+          if (item.user_id) participantIds.add(item.user_id);
+        });
+        row.participants?.forEach((p: string) => {
+          if (p) participantIds.add(p);
+        });
+
         return {
           id: row.id,
           title: row.title,
           description: row.description || '',
           facilitatorId: row.created_by || '',
-          participants: row.participants || [row.created_by || ''], 
+          participants: Array.from(participantIds),
           columns: [],
           stickyNotes: [],
           aiSummary: row.ai_summary || {},

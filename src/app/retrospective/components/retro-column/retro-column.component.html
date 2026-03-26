@@ -113,7 +113,7 @@
 
         <!-- Empty State - OUTSIDE the drop list so it doesn't interfere -->
         <div 
-          *ngIf="stickyNotes.length === 0" 
+          *ngIf="stickyNotes.length === 0 && !isLoading" 
           class="empty-state-overlay"
         >
           <nz-empty 
