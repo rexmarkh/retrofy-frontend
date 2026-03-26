@@ -235,10 +235,34 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
           return;
         }
         // Deduplicate by userId – a user can appear multiple times if they belong
-        // to multiple teams within the same org.
         const seen = new Map<string, OrganizationMember>();
-        members.forEach(m => { if (m?.userId && !seen.has(m.userId)) seen.set(m.userId, m); });
-        this.members = Array.from(seen.values());
+        const roleOrder: Record<string, number> = {
+          'owner': 1,
+          'admin': 2,
+          'member': 3
+        };
+
+        members.forEach(m => {
+          if (m?.userId) {
+            const existing = seen.get(m.userId);
+            if (!existing) {
+              seen.set(m.userId, m);
+            } else {
+              // Prioritize higher role (lower number = higher priority)
+              const currentPriority = roleOrder[m.role?.toLowerCase()] || 4;
+              const existingPriority = roleOrder[existing.role?.toLowerCase()] || 4;
+              if (currentPriority < existingPriority) {
+                seen.set(m.userId, m);
+              }
+            }
+          }
+        });
+
+        this.members = Array.from(seen.values()).sort((a, b) => {
+          const priorityA = roleOrder[a.role?.toLowerCase()] || 4;
+          const priorityB = roleOrder[b.role?.toLowerCase()] || 4;
+          return priorityA - priorityB;
+        });
       });
   }
 

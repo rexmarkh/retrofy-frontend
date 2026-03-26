@@ -303,7 +303,11 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     this.memberSearchResults = results.map(r => ({
       ...r,
       isAdded: memberUserIds.has(r.userId)
-    }));
+    })).sort((a, b) => {
+      // Sort new members (isAdded false/undefined) to the top
+      if (a.isAdded === b.isAdded) return 0;
+      return a.isAdded ? 1 : -1;
+    });
     
     this.isSearchingMembers = false;
   }

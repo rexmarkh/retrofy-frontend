@@ -158,13 +158,32 @@ export class OrganizationService {
         
         // Deduplicate by user_id to ensure a unique member list for the organization
         const uniqueUserMemberships = new Map<string, any>();
+        const rolePriority: Record<string, number> = {
+          'owner': 1,
+          'admin': 2,
+          'member': 3
+        };
+
         allMemberships?.forEach(m => {
           if (m.org_id === org.id || (m.team_id && orgTeamIds.includes(m.team_id))) {
             const existing = uniqueUserMemberships.get(m.user_id);
-            // Prioritize organization-level memberships (team_id IS NULL)
-            // or roles explicitly marked as 'owner'
-            if (!existing || (!existing.team_id && m.team_id) || m.role === 'owner' || m.user_id === org.owner_id) {
+            if (!existing) {
               uniqueUserMemberships.set(m.user_id, m);
+            } else {
+              const currentRole = m.user_id === org.owner_id ? 'owner' : (m.role?.toLowerCase() || 'member');
+              const existingRole = existing.user_id === org.owner_id ? 'owner' : (existing.role?.toLowerCase() || 'member');
+              
+              const currentPriority = rolePriority[currentRole] || 4;
+              const existingPriority = rolePriority[existingRole] || 4;
+
+              // Prioritize higher role
+              if (currentPriority < existingPriority) {
+                uniqueUserMemberships.set(m.user_id, m);
+              } 
+              // If same role, prioritize organization-level membership (null team_id)
+              else if (currentPriority === existingPriority && !m.team_id && existing.team_id) {
+                uniqueUserMemberships.set(m.user_id, m);
+              }
             }
           }
         });
