@@ -974,23 +974,32 @@ export class RetrospectiveService {
 
   async getUserRetroStats(userId: string) {
     try {
-      const { count: retrosJoined, error: retrosError } = await this.supabaseService.client
-        .from('retro_boards')
-        .select('*', { count: 'exact', head: true })
-        .contains('participants', [userId]);
+      // 1. Fetch board participation from multiple sources for an accurate count
+      const [
+        { data: mbBoards }, // Memberships
+        { data: cbBoards }, // Created by
+        { data: noteItems }, // Contributed notes
+        { data: voteItems }  // Cast votes
+      ] = await Promise.all([
+        this.supabaseService.client.from('retro_boards').select('id').contains('participants', [userId]),
+        this.supabaseService.client.from('retro_boards').select('id').eq('created_by', userId),
+        this.supabaseService.client.from('retro_items').select('board_id, category').eq('user_id', userId),
+        this.supabaseService.client.from('retro_items').select('board_id').contains('voter_ids', [userId])
+      ]);
 
-      if (retrosError) throw retrosError;
+      const uniqueBoardIds = new Set<string>();
+      mbBoards?.forEach(b => uniqueBoardIds.add(b.id));
+      cbBoards?.forEach(b => uniqueBoardIds.add(b.id));
+      noteItems?.forEach(i => uniqueBoardIds.add(i.board_id));
+      voteItems?.forEach(i => uniqueBoardIds.add(i.board_id));
 
-      const { data: notesData, error: notesError } = await this.supabaseService.client
-        .from('retro_items')
-        .select('category')
-        .eq('user_id', userId);
+      const retrosJoined = uniqueBoardIds.size;
 
-      if (notesError) throw notesError;
+      // 2. Aggregate counts from fetched note items
+      const notesAdded = noteItems?.filter(item => item.category !== 'Action Items').length || 0;
+      const actionItems = noteItems?.filter(item => item.category === 'Action Items').length || 0;
 
-      const notesAdded = notesData?.filter(item => item.category !== 'Action Items').length || 0;
-      const actionItems = notesData?.filter(item => item.category === 'Action Items').length || 0;
-
+      // 3. Fetch total votes cast count
       const { count: votesCast, error: votesError } = await this.supabaseService.client
         .from('retro_items')
         .select('*', { count: 'exact', head: true })
@@ -1000,8 +1009,8 @@ export class RetrospectiveService {
 
       // Calculate category distribution
       const categoryDistribution = {
-        'What went well': notesData?.filter(item => item.category === 'What went well').length || 0,
-        'What can be improved': notesData?.filter(item => item.category === 'What can be improved').length || 0,
+        'What went well': noteItems?.filter(item => item.category === 'What went well').length || 0,
+        'What can be improved': noteItems?.filter(item => item.category === 'What can be improved').length || 0,
         'Action Items': actionItems
       };
 

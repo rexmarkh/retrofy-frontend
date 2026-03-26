@@ -90,11 +90,33 @@
         color: #111827;
       }
 
-      .profile-role {
-        font-size: 14px;
-        color: #6b7280;
+      .designation-wrapper {
         margin-bottom: 24px;
-        display: block;
+        
+        ::ng-deep .ant-select-selector {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          text-align: center !important;
+          cursor: pointer;
+        }
+
+        ::ng-deep .ant-select-selection-item {
+          font-size: 14px !important;
+          color: #6366f1 !important; // Vibrant indigo
+          font-weight: 600 !important;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          justify-content: center;
+        }
+
+        &:hover {
+          ::ng-deep .ant-select-selection-item {
+            color: #4f46e5 !important;
+            text-decoration: underline;
+          }
+        }
       }
 
       .profile-meta {
@@ -117,22 +139,6 @@
         }
       }
 
-      .edit-profile-btn {
-        width: 100%;
-        padding: 10px;
-        background: #f3f4f6;
-        border: none;
-        border-radius: 8px;
-        color: #374151;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-top: 16px;
-
-        &:hover {
-          background: #e5e7eb;
-        }
-      }
 
       .logout-btn {
         width: 100%;
