@@ -181,7 +181,7 @@
           <app-team-card
             *ngFor="let team of teams; trackBy: trackByTeamId"
             [team]="team"
-            [canManage]="hasPermission(Permission.CREATE_TEAM)"
+            [canManage]="hasPermission(Permission.UPDATE_RETRO_PHASE, team.id)"
             (cardClick)="openTeamManagement($event)"
             (edit)="showTeamSettings($event)"
             (delete)="deleteTeam($event)"

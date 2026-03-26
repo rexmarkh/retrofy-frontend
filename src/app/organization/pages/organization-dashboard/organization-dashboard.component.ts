@@ -142,8 +142,8 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     private message: NzMessageService
   ) {}
 
-  hasPermission(permission: Permission): boolean {
-    return this.organizationService.hasPermission(permission);
+  hasPermission(permission: Permission, teamId?: string): boolean {
+    return this.organizationService.hasPermission(permission, teamId);
   }
 
   ngOnInit() {

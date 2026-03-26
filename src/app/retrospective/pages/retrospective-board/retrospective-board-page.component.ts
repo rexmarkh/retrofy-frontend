@@ -368,7 +368,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   canChangePhase(): boolean {
-    return this.organizationService.hasPermission(Permission.UPDATE_RETRO_PHASE);
+    return this.organizationService.hasPermission(Permission.UPDATE_RETRO_PHASE, this.currentBoard?.teamId);
   }
 
   isPhaseClickable(phase: RetroPhase): boolean {

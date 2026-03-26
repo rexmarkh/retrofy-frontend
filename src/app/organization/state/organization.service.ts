@@ -16,17 +16,52 @@ export class OrganizationService {
   /**
    * Check if the current user has a specific permission in the current organization context.
    */
-  hasPermission(permission: Permission): boolean {
+  hasPermission(permission: Permission, teamId?: string): boolean {
     if (permission === Permission.CREATE_ORG) {
       // Always allow organization creation if the user is authenticated,
       // regardless of their role in the current organization context.
       return !!this.getCurrentUserId();
     }
 
-    const role = this.getCurrentUserRole();
-    if (!role) return false;
-    
-    return ROLE_PERMISSIONS[role].includes(permission);
+    const state = this.store.getValue();
+    const currentOrgId = state.currentOrganization?.id;
+    const currentUserId = this.getCurrentUserId();
+
+    if (!currentOrgId || !currentUserId) return false;
+
+    // 1. Check Organization-level Role
+    const member = state.organizationMembers.find(
+      m => m.organizationId === currentOrgId && m.userId === currentUserId
+    );
+
+    if (member) {
+      // Owners have all permissions
+      if (member.role === OrganizationRole.OWNER) return true;
+      
+      // Global Admins have all permissions (isGlobal is true for memberships with null team_id)
+      if (member.role === OrganizationRole.ADMIN && member.isGlobal) {
+        const permissions = ROLE_PERMISSIONS[OrganizationRole.ADMIN];
+        if (permissions?.includes(permission)) return true;
+      }
+    }
+
+    // 2. Check Team-level Role contextually
+    if (teamId) {
+      const team = state.teams.find(t => t.id === teamId);
+      const teamRole = team?.currentUserRole;
+      if (teamRole) {
+        const permissions = ROLE_PERMISSIONS[teamRole as OrganizationRole];
+        if (permissions?.includes(permission)) return true;
+      }
+    }
+
+    // 3. Fallback to Member permissions
+    if (member) {
+      const memberPermissions = ROLE_PERMISSIONS[OrganizationRole.MEMBER];
+      return memberPermissions?.includes(permission) || false;
+    }
+
+    return false;
   }
 
   /**
@@ -222,6 +257,7 @@ export class OrganizationService {
             userId: m.user_id,
             organizationId: org.id,
             role: m.user_id === org.owner_id ? OrganizationRole.OWNER : (m.role || OrganizationRole.MEMBER),
+            isGlobal: !m.team_id,
             joinedAt: m.created_at || org.created_at || new Date().toISOString(),
             status: m.status as MemberStatus || MemberStatus.ACTIVE,
             user: userDetails
@@ -255,18 +291,22 @@ export class OrganizationService {
         };
       });
 
-      const mappedTeams: Team[] = allTeams.map(team => ({
-        id: team.id,
-        name: team.name,
-        description: team.description || '',
-        organizationId: team.org_id || '',
-        createdAt: team.created_at || new Date().toISOString(),
-        updatedAt: team.created_at || new Date().toISOString(),
-        memberCount: (team.memberships || []).length,
-        boardCount: team.retro_boards?.[0]?.count ?? 0,
-        isPrivate: true,
-        isMember: (team.memberships || []).some((m: any) => m.user_id === currentUserId)
-      }));
+      const mappedTeams: Team[] = allTeams.map(team => {
+        const userMembership = (team.memberships || []).find((m: any) => m.user_id === currentUserId);
+        return {
+          id: team.id,
+          name: team.name,
+          description: team.description || '',
+          organizationId: team.org_id || '',
+          createdAt: team.created_at || new Date().toISOString(),
+          updatedAt: team.created_at || new Date().toISOString(),
+          memberCount: (team.memberships || []).length,
+          boardCount: team.retro_boards?.[0]?.count ?? 0,
+          isPrivate: true,
+          isMember: !!userMembership,
+          currentUserRole: userMembership?.role
+        };
+      });
 
       // Update state with organizations, teams AND members
       this.store.update(state => ({

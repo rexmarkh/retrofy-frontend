@@ -69,7 +69,9 @@ export class RetrospectiveService {
           isActive: row.status === 'active',
           currentPhase: this.mapPhaseFromDb(row.current_stage),
           createdAt: row.created_at || new Date().toISOString(),
-          updatedAt: finalUpdatedAt
+          updatedAt: finalUpdatedAt,
+          orgId: row.org_id,
+          teamId: row.team_id
         };
       });
 
@@ -140,6 +142,8 @@ export class RetrospectiveService {
         notesCount: 0,
         isActive: true,
         currentPhase: RetroPhase.BRAINSTORMING,
+        orgId: data.org_id,
+        teamId: data.team_id,
         createdAt: data.created_at,
         updatedAt: data.created_at
       };
@@ -255,6 +259,8 @@ export class RetrospectiveService {
             aiSummary: boardData.ai_summary || {},
             isActive: boardData.status === 'active',
             currentPhase: this.mapPhaseFromDb(boardData.current_stage),
+            orgId: boardData.org_id,
+            teamId: boardData.team_id,
             createdAt: boardData.created_at || new Date().toISOString(),
             updatedAt: boardData.created_at || new Date().toISOString()
           };

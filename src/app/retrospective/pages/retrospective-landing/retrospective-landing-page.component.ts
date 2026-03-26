@@ -365,7 +365,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   hasPermission(permission: Permission): boolean {
-    return this.organizationService.hasPermission(permission);
+    const currentTeam = this.organizationQuery.getValue().currentTeam;
+    return this.organizationService.hasPermission(permission, currentTeam?.id);
   }
 
 
