@@ -400,16 +400,25 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       : this.teamMembers;
 
     let result: any[] = [];
+    const orgMembers = this.organizationQuery.getValue().organizationMembers;
+
     if (members.length > 0) {
-      result = members.map((m, i) => ({
-        ...m,
-        id: m.id,
-        name: m.name || m.email || 'Team Member',
-        role: this.formatRole(m.role),
-        color: roleColors[i % roleColors.length],
-        avatarUrl: m.avatarUrl,
-        contributionRate: this.memberContributionStats.get((m as any).userId || m.id) || 0
-      }));
+      result = members.map((m, i) => {
+        const userId = (m as any).userId || m.id;
+        // Find this user in organization members to get their highest (org-level) role
+        const orgMember = orgMembers.find(om => om.userId === userId);
+        const effectiveRole = orgMember ? orgMember.role : m.role;
+
+        return {
+          ...m,
+          id: m.id,
+          name: m.name || m.email || 'Team Member',
+          role: this.formatRole(effectiveRole),
+          color: roleColors[i % roleColors.length],
+          avatarUrl: m.avatarUrl,
+          contributionRate: this.memberContributionStats.get(userId) || 0
+        };
+      });
     } else {
       // Last-resort fallback: use current user only
       const team = currentTeam as any;

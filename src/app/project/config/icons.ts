@@ -7,7 +7,9 @@ import {
   TwitterOutline,
   EditOutline,
   LogoutOutline,
-  ApartmentOutline
+  ApartmentOutline,
+  EllipsisOutline,
+  MoreOutline
 } from '@ant-design/icons-angular/icons';
 
 export const NZ_JIRA_ICONS: IconDefinition[] = [
@@ -18,5 +20,7 @@ export const NZ_JIRA_ICONS: IconDefinition[] = [
   TwitterOutline,
   EditOutline,
   LogoutOutline,
-  ApartmentOutline
+  ApartmentOutline,
+  EllipsisOutline,
+  MoreOutline
 ];

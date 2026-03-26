@@ -317,7 +317,7 @@
                     </div>
                   </div>
 
-                  <div class="flex flex-col items-end gap-2 w-[160px] flex-shrink-0">
+                  <div class="flex flex-col items-end w-[160px] flex-shrink-0">
                     <div class="flex items-center justify-end w-full gap-2 font-bold text-[13px]">
                       <span *ngIf="member.contributionRate > 0" [style.color]="getContributionColor(member.contributionRate)">{{ member.contributionRate }}%</span>
                       <span *ngIf="member.contributionRate === 0" class="text-gray-400 text-[11px]">No activity yet</span>

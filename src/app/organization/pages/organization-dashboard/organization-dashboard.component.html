@@ -222,7 +222,7 @@
             </div>
             <a class="text-[#7954AA] text-xs font-bold hover:text-[#6b4299]">View All</a>
           </div>
-          <div *ngIf="members.length > 0" class="member-list space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div *ngIf="members.length > 0" class="member-list space-y-2 mb-6 max-h-[300px] overflow-y-auto custom-scrollbar">
             <div *ngFor="let member of members; trackBy: trackByMemberId"
                  class="flex items-center justify-between p-2 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-50 mb-1">
               <div class="flex items-center gap-3">
@@ -239,8 +239,8 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <div *ngIf="canManageMember(member)" nz-dropdown [nzDropdownMenu]="memberMenu" nzTrigger="click" class="cursor-pointer text-gray-400 hover:text-gray-600 p-1">
-                  <span nz-icon nzType="more" nzTheme="outline" class="text-lg"></span>
+                <div *ngIf="canManageMember(member)" nz-dropdown [nzDropdownMenu]="memberMenu" nzTrigger="click" class="cursor-pointer text-gray-400 hover:text-gray-600 p-1 flex items-center justify-center">
+                  <span nz-icon nzType="ellipsis" nzTheme="outline" class="text-xl"></span>
                 </div>
                 <nz-dropdown-menu #memberMenu="nzDropdownMenu">
                   <ul nz-menu>
