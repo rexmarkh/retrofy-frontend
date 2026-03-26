@@ -117,6 +117,106 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   newOrgName = '';
   newOrgDescription = '';
 
+  // Member Management
+  isEditMembershipModalVisible = false;
+  selectedMember: OrganizationMember | null = null;
+  editingRole: string = '';
+  editingTeamIds: string[] = [];
+  isUpdatingMembership = false;
+  allTeams: Team[] = [];
+
+  get isOwner(): boolean {
+    return this.currentOrganization?.currentUserRole === 'owner';
+  }
+
+  get isAdmin(): boolean {
+    return this.currentOrganization?.currentUserRole === 'admin';
+  }
+
+  canManageMember(member: OrganizationMember): boolean {
+    if (!this.currentOrganization) return false;
+    
+    // Current user can only manage others if they are owner or admin
+    const myRole = this.currentOrganization.currentUserRole;
+    if (myRole !== 'owner' && myRole !== 'admin') return false;
+
+    // Owners can manage everyone except maybe themselves in some contexts, but usually OK
+    if (myRole === 'owner') return true;
+
+    // Admins can manage members and other admins, but not owners
+    if (myRole === 'admin') {
+      return member.role !== 'owner';
+    }
+    
+    return false;
+  }
+
+  canChangeRole(member: OrganizationMember): boolean {
+    if (!this.currentOrganization) return false;
+    const myRole = this.currentOrganization.currentUserRole;
+
+    // Only owners can promote/demote owners
+    if (member.role === 'owner') return myRole === 'owner';
+    
+    // Owners and Admins can change roles of members/admins
+    return myRole === 'owner' || myRole === 'admin';
+  }
+
+  showEditMembershipModal(member: OrganizationMember): void {
+    this.selectedMember = member;
+    this.editingRole = member.role;
+    this.isEditMembershipModalVisible = true;
+    this.allTeams = this.teams;
+    
+    // Find teams where this user is present
+    this.editingTeamIds = this.teams
+      .filter(team => {
+        const teamMembers = this.organizationQuery.getValue().teamMembers;
+        return teamMembers.some(tm => tm.teamId === team.id && (tm as any).userId === member.userId);
+      })
+      .map(team => team.id);
+  }
+
+  cancelEditMembership(): void {
+    this.isEditMembershipModalVisible = false;
+    this.selectedMember = null;
+    this.editingRole = '';
+    this.editingTeamIds = [];
+  }
+
+  async saveMembershipChanges(): Promise<void> {
+    if (!this.selectedMember || !this.currentOrganization) return;
+
+    this.isUpdatingMembership = true;
+    try {
+      // 1. Update Role if changed
+      if (this.editingRole !== this.selectedMember.role) {
+        const success = await this.organizationService.updateMemberRole(
+          this.selectedMember.userId,
+          this.currentOrganization.id,
+          this.editingRole
+        );
+        if (!success) throw new Error('Failed to update role');
+      }
+
+      // 2. Update Teams
+      const successTeams = await this.organizationService.updateTeamMemberships(
+        this.selectedMember.userId,
+        this.currentOrganization.id,
+        this.editingTeamIds
+      );
+      if (!successTeams) throw new Error('Failed to update team memberships');
+
+      this.message.success('Membership updated successfully');
+      this.cancelEditMembership();
+    } catch (error) {
+      console.error('[OrganizationDashboard] Failed to save membership changes:', error);
+      this.message.error('Failed to update membership');
+    } finally {
+      this.isUpdatingMembership = false;
+    }
+  }
+
   // Invite Member Modal
   isInviteMemberModalVisible = false;
   inviteEmail = '';

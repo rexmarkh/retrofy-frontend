@@ -287,7 +287,8 @@ export class OrganizationService {
             allowPublicTeams: false,
             requireApprovalForMembers: true,
             defaultTeamVisibility: 'private'
-          }
+          },
+          currentUserRole: activeMembers.find(m => m.userId === currentUserId)?.role || OrganizationRole.MEMBER
         };
       });
 
@@ -862,6 +863,79 @@ export class OrganizationService {
           : org
       )
     }));
+  }
+
+  async updateMemberRole(userId: string, orgId: string, role: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabaseService.client
+        .from('memberships')
+        .update({ role })
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+        .is('team_id', null);
+
+      if (error) throw error;
+      
+      // Refresh to update local state
+      await this.loadOrganizationsFromSupabase();
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] updateMemberRole failed:', err);
+      return false;
+    }
+  }
+
+  async updateTeamMemberships(userId: string, orgId: string, teamIds: string[]): Promise<boolean> {
+    try {
+      // 1. Fetch current team memberships for this user in this org
+      const { data: currentMemberships, error: fetchError } = await this.supabaseService.client
+        .from('memberships')
+        .select('team_id')
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+        .not('team_id', 'is', null);
+
+      if (fetchError) throw fetchError;
+
+      const currentTeamIds = currentMemberships?.map(m => m.team_id) || [];
+      
+      // 2. Identify additions and removals
+      const teamsToAdd = teamIds.filter(id => !currentTeamIds.includes(id));
+      const teamsToRemove = currentTeamIds.filter(id => !teamIds.includes(id));
+
+      // 3. Perform removals
+      if (teamsToRemove.length > 0) {
+        const { error: removeError } = await this.supabaseService.client
+          .from('memberships')
+          .delete()
+          .eq('user_id', userId)
+          .eq('org_id', orgId)
+          .in('team_id', teamsToRemove);
+        if (removeError) throw removeError;
+      }
+
+      // 4. Perform additions
+      if (teamsToAdd.length > 0) {
+        const insertData = teamsToAdd.map(id => ({
+          user_id: userId,
+          org_id: orgId,
+          team_id: id,
+          role: 'member', // Default to member for new team assignments
+          status: 'active'
+        }));
+        const { error: addError } = await this.supabaseService.client
+          .from('memberships')
+          .insert(insertData);
+        if (addError) throw addError;
+      }
+
+      // 5. Refresh to update local state
+      await this.loadOrganizationsFromSupabase();
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] updateTeamMemberships failed:', err);
+      return false;
+    }
   }
 
   addTeamMemberDirect(teamId: string, organizationId: string, name: string, email: string, role: 'team_lead' | 'senior' | 'developer' | 'designer' | 'qa' | 'member'): void {

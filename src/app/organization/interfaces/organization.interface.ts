@@ -11,6 +11,7 @@ export interface Organization {
   isPrivate: boolean;
   settings?: OrganizationSettings;
   jiraIntegration?: JiraIntegration;
+  currentUserRole?: string | OrganizationRole;
 }
 
 export interface Team {

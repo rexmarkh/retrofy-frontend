@@ -238,6 +238,19 @@
                   <div class="text-[11px] text-gray-500">{{ member.user.email }}</div>
                 </div>
               </div>
+              <div class="flex items-center gap-2">
+                <div *ngIf="canManageMember(member)" nz-dropdown [nzDropdownMenu]="memberMenu" nzTrigger="click" class="cursor-pointer text-gray-400 hover:text-gray-600 p-1">
+                  <span nz-icon nzType="more" nzTheme="outline" class="text-lg"></span>
+                </div>
+                <nz-dropdown-menu #memberMenu="nzDropdownMenu">
+                  <ul nz-menu>
+                    <li nz-menu-item (click)="showEditMembershipModal(member)">
+                      <span nz-icon nzType="edit" class="mr-2"></span>
+                      Edit Membership
+                    </li>
+                  </ul>
+                </nz-dropdown-menu>
+              </div>
             </div>
           </div>
         </div>
@@ -291,6 +304,56 @@
 </nz-modal>
 
 <!-- ... (Invite Modal same as before) -->
+<nz-modal [(nzVisible)]="isEditMembershipModalVisible" nzTitle="Edit Membership" [nzFooter]="null" (nzOnCancel)="cancelEditMembership()" nzWidth="520px" nzWrapClassName="premium-modal">
+  <ng-container *nzModalContent>
+    <div *ngIf="selectedMember" class="space-y-6 py-4">
+      <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mb-6 border border-gray-100">
+        <j-avatar [avatarUrl]="selectedMember.user.avatarUrl" [name]="selectedMember.user.name" [size]="48" className="rounded-sm"></j-avatar>
+        <div>
+          <div class="font-bold text-gray-900 text-base">{{ selectedMember.user.name }}</div>
+          <div class="text-sm text-gray-500">{{ selectedMember.user.email }}</div>
+        </div>
+      </div>
+
+      <div class="form-group mb-6">
+        <label class="label mb-2 block font-bold text-gray-700 text-xs uppercase tracking-wider">Organization Role</label>
+        <nz-select [(ngModel)]="editingRole" class="w-full" [disabled]="!canChangeRole(selectedMember)">
+          <nz-option nzValue="owner" nzLabel="Owner" [nzDisabled]="!isOwner"></nz-option>
+          <nz-option nzValue="admin" nzLabel="Admin" [nzDisabled]="!isOwner && !isAdmin"></nz-option>
+          <nz-option nzValue="member" nzLabel="Member"></nz-option>
+        </nz-select>
+        <p class="text-[11px] text-gray-400 mt-2 italic" *ngIf="!isOwner && selectedMember.role === 'owner'">
+          Only Owners can manage other Owners.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label class="label mb-2 block font-bold text-gray-700 text-xs uppercase tracking-wider">Team Assignments</label>
+        <nz-select
+          [(ngModel)]="editingTeamIds"
+          nzMode="multiple"
+          nzPlaceHolder="Select teams"
+          class="w-full h-auto"
+          [nzMaxTagCount]="5"
+        >
+          <nz-option *ngFor="let team of allTeams" [nzValue]="team.id" [nzLabel]="team.name"></nz-option>
+        </nz-select>
+        <p class="text-[11px] text-gray-400 mt-2">
+          Assigning a member to a team gives them access to that team's retrospectives and boards.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-10 pt-6 border-t border-gray-100">
+        <button nz-button nzType="default" (click)="cancelEditMembership()" class="rounded-sm px-6">Cancel</button>
+        <button nz-button nzType="primary" [nzLoading]="isUpdatingMembership" (click)="saveMembershipChanges()" 
+                class="bg-[#7954AA] border-none hover:bg-[#6b4299] rounded-sm px-6">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
+
 <ng-template #emptyOrganizationsTemplate>
   <div class="text-center py-12">
     <span nz-icon nzType="apartment" class="text-6xl text-gray-300 mb-4 block"></span>
