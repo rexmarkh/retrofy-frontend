@@ -27,7 +27,7 @@ export function createInitialState(): OrganizationState {
     projects: [],
     organizationInvites: [],
     teamInvites: [],
-    loading: false,
+    loading: true,
     error: null
   };
 }

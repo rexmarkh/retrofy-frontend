@@ -20,11 +20,14 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 
 import { OrganizationService } from '../../state/organization.service';
 import { OrganizationQuery } from '../../state/organization.query';
 import { AuthQuery } from '../../../project/auth/auth.query';
 import { Organization, Team, OrganizationMember, OrganizationSettings, TeamSettings, MemberStatus } from '../../interfaces/organization.interface';
+import { Permission } from '../../../core/constants/permissions';
 import { TeamCardComponent } from '../../components/team-card/team-card.component';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
@@ -50,8 +53,9 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
     NzFormModule,
     NzTagModule,
     NzAvatarModule,
-    NzGridModule,
     NzSkeletonModule,
+    NzDropDownModule,
+    NzMenuModule,
     TeamCardComponent,
     JiraControlModule
   ],
@@ -127,6 +131,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   editTeamDescription = '';
 
   isUploadingAvatar = false;
+  readonly Permission = Permission;
 
   constructor(
     private router: Router,
@@ -137,19 +142,30 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     private message: NzMessageService
   ) {}
 
+  hasPermission(permission: Permission): boolean {
+    return this.organizationService.hasPermission(permission);
+  }
+
   ngOnInit() {
-    // Fetch data from Supabase into local store
-    this.organizationService.loadOrganizationsFromSupabase();
+    // React to auth status and load data
+    this.authQuery.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        if (user) {
+          this.organizationService.loadOrganizationsFromSupabase();
+        }
+      });
 
     // Subscribe to organizations
     this.organizationQuery.organizations$
       .pipe(takeUntil(this.destroy$))
       .subscribe(organizations => {
-        this.organizations = organizations;
+        this.organizations = organizations || [];
         
-        // Auto-select first/only organization
-        if (organizations.length > 0 && !this.currentOrganization) {
-          this.setCurrentOrganization(organizations[0]);
+        // Auto-select first/only organization if one isn't already selected in store
+        const currentOrgId = this.organizationQuery.getValue().currentOrganization?.id;
+        if (this.organizations.length > 0 && !currentOrgId) {
+          this.setCurrentOrganization(this.organizations[0]);
         }
       });
 
@@ -178,6 +194,10 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     }
   }
   
+  switchOrganization(org: Organization) {
+    this.setCurrentOrganization(org);
+  }
+
   private setCurrentOrganization(org: Organization) {
     this.currentOrganization = org;
     this.organizationService.setCurrentOrganization(org.id);
@@ -188,6 +208,10 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.organizationQuery.getTeamsByOrganization(orgId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(teams => {
+        if (!teams) {
+          this.teams = [];
+          return;
+        }
         this.teams = [...teams].sort((a, b) => {
           if ((b.boardCount || 0) !== (a.boardCount || 0)) {
             return (b.boardCount || 0) - (a.boardCount || 0);
@@ -206,10 +230,14 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.organizationQuery.getMembersByOrganization(orgId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(members => {
+        if (!members) {
+          this.members = [];
+          return;
+        }
         // Deduplicate by userId – a user can appear multiple times if they belong
         // to multiple teams within the same org.
         const seen = new Map<string, OrganizationMember>();
-        members.forEach(m => { if (!seen.has(m.userId)) seen.set(m.userId, m); });
+        members.forEach(m => { if (m?.userId && !seen.has(m.userId)) seen.set(m.userId, m); });
         this.members = Array.from(seen.values());
       });
   }

@@ -3,6 +3,7 @@ import { OrganizationStore } from './organization.store';
 import { Organization, Team, OrganizationMember, TeamMember, OrganizationInvite, TeamInvite, OrganizationRole, TeamRole, MemberStatus, InviteStatus, OrganizationSettings, TeamSettings, Project } from '../interfaces/organization.interface';
 import { AuthQuery } from '../../project/auth/auth.query';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { Permission, ROLE_PERMISSIONS } from '../../core/constants/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -11,6 +12,61 @@ export class OrganizationService {
     private authQuery: AuthQuery,
     private supabaseService: SupabaseService
   ) {}
+
+  /**
+   * Check if the current user has a specific permission in the current organization context.
+   */
+  hasPermission(permission: Permission): boolean {
+    if (permission === Permission.CREATE_ORG) {
+      // Always allow organization creation if the user is authenticated,
+      // regardless of their role in the current organization context.
+      return !!this.getCurrentUserId();
+    }
+
+    const role = this.getCurrentUserRole();
+    if (!role) return false;
+    
+    return ROLE_PERMISSIONS[role].includes(permission);
+  }
+
+  /**
+   * Get the current user ID, with fallback to localStorage for session restoration resilience.
+   */
+  getCurrentUserId(): string | null {
+    let currentUserId = this.authQuery.getValue()?.id;
+    
+    // Safely try to get user from localStorage if not in authQuery
+    if (!currentUserId) {
+      try {
+        const tokenStr = localStorage.getItem('sb-cjoigydcgkkmlikacmtt-auth-token');
+        if (tokenStr) {
+          const tokenData = JSON.parse(tokenStr);
+          currentUserId = tokenData?.user?.id;
+        }
+      } catch (e) {
+        console.warn('[OrganizationService] Failed to parse auth token from localStorage', e);
+      }
+    }
+    
+    return currentUserId || null;
+  }
+
+  /**
+   * Get the current user's role in the currently selected organization.
+   */
+  getCurrentUserRole(): OrganizationRole | null {
+    const state = this.store.getValue();
+    const currentOrgId = state.currentOrganization?.id;
+    const currentUserId = this.getCurrentUserId();
+
+    if (!currentOrgId || !currentUserId) return null;
+
+    const member = state.organizationMembers.find(
+      m => m.organizationId === currentOrgId && m.userId === currentUserId
+    );
+
+    return member ? member.role : null;
+  }
 
   async inviteMember(email: string, orgId: string, orgName: string): Promise<{ success: boolean; error?: any }> {
     try {
@@ -74,6 +130,11 @@ export class OrganizationService {
         return ids.concat((org.teams || []).map((t: any) => t.id));
       }, [] as string[]);
       
+      let query = `org_id.in.(${orgIds.join(',')})`;
+      if (teamIds.length > 0) {
+        query += `,team_id.in.(${teamIds.join(',')})`;
+      }
+      
       const { data: allMemberships, error: membershipsError } = await this.supabaseService.client
         .from('memberships')
         .select(`
@@ -84,7 +145,7 @@ export class OrganizationService {
             avatar_url
           )
         `)
-        .or(`org_id.in.(${orgIds.join(',')}),team_id.in.(${teamIds.join(',')})`);
+        .or(query);
 
       if (membershipsError) throw membershipsError;
 
@@ -99,7 +160,10 @@ export class OrganizationService {
         const uniqueUserMemberships = new Map<string, any>();
         allMemberships?.forEach(m => {
           if (m.org_id === org.id || (m.team_id && orgTeamIds.includes(m.team_id))) {
-            if (!uniqueUserMemberships.has(m.user_id)) {
+            const existing = uniqueUserMemberships.get(m.user_id);
+            // Prioritize organization-level memberships (team_id IS NULL)
+            // or roles explicitly marked as 'owner'
+            if (!existing || (!existing.team_id && m.team_id) || m.role === 'owner' || m.user_id === org.owner_id) {
               uniqueUserMemberships.set(m.user_id, m);
             }
           }

@@ -95,6 +95,7 @@
 
         <div class="flex items-center gap-3">
           <button
+            *ngIf="hasPermission(Permission.MANAGE_RETROS)"
             nz-button
             nzType="primary"
             nzSize="large"
@@ -107,6 +108,7 @@
 
           <div class="relative">
             <button
+              *ngIf="hasPermission(Permission.INVITE_USERS)"
               nz-button
               nzType="default"
               nzSize="large"
@@ -194,7 +196,7 @@
             (click)="openBoard(board.id)"
           >
             <!-- Actions (Edit / Delete) -->
-            <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()">
+            <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()" *ngIf="hasPermission(Permission.MANAGE_RETROS)">
               <button nz-button nzType="text" nzSize="small" (click)="editBoard(board)" class="text-gray-300 hover:text-[#7954AA] p-1 w-8 h-8 rounded-full hover:bg-gray-100">
                 <span nz-icon nzType="edit" nzTheme="outline"></span>
               </button>
@@ -269,7 +271,7 @@
           </div>
           <h3 class="text-lg font-bold text-gray-900 mb-2">No boards yet</h3>
           <p class="text-gray-500 mb-6">Create your first board to start a retrospective.</p>
-          <button nz-button nzType="primary" class="bg-[#7954AA] border-none" (click)="showCreateBoardModal()">Create Board</button>
+          <button *ngIf="hasPermission(Permission.MANAGE_RETROS)" nz-button nzType="primary" class="bg-[#7954AA] border-none" (click)="showCreateBoardModal()">Create Board</button>
         </div>
       </div>
 

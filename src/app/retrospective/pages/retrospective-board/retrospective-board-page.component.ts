@@ -25,6 +25,8 @@ import { RetrospectiveService } from '../../state/retrospective.service';
 import { RetrospectiveQuery } from '../../state/retrospective.query';
 import { AuthQuery } from '../../../project/auth/auth.query';
 import { ProjectQuery } from '../../../project/state/project/project.query';
+import { OrganizationService } from '../../../organization/state/organization.service';
+import { Permission } from '../../../core/constants/permissions';
 import { RetrospectiveBoard, StickyNote, StickyNoteColor, RetroPhase, RetroColumn } from '../../interfaces/retrospective.interface';
 import { RetroColumnComponent } from '../../components/retro-column/retro-column.component';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
@@ -84,6 +86,8 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   settingsDescription = '';
   isLoading$ = this.retrospectiveQuery.isLoading$;
 
+  readonly Permission = Permission;
+
   showSkeleton$ = combineLatest([
     this.isLoading$,
     timer(1000).pipe(startWith(null))
@@ -112,6 +116,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     private retrospectiveQuery: RetrospectiveQuery,
     public authQuery: AuthQuery,
     private projectQuery: ProjectQuery,
+    private organizationService: OrganizationService,
     private modal: NzModalService
   ) {}
 
@@ -363,8 +368,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   canChangePhase(): boolean {
-    // In a real app, you might check if the user is a facilitator
-    return true;
+    return this.organizationService.hasPermission(Permission.UPDATE_RETRO_PHASE);
   }
 
   isPhaseClickable(phase: RetroPhase): boolean {

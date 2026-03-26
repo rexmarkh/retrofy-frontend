@@ -25,6 +25,7 @@ import { RetrospectiveQuery } from '../../state/retrospective.query';
 import { AuthQuery } from '../../../project/auth/auth.query';
 import { OrganizationQuery } from '../../../organization/state/organization.query';
 import { OrganizationService } from '../../../organization/state/organization.service';
+import { Permission } from '../../../core/constants/permissions';
 import { RetrospectiveBoard, RetroPhase } from '../../interfaces/retrospective.interface';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 
@@ -107,6 +108,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   editingBoard: RetrospectiveBoard | null = null;
   editBoardTitle = '';
   editBoardDescription = '';
+
+  readonly Permission = Permission;
 
   constructor(
     private router: Router,
@@ -355,6 +358,10 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     if (confirm('Are you sure you want to delete this board? This action cannot be undone.')) {
       await this.retrospectiveService.deleteBoardSupabase(boardId);
     }
+  }
+
+  hasPermission(permission: Permission): boolean {
+    return this.organizationService.hasPermission(permission);
   }
 
 

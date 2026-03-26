@@ -103,26 +103,65 @@
         </div>
 
         <div>
-          <h1 class="text-[26px] font-bold text-gray-900 leading-tight mb-1.5 tracking-tight">{{ currentOrganization.name }}</h1>
+          <div class="flex items-center gap-2 mb-1.5">
+            <h1 class="text-[26px] font-bold text-gray-900 leading-tight tracking-tight cursor-pointer group" 
+                nz-dropdown [nzDropdownMenu]="orgMenu" nzTrigger="click" nzPlacement="bottomLeft">
+              {{ currentOrganization?.name }}
+              <span nz-icon nzType="down" class="text-base text-gray-400 group-hover:text-[#7954AA] transition-colors ml-1"></span>
+            </h1>
+            <nz-dropdown-menu #orgMenu="nzDropdownMenu">
+              <ul nz-menu class="min-w-[240px] premium-dropdown p-2 rounded-xl">
+                <li nz-menu-group [nzTitle]="'YOUR ORGANIZATIONS'">
+                  <ul>
+                    <li nz-menu-item *ngFor="let org of organizations" (click)="switchOrganization(org)" 
+                        [nzSelected]="org.id === currentOrganization.id"
+                        class="rounded-lg mb-1 py-2 px-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-[#7954AA] border border-gray-100">
+                           {{ org.name.charAt(0) }}
+                        </div>
+                        <span class="font-medium">{{ org.name }}</span>
+                        <span *ngIf="org.id === currentOrganization?.id" nz-icon nzType="check" class="ml-auto text-green-500"></span>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+                <li nz-menu-divider *ngIf="hasPermission(Permission.CREATE_ORG)" class="my-2"></li>
+                <li nz-menu-item *ngIf="hasPermission(Permission.CREATE_ORG)" (click)="showCreateOrgModal()" 
+                    class="rounded-lg py-2 px-3 text-[#7954AA] hover:bg-[#7954AA]/5">
+                  <div class="flex items-center gap-3 font-semibold">
+                    <div class="w-8 h-8 rounded-lg bg-[#7954AA]/10 flex items-center justify-center">
+                      <span nz-icon nzType="plus"></span>
+                    </div>
+                    Add Organization
+                  </div>
+                </li>
+              </ul>
+            </nz-dropdown-menu>
+          </div>
           <div class="flex flex-col gap-0.5 text-[13px] font-medium text-gray-500">
             <span class="flex items-center gap-2">
               <span nz-icon nzType="team" nzTheme="outline" class="text-[14px]"></span>
-              {{ currentOrganization.memberCount }} member{{ currentOrganization.memberCount !== 1 ? 's' : '' }} • {{ currentOrganization.teamCount }} team{{ currentOrganization.teamCount !== 1 ? 's' : '' }}
+              {{ currentOrganization?.memberCount }} member{{ currentOrganization?.memberCount !== 1 ? 's' : '' }} • {{ currentOrganization?.teamCount }} team{{ currentOrganization?.teamCount !== 1 ? 's' : '' }}
             </span>
             <span class="flex items-center gap-2">
               <span nz-icon nzType="calendar" nzTheme="outline" class="text-[14px]"></span>
-              Created {{ currentOrganization.createdAt | date:'MMM d, yyyy' }}
+              Created {{ currentOrganization?.createdAt | date:'MMM d, yyyy' }}
             </span>
           </div>
         </div>
       </div>
       
       <div class="flex items-center gap-3">
-        <button nz-button nzType="default" nzSize="medium" (click)="showInviteMemberModal()"
+        <button *ngIf="hasPermission(Permission.CREATE_ORG)" nz-button nzType="default" nzSize="medium" (click)="showCreateOrgModal()"
+                class="flex items-center h-[40px] px-6 text-[14px] font-medium bg-white shadow-sm hover:bg-gray-50 text-[#7954AA] border-gray-200">
+          <span nz-icon nzType="plus" class="mr-2"></span> Add Organization
+        </button>
+        <button *ngIf="hasPermission(Permission.INVITE_USERS)" nz-button nzType="default" nzSize="medium" (click)="showInviteMemberModal()"
                 class="flex items-center h-[40px] px-6 text-[14px] font-medium bg-white shadow-sm hover:bg-gray-50">
           Invite Members
         </button>
-        <button nz-button nzType="primary" nzSize="medium" (click)="showCreateTeamModal()"
+        <button *ngIf="hasPermission(Permission.CREATE_TEAM)" nz-button nzType="primary" nzSize="medium" (click)="showCreateTeamModal()"
                 class="flex items-center h-[40px] px-6 text-[14px] font-medium bg-[#7954AA] hover:bg-[#6b4299] border-none shadow-sm transition-colors">
           Create Team
         </button>
@@ -142,6 +181,7 @@
           <app-team-card
             *ngFor="let team of teams; trackBy: trackByTeamId"
             [team]="team"
+            [canManage]="hasPermission(Permission.CREATE_TEAM)"
             (cardClick)="openTeamManagement($event)"
             (edit)="showTeamSettings($event)"
             (delete)="deleteTeam($event)"
@@ -154,7 +194,7 @@
               <span nz-icon nzType="team" class="text-4xl text-gray-300 mb-4 block"></span>
               <h3 class="text-lg font-medium mb-2">No teams yet</h3>
               <p class="text-gray-500 mb-4">Create your first team to organize members and projects</p>
-              <button nz-button nzType="primary" (click)="showCreateTeamModal()">Create First Team</button>
+              <button *ngIf="hasPermission(Permission.CREATE_TEAM)" nz-button nzType="primary" (click)="showCreateTeamModal()">Create First Team</button>
             </div>
           </nz-empty>
         </div>
@@ -256,7 +296,7 @@
     <span nz-icon nzType="apartment" class="text-6xl text-gray-300 mb-4 block"></span>
     <h3 class="text-lg font-medium mb-2">No workspace found</h3>
     <p class="text-gray-500 mb-6">Create your first organization to get started</p>
-    <button nz-button nzType="primary" (click)="showCreateOrgModal()" class="bg-[#7954AA]">Create First Organization</button>
+    <button *ngIf="hasPermission(Permission.CREATE_ORG)" nz-button nzType="primary" (click)="showCreateOrgModal()" class="bg-[#7954AA]">Create First Organization</button>
   </div>
 </ng-template>
 

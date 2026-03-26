@@ -25,6 +25,7 @@ import { Team } from '../../interfaces/organization.interface';
 })
 export class TeamCardComponent {
   @Input() team!: Team;
+  @Input() canManage = false;
   @Output() cardClick = new EventEmitter<Team>();
   @Output() edit = new EventEmitter<Team>();
   @Output() manageMembers = new EventEmitter<Team>();
