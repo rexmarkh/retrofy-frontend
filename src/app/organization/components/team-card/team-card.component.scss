@@ -3,11 +3,59 @@
   height: 100%;
 
   > div {
-    &:hover {
+    &:hover:not(.loading-border) {
       box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.10), 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
       border-color: #7954AA !important;
       transform: translateY(-2px);
     }
+
+    &.loading-border {
+      position: relative;
+      overflow: hidden;
+      
+      .loading-progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: rgba(121, 84, 170, 0.1);
+        z-index: 30;
+        overflow: hidden;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -50%;
+          width: 50%;
+          height: 100%;
+          background: #7954AA;
+          animation: indeterminate-progress 1.2s infinite ease-in-out;
+          box-shadow: 0 0 8px rgba(121, 84, 170, 0.4);
+        }
+      }
+
+      box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.10) !important;
+      pointer-events: none;
+      cursor: wait !important;
+    }
+  }
+}
+
+@keyframes indeterminate-progress {
+  0% {
+    left: -50%;
+    width: 30%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    left: 100%;
+    width: 30%;
   }
 }
 
