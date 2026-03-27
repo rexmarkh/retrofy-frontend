@@ -220,7 +220,7 @@
               <h2 class="text-[17px] font-bold text-gray-900 m-0">Members</h2>
               <span nz-icon nzType="user" nzTheme="outline" class="text-[#7954AA] text-lg"></span>
             </div>
-            <a class="text-[#7954AA] text-xs font-bold hover:text-[#6b4299]">View All</a>
+            <a class="text-[#7954AA] text-xs font-bold hover:text-[#6b4299]" (click)="showAllMembersModal()">View All</a>
           </div>
           <div *ngIf="members.length > 0" class="member-list space-y-2 mb-6 max-h-[300px] overflow-y-auto custom-scrollbar">
             <div *ngFor="let member of members; trackBy: trackByMemberId"
@@ -446,6 +446,79 @@
         <button nz-button nzType="primary" (click)="connectJira()" [disabled]="!isJiraConfigValid()" [nzLoading]="isConnecting" class="bg-[#7954AA]">
           Connect Jira
         </button>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
+<!-- All Members Modal -->
+<nz-modal 
+  [(nzVisible)]="isAllMembersModalVisible" 
+  [nzTitle]="modalTitle" 
+  [nzFooter]="null" 
+  (nzOnCancel)="hideAllMembersModal()" 
+  nzWidth="650px" 
+  nzWrapClassName="premium-modal all-members-modal">
+  <ng-template #modalTitle>
+    <div class="flex items-center gap-2">
+      <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA]"></span>
+      <span>Organization Members</span>
+    </div>
+  </ng-template>
+
+  <ng-container *nzModalContent>
+    <!-- Search Bar -->
+    <div class="mb-5">
+      <nz-input-group [nzPrefix]="prefixIconSearch">
+        <input type="text" nz-input placeholder="Search members by name or email..." [(ngModel)]="allMembersSearchTerm" class="search-input" />
+      </nz-input-group>
+      <ng-template #prefixIconSearch>
+        <span nz-icon nzType="search"></span>
+      </ng-template>
+    </div>
+
+    <!-- Members List -->
+    <div class="all-members-list custom-scrollbar max-h-[450px] overflow-y-auto pr-2">
+      <div *ngFor="let member of getFilteredMembers(); trackBy: trackByMemberId"
+           class="member-item flex items-center justify-between p-3 rounded-sm hover:bg-gray-50 transition-colors bg-[#fdfdfd] border border-gray-100 mb-2">
+        
+        <div class="flex items-center gap-3 flex-grow min-w-0">
+          <div class="relative flex-shrink-0">
+            <j-avatar [avatarUrl]="member.user.avatarUrl" [name]="member.user.name" [size]="48" className="rounded-full"></j-avatar>
+            <span class="status-dot" [style.background]="getStatusColor(member.status)"></span>
+          </div>
+          
+          <div class="min-w-0 flex-grow">
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="font-bold text-[#111827] text-[15px] truncate">{{ member.user.name }}</span>
+              <span class="role-badge" [ngClass]="member.role.toLowerCase()">{{ member.role }}</span>
+            </div>
+            <div class="text-[13px] text-[#9ca3af]">{{ member.user.email }}</div>
+            
+            <!-- Team Chips -->
+            <div class="flex flex-wrap gap-2 mt-2">
+              <div *ngIf="getMemberTeams(member).length === 0" class="text-[11px] text-[#9ca3af] italic">No teams assigned</div>
+              <span *ngFor="let team of getMemberTeams(member)" class="category-chip">
+                {{ team.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 ml-4">
+          <button *ngIf="canManageMember(member)" 
+                  nz-button 
+                  nzType="text" 
+                  class="manage-btn" 
+                  (click)="showEditMembershipModal(member); hideAllMembersModal()">
+            <span nz-icon nzType="setting" nzTheme="outline"></span>
+            Manage
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State for Search -->
+      <div *ngIf="getFilteredMembers().length === 0 && allMembersSearchTerm" class="py-12 text-center">
+        <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="'No members found matching \'' + allMembersSearchTerm + '\''"></nz-empty>
       </div>
     </div>
   </ng-container>

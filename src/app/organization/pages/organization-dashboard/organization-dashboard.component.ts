@@ -120,6 +120,8 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
 
   // Member Management
   isEditMembershipModalVisible = false;
+  isAllMembersModalVisible = false;
+  allMembersSearchTerm = '';
   selectedMember: OrganizationMember | null = null;
   editingRole: string = '';
   editingTeamIds: string[] = [];
@@ -184,6 +186,39 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
     this.selectedMember = null;
     this.editingRole = '';
     this.editingTeamIds = [];
+  }
+
+  showAllMembersModal(): void {
+    this.isAllMembersModalVisible = true;
+    this.allMembersSearchTerm = '';
+  }
+
+  hideAllMembersModal(): void {
+    this.isAllMembersModalVisible = false;
+    this.allMembersSearchTerm = '';
+  }
+
+  getFilteredMembers(): OrganizationMember[] {
+    if (!this.allMembersSearchTerm.trim()) {
+      return this.members;
+    }
+    const term = this.allMembersSearchTerm.toLowerCase();
+    return this.members.filter(m => 
+      m.user.name.toLowerCase().includes(term) || 
+      m.user.email.toLowerCase().includes(term)
+    );
+  }
+
+  getMemberTeams(member: OrganizationMember): Team[] {
+    if (!this.currentOrganization) return [];
+    
+    // Find teams where this user is present in the store's teamMembers
+    const teamMembers = this.organizationQuery.getValue().teamMembers;
+    const memberTeamIds = teamMembers
+      .filter(tm => (tm as any).userId === member.userId)
+      .map(tm => tm.teamId);
+      
+    return this.teams.filter(team => memberTeamIds.includes(team.id));
   }
 
   async saveMembershipChanges(): Promise<void> {
