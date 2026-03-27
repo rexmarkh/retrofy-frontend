@@ -31,6 +31,7 @@ import { Permission } from '../../../core/constants/permissions';
 import { TeamCardComponent } from '../../components/team-card/team-card.component';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
+import { slugify } from '../../../core/utils/slug.utils';
 
 @Component({
   selector: 'app-organization-dashboard',
@@ -576,7 +577,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
       if (team) {
         this.cancelCreateTeam();
         this.message.success(`Team "${team.name}" created successfully!`);
-        this.router.navigate(['/retrospective']);
+        this.router.navigate(['/retrospective', slugify(team.name)]);
       } else {
         this.message.error('Failed to create team. Please try again.');
       }
@@ -595,7 +596,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
       this.organizationService.setCurrentTeam(team.id);
 
       // Direct navigation to Retrospective board as per new onboarding flow
-      this.router.navigate(['/retrospective']);
+      this.router.navigate(['/retrospective', slugify(team.name)]);
     }
   }
 

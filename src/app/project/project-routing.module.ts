@@ -26,7 +26,7 @@ const routes: Routes = [
         component: ProfilePageComponent
       },
       {
-        path: 'retrospective',
+        path: 'retrospective/:teamSlug',
         canActivate: [TeamAccessGuard],
         loadChildren: () => import('../retrospective/retrospective.module').then(m => m.RetrospectiveModule)
       },

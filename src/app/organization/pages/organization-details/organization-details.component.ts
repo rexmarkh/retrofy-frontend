@@ -23,6 +23,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 
 // Components
 import { TeamCardComponent } from '../../components/team-card/team-card.component';
+import { slugify } from '../../../core/utils/slug.utils';
 
 // Services and Models
 import { OrganizationService } from '../../state/organization.service';
@@ -175,7 +176,7 @@ export class OrganizationDetailsComponent implements OnInit, OnDestroy {
 
   onTeamClick(team: Team) {
     if (this.organization) {
-      this.router.navigate(['/retrospective']);
+      this.router.navigate(['/retrospective', slugify(team.name)]);
     } else {
       // Fallback to old route structure (optional, but good to ensure redirect here as well)
       this.router.navigate(['/project/retrospective']);

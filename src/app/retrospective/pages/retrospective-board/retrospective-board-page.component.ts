@@ -153,7 +153,8 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/retrospective']);
+    const teamSlug = this.route.snapshot.paramMap.get('teamSlug');
+    this.router.navigate(['/retrospective', teamSlug]);
   }
 
   getCurrentUserId(): string {

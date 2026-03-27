@@ -4,6 +4,8 @@ import { JProject } from '@trungk18/interface/project';
 import { SideBarLink } from '@trungk18/interface/ui-model/nav-link';
 import { SideBarLinks } from '@trungk18/project/config/sidebar';
 import { ProjectQuery } from '@trungk18/project/state/project/project.query';
+import { OrganizationQuery } from '@trungk18/organization/state/organization.query';
+import { slugify } from '@trungk18/core/utils/slug.utils';
 
 @Component({
     selector: 'app-sidebar',
@@ -22,13 +24,27 @@ export class SidebarComponent implements OnInit {
   project: JProject;
   sideBarLinks: SideBarLink[];
 
-  constructor(private _projectQuery: ProjectQuery) {
+  constructor(
+    private _projectQuery: ProjectQuery,
+    private _organizationQuery: OrganizationQuery
+  ) {
     this._projectQuery.all$.pipe(untilDestroyed(this)).subscribe((project) => {
       this.project = project;
     });
   }
 
   ngOnInit(): void {
-    this.sideBarLinks = SideBarLinks;
+    this._organizationQuery.currentTeam$.pipe(untilDestroyed(this)).subscribe(team => {
+      this.sideBarLinks = SideBarLinks.map(link => {
+        if (link.url === 'retrospective') {
+          return new SideBarLink(
+            link.name,
+            link.icon,
+            team ? `retrospective/${slugify(team.name)}` : 'retrospective'
+          );
+        }
+        return link;
+      });
+    });
   }
 }
