@@ -9,6 +9,8 @@ import { Observable, forkJoin, of, BehaviorSubject, combineLatest, timer } from 
 import { filter, distinctUntilKeyChanged, map, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { trigger, transition, style, animate } from '@angular/animations';
 
+import { SupabaseService } from '@trungk18/core/services/supabase.service';
+
 @Component({
   selector: 'app-profile-page',
   templateUrl: './profile-page.component.html',
@@ -54,6 +56,13 @@ export class ProfilePageComponent implements OnInit {
   
   // Dynamic Trends & Info
   userRole = 'Contributor';
+  designations = ['Developer', 'QA', 'Manager', 'Lead', 'ScrumMaster', 'Others'];
+  selectedDesignation = '';
+  lastLogin: string | null = null;
+  lastLoginDate: Date | null = null;
+  joinedAt: string | null = null;
+  profileAvatarUrl: string | null = null;
+
   retrosTrend = 'Active participant';
   notesTrend = 'Identifying team wins';
   votesTrend = 'Supporting team ideas';
@@ -64,12 +73,12 @@ export class ProfilePageComponent implements OnInit {
   completedIssues = 0;
   activeIssues = 0;
   loginEmail = '';
-  lastLoginTime = new Date();
 
   constructor(
     private authQuery: AuthQuery,
     private projectQuery: ProjectQuery,
     private retrospectiveService: RetrospectiveService,
+    private supabaseService: SupabaseService,
     private router: Router
   ) {
     this.user$ = this.authQuery.user$;
@@ -88,7 +97,6 @@ export class ProfilePageComponent implements OnInit {
 
       this.currentUser = user;
       this.loginEmail = user.email || '';
-      this.lastLoginTime = new Date(); 
       
       this.loadingSubject.next(true);
       try {
@@ -109,13 +117,33 @@ export class ProfilePageComponent implements OnInit {
           this.userRole = this.notesAdded > 20 ? 'Power Contributor' : 'Active Contributor';
           this.actionItemsTrend = `${this.actionItems} items identified`;
         }
-
+  
         // Load activity history
         this.activityHistory = await this.retrospectiveService.getUserActivityHistory(user.id);
         
         if (this.activityHistory.length > 0) {
           const lastActivity = new Date(this.activityHistory[0].date);
-          this.notesTrend = `Last active ${this.getRelativeTime(lastActivity)}`;
+          this.notesTrend = `Last activity ${this.getRelativeTime(lastActivity)}`;
+        }
+
+        // Fetch profile from public.profiles for designation and avatar
+        const { data: profile } = await this.supabaseService.client
+          .from('profiles')
+          .select('designation, avatar_url')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          this.selectedDesignation = profile.designation || '';
+          this.profileAvatarUrl = profile.avatar_url || null;
+        }
+
+        // Get auth user details for precise dates
+        const { data: { user: authUser } } = await this.supabaseService.getUser();
+        if (authUser) {
+          this.joinedAt = authUser.created_at;
+          this.lastLogin = authUser.last_sign_in_at || null;
+          this.lastLoginDate = authUser.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
         }
 
         // Fetch total boards for participation trend using service method
@@ -123,7 +151,7 @@ export class ProfilePageComponent implements OnInit {
           
         if (totalBoards && totalBoards > 0) {
           const percent = Math.round((this.retrosJoined / totalBoards) * 100);
-          this.retrosTrend = `${percent}% participation rate`;
+          this.retrosTrend = `${percent}% contribution rate`;
         }
 
       } catch (err) {
@@ -178,6 +206,22 @@ export class ProfilePageComponent implements OnInit {
   onSettingChange(setting: string, value: boolean): void {
     // Handle setting changes
     console.log(`Setting ${setting} changed to:`, value);
+  }
+
+  async onDesignationChange(value: string) {
+    if (!this.currentUser) return;
+    
+    try {
+      const { error } = await this.supabaseService.client
+        .from('profiles')
+        .update({ designation: value })
+        .eq('id', this.currentUser.id);
+      
+      if (error) throw error;
+      this.selectedDesignation = value;
+    } catch (err) {
+      console.error('[Profile] Failed to update designation:', err);
+    }
   }
 
   goBack(): void {
@@ -272,7 +316,7 @@ export class ProfilePageComponent implements OnInit {
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
-  private getRelativeTime(date: Date): string {
+  public getRelativeTime(date: Date): string {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     

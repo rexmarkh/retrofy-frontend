@@ -10,6 +10,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { CdkDropList, CdkDragDrop, CdkDragStart, CdkDragEnd, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { RetroColumn, StickyNote, StickyNoteColor, RetroPhase } from '../../interfaces/retrospective.interface';
 import { StickyNoteComponent } from '../sticky-note/sticky-note.component';
@@ -33,6 +34,7 @@ import { SupabaseService } from '../../../core/services/supabase.service';
     NzEmptyModule,
     NzToolTipModule,
     NzSwitchModule,
+    NzSkeletonModule,
     DragDropModule,
     StickyNoteComponent,
     JiraControlModule
@@ -45,6 +47,7 @@ export class RetroColumnComponent {
   @Input() stickyNotes: StickyNote[] = [];
   @Input() currentUserId: string = '';
   @Input() currentPhase!: RetroPhase;
+  @Input() isLoading: boolean = false;
   
   @Output() noteAdd = new EventEmitter<{ columnId: string, content: string, color: StickyNoteColor, isAnonymous: boolean }>();
   @Output() noteChange = new EventEmitter<StickyNote>();

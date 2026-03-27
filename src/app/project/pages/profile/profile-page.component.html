@@ -73,26 +73,41 @@
       <aside class="profile-sidebar">
         <div class="profile-card">
           <div class="avatar-wrapper" (click)="onAvatarClick()">
-            <img *ngIf="currentUser.avatarUrl" [src]="currentUser.avatarUrl" alt="Avatar" class="profile-avatar">
-            <div *ngIf="!currentUser.avatarUrl" class="avatar-initials">
+            <img *ngIf="profileAvatarUrl || currentUser.avatarUrl" [src]="profileAvatarUrl || currentUser.avatarUrl" alt="Avatar" class="profile-avatar">
+            <div *ngIf="!profileAvatarUrl && !currentUser.avatarUrl" class="avatar-initials">
               {{ getUserInitials(currentUser) }}
             </div>
           </div>
           <h1 class="profile-name">{{ currentUser.name }}</h1>
-          <span class="profile-role">{{ userRole }}</span>
+          
+          <div class="designation-wrapper">
+            <nz-select 
+              [nzPlaceHolder]="'Select Designation'" 
+              [(ngModel)]="selectedDesignation" 
+              (ngModelChange)="onDesignationChange($event)"
+              class="w-full"
+              nzSize="small"
+              [nzBorderless]="true"
+            >
+              <nz-option *ngFor="let des of designations" [nzValue]="des" [nzLabel]="des"></nz-option>
+              <nz-option nzValue="" nzLabel="Set Designation" [nzDisabled]="true" *ngIf="!selectedDesignation"></nz-option>
+            </nz-select>
+          </div>
 
           <div class="profile-meta">
             <div class="meta-item">
               <i class="far fa-envelope"></i>
               <span>{{ loginEmail }}</span>
             </div>
-            <div class="meta-item">
+            <div class="meta-item" *ngIf="joinedAt">
               <i class="far fa-calendar-alt"></i>
-              <span>Joined {{ formatJoinDate(currentUser.createdAt) }}</span>
+              <span>Joined {{ formatJoinDate(joinedAt) }}</span>
+            </div>
+            <div class="meta-item" *ngIf="lastLoginDate">
+              <i class="far fa-clock"></i>
+              <span>Last login: {{ getRelativeTime(lastLoginDate) }}</span>
             </div>
           </div>
-
-          <button class="edit-profile-btn" (click)="toggleEditMode()">Edit Profile</button>
         </div>
       </aside>
 

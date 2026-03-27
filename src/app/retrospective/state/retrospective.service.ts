@@ -26,7 +26,8 @@ export class RetrospectiveService {
         .select(`
           *,
           retro_items (
-            created_at
+            created_at,
+            user_id
           )
         `);
       
@@ -56,12 +57,22 @@ export class RetrospectiveService {
         const latestActivityTime = Math.max(boardUpdateAt, boardCreateAt, ...noteDates);
         const finalUpdatedAt = latestActivityTime > 0 ? new Date(latestActivityTime).toISOString() : new Date().toISOString();
 
+        // Accurate unique participants calculation from metadata, creator, and contributors
+        const participantIds = new Set<string>();
+        if (row.created_by) participantIds.add(row.created_by);
+        row.retro_items?.forEach((item: any) => {
+          if (item.user_id) participantIds.add(item.user_id);
+        });
+        row.participants?.forEach((p: string) => {
+          if (p) participantIds.add(p);
+        });
+
         return {
           id: row.id,
           title: row.title,
           description: row.description || '',
           facilitatorId: row.created_by || '',
-          participants: row.participants || [row.created_by || ''], 
+          participants: Array.from(participantIds),
           columns: [],
           stickyNotes: [],
           aiSummary: row.ai_summary || {},
@@ -268,7 +279,7 @@ export class RetrospectiveService {
       }
 
       if (!board) return;
-
+      
       // Always ensure we have default columns
       if (!board.columns || board.columns.length === 0) {
         board.columns = [
@@ -295,6 +306,9 @@ export class RetrospectiveService {
           }
         ];
       }
+      
+      // Update store with board metadata early so the layout can render
+      this.store.update({ currentBoard: board });
 
       // Fetch items from retro_items and join with profiles
       const { data: itemsData, error: itemsError } = await this.supabaseService.client
@@ -318,16 +332,17 @@ export class RetrospectiveService {
         const author = this.projectQuery.getValue().users.find(u => u.id === item.user_id);
         const profile = item.profiles;
         
-        const fallbackName = profile?.full_name || author?.name || 'User';
-        const fallbackAvatar = profile?.avatar_url || author?.avatarUrl || '';
+        const isExMember = !item.user_id;
+        const fallbackName = isExMember ? 'Ex. member' : (profile?.full_name || author?.name || 'User');
+        const fallbackAvatar = isExMember ? '' : (profile?.avatar_url || author?.avatarUrl || '');
 
         return {
           id: item.id,
           noteNumber: item.sequence_number || 1,
           content: item.content,
           authorId: item.user_id || '',
-          authorName: item.is_anonymous ? 'Anonymous' : fallbackName,
-          authorAvatar: item.is_anonymous ? '' : fallbackAvatar,
+          authorName: fallbackName,
+          authorAvatar: fallbackAvatar,
           isAnonymous: !!item.is_anonymous,
           columnId: mapCategoryToColumnId(item.category),
           color: item.color_code || StickyNoteColor.YELLOW,
@@ -535,7 +550,7 @@ export class RetrospectiveService {
 
     const newRetroItem = {
       board_id: currentState.currentBoard.id,
-      user_id: isAnonymous ? null : user.id,
+      user_id: user.id,
       content,
       category,
       sequence_number: nextNoteNumber,
@@ -559,8 +574,8 @@ export class RetrospectiveService {
         noteNumber: data.sequence_number || nextNoteNumber,
         content: data.content,
         authorId: data.user_id || '',
-        authorName: isAnonymous ? 'Anonymous' : user.name,
-        authorAvatar: isAnonymous ? '' : user.avatarUrl,
+        authorName: user.name,
+        authorAvatar: user.avatarUrl,
         isAnonymous: isAnonymous,
         columnId: this.mapCategoryToColumnId(data.category),
         color,
@@ -960,23 +975,32 @@ export class RetrospectiveService {
 
   async getUserRetroStats(userId: string) {
     try {
-      const { count: retrosJoined, error: retrosError } = await this.supabaseService.client
-        .from('retro_boards')
-        .select('*', { count: 'exact', head: true })
-        .contains('participants', [userId]);
+      // 1. Fetch board participation from multiple sources for an accurate count
+      const [
+        { data: mbBoards }, // Memberships
+        { data: cbBoards }, // Created by
+        { data: noteItems }, // Contributed notes
+        { data: voteItems }  // Cast votes
+      ] = await Promise.all([
+        this.supabaseService.client.from('retro_boards').select('id').contains('participants', [userId]),
+        this.supabaseService.client.from('retro_boards').select('id').eq('created_by', userId),
+        this.supabaseService.client.from('retro_items').select('board_id, category').eq('user_id', userId),
+        this.supabaseService.client.from('retro_items').select('board_id').contains('voter_ids', [userId])
+      ]);
 
-      if (retrosError) throw retrosError;
+      const uniqueBoardIds = new Set<string>();
+      mbBoards?.forEach(b => uniqueBoardIds.add(b.id));
+      cbBoards?.forEach(b => uniqueBoardIds.add(b.id));
+      noteItems?.forEach(i => uniqueBoardIds.add(i.board_id));
+      voteItems?.forEach(i => uniqueBoardIds.add(i.board_id));
 
-      const { data: notesData, error: notesError } = await this.supabaseService.client
-        .from('retro_items')
-        .select('category')
-        .eq('user_id', userId);
+      const retrosJoined = uniqueBoardIds.size;
 
-      if (notesError) throw notesError;
+      // 2. Aggregate counts from fetched note items
+      const notesAdded = noteItems?.filter(item => item.category !== 'Action Items').length || 0;
+      const actionItems = noteItems?.filter(item => item.category === 'Action Items').length || 0;
 
-      const notesAdded = notesData?.filter(item => item.category !== 'Action Items').length || 0;
-      const actionItems = notesData?.filter(item => item.category === 'Action Items').length || 0;
-
+      // 3. Fetch total votes cast count
       const { count: votesCast, error: votesError } = await this.supabaseService.client
         .from('retro_items')
         .select('*', { count: 'exact', head: true })
@@ -986,8 +1010,8 @@ export class RetrospectiveService {
 
       // Calculate category distribution
       const categoryDistribution = {
-        'What went well': notesData?.filter(item => item.category === 'What went well').length || 0,
-        'What can be improved': notesData?.filter(item => item.category === 'What can be improved').length || 0,
+        'What went well': noteItems?.filter(item => item.category === 'What went well').length || 0,
+        'What can be improved': noteItems?.filter(item => item.category === 'What can be improved').length || 0,
         'Action Items': actionItems
       };
 

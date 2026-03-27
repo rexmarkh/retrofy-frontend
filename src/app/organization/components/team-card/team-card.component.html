@@ -1,16 +1,19 @@
 <div 
   class="bg-white rounded-xl overflow-hidden transition-all duration-300 h-full flex flex-col relative"
-  [class.hover:shadow-lg]="team.isMember"
-  [class.hover:-translate-y-1]="team.isMember"
-  [class.cursor-pointer]="team.isMember"
-  [class.cursor-not-allowed]="!team.isMember"
+  [class.hover:shadow-lg]="team.isMember && !isLoading"
+  [class.hover:-translate-y-1]="team.isMember && !isLoading"
+  [class.cursor-pointer]="team.isMember && !isLoading"
+  [class.cursor-not-allowed]="!team.isMember || isLoading"
   [class.opacity-50]="!team.isMember"
   [class.grayscale]="!team.isMember"
+  [class.loading-border]="isLoading"
   style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
-  (click)="team.isMember && onCardClick()"
+  (click)="onCardClick()"
   [nz-tooltip]="!team.isMember ? 'You do not have access to this team' : ''"
   nzTooltipPlacement="top"
 >
+  <!-- Loading Progress Bar -->
+  <div *ngIf="isLoading" class="loading-progress-bar"></div>
   <!-- Card Body -->
   <div class="p-6 flex flex-col flex-grow">
     <!-- Actions (Edit / Delete) - Top Right Corner -->

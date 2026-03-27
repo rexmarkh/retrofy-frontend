@@ -31,9 +31,18 @@ export class TeamCardComponent {
   @Output() manageMembers = new EventEmitter<Team>();
   @Output() settings = new EventEmitter<Team>();
   @Output() delete = new EventEmitter<Team>();
+  
+  isLoading = false;
 
   onCardClick() {
-    this.cardClick.emit(this.team);
+    if (!this.team.isMember || this.isLoading) return;
+    
+    this.isLoading = true;
+    
+    // Delay emission to allow one full animation cycle (1.2s) to complete
+    setTimeout(() => {
+      this.cardClick.emit(this.team);
+    }, 1200);
   }
 
   onEdit() {

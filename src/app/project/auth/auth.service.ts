@@ -70,6 +70,35 @@ export class AuthService {
     }
   }
 
+  async signUp(email: string, password: string, fullName: string) {
+    this._store.setLoading(true);
+    try {
+      const { data, error } = await this.supabaseService.client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.user) {
+        this.updateStoreFromUser(data.user);
+      }
+      return data;
+    } catch (err: any) {
+      this._store.setError(err);
+      throw err;
+    } finally {
+      this._store.setLoading(false);
+    }
+  }
+
   async logout() {
     try {
       const { error } = await this.supabaseService.client.auth.signOut();

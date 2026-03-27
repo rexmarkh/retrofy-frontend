@@ -309,12 +309,41 @@ export class OrganizationService {
         };
       });
 
+      // Collect ALL active team memberships across the whole organization for the members popup
+      const allTeamMembers: TeamMember[] = (allMemberships || [])
+        .filter(m => !!m.team_id && m.status === MemberStatus.ACTIVE)
+        .map(m => {
+          const isCurrentUser = m.user_id === currentUserId;
+          const profile = m.profiles;
+          
+          const resolvedName = isCurrentUser
+            ? (user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Me')
+            : (profile?.full_name || 'User ' + m.user_id.substring(0, 5));
+
+          return {
+            id: m.id || `${m.team_id}_${m.user_id}`,
+            userId: m.user_id,
+            name: resolvedName,
+            email: profile?.email || '',
+            avatarUrl: isCurrentUser 
+              ? (user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatarUrl)
+              : profile?.avatar_url,
+            teamId: m.team_id,
+            organizationId: m.org_id || '',
+            role: m.role || 'member',
+            status: 'active',
+            joinDate: new Date(m.created_at || new Date()),
+            projectIds: []
+          } as any as TeamMember;
+        });
+
       // Update state with organizations, teams AND members
       this.store.update(state => ({
         ...state,
         organizations: mappedOrgs,
         teams: mappedTeams,
-        organizationMembers: allOrganizationMembers
+        organizationMembers: allOrganizationMembers,
+        teamMembers: allTeamMembers
       }));
 
       // Set current org to first one if none is selected
@@ -935,6 +964,51 @@ export class OrganizationService {
     } catch (err) {
       console.error('[OrganizationService] updateTeamMemberships failed:', err);
       return false;
+    }
+  }
+
+  async removeMemberFromOrganization(userId: string, orgId: string): Promise<boolean> {
+    try {
+      this.store.setLoading(true);
+
+      // 1. Delete all memberships for this user in this organization (global and team-level)
+      const { error: deleteError } = await this.supabaseService.client
+        .from('memberships')
+        .delete()
+        .eq('user_id', userId)
+        .eq('org_id', orgId);
+
+      if (deleteError) throw deleteError;
+
+      // 2. Anonymize notes in all boards belonging to this organization
+      // First find all boards for this org
+      const { data: boards, error: boardsError } = await this.supabaseService.client
+        .from('retro_boards')
+        .select('id')
+        .eq('org_id', orgId);
+
+      if (boardsError) throw boardsError;
+
+      if (boards && boards.length > 0) {
+        const boardIds = boards.map(b => b.id);
+        const { error: anonymizeError } = await this.supabaseService.client
+          .from('retro_items')
+          .update({ user_id: null })
+          .eq('user_id', userId)
+          .in('board_id', boardIds);
+        
+        if (anonymizeError) throw anonymizeError;
+      }
+
+      // 3. Refresh local state
+      await this.loadOrganizationsFromSupabase();
+      
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] removeMemberFromOrganization failed:', err);
+      return false;
+    } finally {
+      this.store.setLoading(false);
     }
   }
 

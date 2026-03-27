@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Subject, takeUntil, combineLatest, timer, map, startWith, distinctUntilChanged } from 'rxjs';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Subject, takeUntil, combineLatest, timer, map, startWith, distinctUntilChanged, filter } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -28,6 +28,7 @@ import { OrganizationService } from '../../../organization/state/organization.se
 import { Permission } from '../../../core/constants/permissions';
 import { RetrospectiveBoard, RetroPhase } from '../../interfaces/retrospective.interface';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
+import { slugify } from '../../../core/utils/slug.utils';
 
 
 import { environment } from '../../../../environments/environment';
@@ -113,6 +114,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private retrospectiveService: RetrospectiveService,
     private retrospectiveQuery: RetrospectiveQuery,
     private authQuery: AuthQuery,
@@ -138,23 +140,39 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
         this.calculateContributionStats();
       });
 
-    // Always use sessionStorage as the source of truth for the selected team.
-    // It is written by setCurrentTeam on every team card click, so it always
-    // reflects the most recent selection regardless of Akita in-memory state.
+    // Priority 1: Team Slug from URL
+    const teamSlugFromRoute = this.route.snapshot.paramMap.get('teamSlug');
     const savedTeamId = sessionStorage.getItem('current_team_id');
-    console.log('[RetroLanding] ngOnInit | savedTeamId from sessionStorage:', savedTeamId);
+
+    combineLatest([
+      this.organizationQuery.organizations$.pipe(filter(orgs => !!orgs && orgs.length > 0)),
+      this.organizationQuery.teams$.pipe(filter(teams => !!teams && teams.length > 0)),
+      this.route.paramMap
+    ]).pipe(
+      takeUntil(this.destroy$),
+      map(([organizations, teams, params]) => {
+        const slug = params.get('teamSlug');
+        if (!slug) return null;
+
+        return teams.find(t => slugify(t.name) === slug);
+      })
+    ).subscribe(teamFromSlug => {
+      if (teamFromSlug) {
+        console.log('[RetroLanding] Setting team from URL slug:', teamFromSlug.name);
+        this.organizationService.setCurrentTeam(teamFromSlug.id);
+      } else if (savedTeamId) {
+        console.log('[RetroLanding] Falling back to saved team ID:', savedTeamId);
+        this.organizationService.setCurrentTeam(savedTeamId);
+      }
+
+      // If no orgs loaded yet, load them
+      if (this.organizationQuery.getValue().organizations.length === 0) {
+        this.organizationService.loadOrganizationsFromSupabase();
+      }
+    });
 
     if (this.organizationQuery.getValue().organizations.length === 0) {
-      // Orgs not yet in memory (hard page reload / direct URL access).
-      // Load them first; loadOrganizationsFromSupabase will restore the team
-      // from sessionStorage once teams are available.
-      console.log('[RetroLanding] No orgs in store – triggering loadOrganizationsFromSupabase');
       this.organizationService.loadOrganizationsFromSupabase();
-    } else if (savedTeamId) {
-      // Orgs already loaded – just (re-)apply the saved team selection.
-      // This covers subsequent navigations where the store may have stale data.
-      console.log('[RetroLanding] Orgs in store, restoring team:', savedTeamId);
-      this.organizationService.setCurrentTeam(savedTeamId);
     }
 
     // Reactive subscription: fires whenever currentTeam changes (including the
@@ -330,7 +348,8 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   openBoard(boardId: string) {
-    this.router.navigate(['/retrospective/board', boardId]);
+    const teamSlug = this.route.snapshot.paramMap.get('teamSlug');
+    this.router.navigate(['/retrospective', teamSlug, 'board', boardId]);
   }
 
   editBoard(board: RetrospectiveBoard) {

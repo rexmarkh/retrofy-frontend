@@ -360,9 +360,7 @@
 
     .form-input {
       width: 100%;
-      padding: 14px 16px;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
+      border-radius: 0;
       font-size: 15px;
       color: #1a1a1a;
       background: #f9fafb;
@@ -407,9 +405,7 @@
       background: none;
       border: none;
       color: #6b7280;
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 8px;
+      border-radius: 0;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
@@ -457,62 +453,8 @@
   align-items: center;
   margin-bottom: 24px;
 
-  .checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-
-    .checkbox-input {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-
-      &:checked + .checkbox-custom {
-        background: #7954aa;
-        border-color: #7954aa;
-
-        &::after {
-          opacity: 1;
-          transform: rotate(45deg) scale(1);
-        }
-      }
-
-      &:focus + .checkbox-custom {
-        box-shadow: 0 0 0 3px rgba(121, 84, 170, 0.1);
-      }
-    }
-
-    .checkbox-custom {
-      position: relative;
-      width: 18px;
-      height: 18px;
-      border: 2px solid #d1d5db;
-      border-radius: 6px;
-      background: white;
-      margin-right: 10px;
-      transition: all 0.2s ease;
-
-      &::after {
-        content: '';
-        position: absolute;
-        left: 3px;
-        top: 0px;
-        width: 5px;
-        height: 10px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        opacity: 0;
-        transform: rotate(45deg) scale(0.8);
-        transition: all 0.2s ease;
-      }
-    }
-
-    .checkbox-label {
-      font-size: 14px;
-      color: #374151;
-      font-weight: 500;
-    }
+  &.forgot-password-only {
+    justify-content: flex-end;
   }
 
   .forgot-password-link {
@@ -522,9 +464,7 @@
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    text-decoration: none;
-    padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: 0;
     transition: all 0.2s ease;
 
     &:hover {
@@ -544,9 +484,8 @@
   width: 100%;
   padding: 14px 24px;
   background: #7954aa;
-  color: white;
-  border: none;
-  border-radius: 12px;
+  color: #ffffff;
+  border-radius: 0;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -614,21 +553,33 @@
 
 // Social Login
 .social-login {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  display: flex;
+  justify-content: center;
   margin-bottom: 28px;
 
   .social-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
+    padding: 12px 24px;
+    border-radius: 0;
     background: white;
     cursor: pointer;
     transition: all 0.2s ease;
+    width: 100%;
+    
+    &.google-only {
+      gap: 12px;
+      border-color: #d1d5db;
+      font-weight: 600;
+      color: #374151;
+
+      &:hover:not(:disabled) {
+        border-color: #4285F4;
+        background: rgba(66, 133, 244, 0.05);
+        color: #4285F4;
+      }
+    }
 
     &:hover:not(:disabled) {
       border-color: #d1d5db;
@@ -651,6 +602,10 @@
       width: 24px;
       height: 24px;
       flex-shrink: 0;
+    }
+
+    .social-text {
+      font-size: 15px;
     }
   }
 }

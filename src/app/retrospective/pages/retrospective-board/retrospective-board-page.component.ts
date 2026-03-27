@@ -84,18 +84,9 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   selectedPhase: RetroPhase = RetroPhase.BRAINSTORMING;
   settingsTitle = '';
   settingsDescription = '';
-  isLoading$ = this.retrospectiveQuery.isLoading$;
-
   readonly Permission = Permission;
 
-  showSkeleton$ = combineLatest([
-    this.isLoading$,
-    timer(1000).pipe(startWith(null))
-  ]).pipe(
-    map(([loading, timerDone]) => loading || timerDone === null),
-    distinctUntilChanged()
-  );
-  dataReady$ = this.isLoading$.pipe(map(loading => !loading));
+  isLoading$ = this.retrospectiveQuery.isLoading$;
   
   // User data
   users: JUser[] = [];
@@ -162,7 +153,8 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/retrospective']);
+    const teamSlug = this.route.snapshot.paramMap.get('teamSlug');
+    this.router.navigate(['/retrospective', teamSlug]);
   }
 
   getCurrentUserId(): string {

@@ -198,7 +198,12 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
       return true;
     }
 
-    // 2. Others are ONLY revealed during Discussion Phase and beyond
+    // 2. If it's a strictly anonymous note, NEVER show author to others
+    if (this.note.isAnonymous) {
+      return false;
+    }
+
+    // 3. Regular notes: Others revealed during Discussion Phase and beyond
     return this.currentPhase === RetroPhase.DISCUSSION || 
            this.currentPhase === RetroPhase.ACTION_ITEMS ||
            this.currentPhase === RetroPhase.COMPLETED;
