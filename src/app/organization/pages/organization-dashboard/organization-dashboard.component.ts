@@ -124,6 +124,7 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
   editingRole: string = '';
   editingTeamIds: string[] = [];
   isUpdatingMembership = false;
+  isRemovingMember = false;
   allTeams: Team[] = [];
 
   get isOwner(): boolean {
@@ -220,6 +221,43 @@ export class OrganizationDashboardComponent implements OnInit, OnDestroy {
       this.message.error('Failed to update membership');
     } finally {
       this.isUpdatingMembership = false;
+    }
+  }
+
+  canRemoveMember(member: OrganizationMember | null): boolean {
+    if (!member || !this.currentOrganization) return false;
+    
+    // Cannot remove the owner of the organization
+    if (member.role === 'owner') return false;
+
+    // Only owners and admins can remove members
+    const myRole = this.currentOrganization.currentUserRole;
+    return myRole === 'owner' || myRole === 'admin';
+  }
+
+  async removeMember(): Promise<void> {
+    if (!this.selectedMember || !this.currentOrganization) return;
+
+    if (confirm(`Are you sure you want to remove ${this.selectedMember.user.name} from the organization? This will also anonymize all their notes in retrospective boards.`)) {
+      this.isRemovingMember = true;
+      try {
+        const success = await this.organizationService.removeMemberFromOrganization(
+          this.selectedMember.userId,
+          this.currentOrganization.id
+        );
+
+        if (success) {
+          this.message.success(`${this.selectedMember.user.name} removed from organization`);
+          this.cancelEditMembership();
+        } else {
+          this.message.error('Failed to remove member. Please try again.');
+        }
+      } catch (error) {
+        console.error('[OrganizationDashboard] Failed to remove member:', error);
+        this.message.error('An error occurred while removing the member.');
+      } finally {
+        this.isRemovingMember = false;
+      }
     }
   }
 

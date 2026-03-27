@@ -345,7 +345,16 @@
       </div>
 
       <div class="flex justify-end gap-3 mt-10 pt-6 border-t border-gray-100">
-        <button nz-button nzType="default" (click)="cancelEditMembership()" class="rounded-sm px-6">Cancel</button>
+        <button 
+          nz-button 
+          nzType="default" 
+          nzDanger 
+          *ngIf="canRemoveMember(selectedMember)"
+          [nzLoading]="isRemovingMember"
+          (click)="removeMember()" 
+          class="rounded-sm px-6 mr-auto">
+          Remove Member
+        </button>
         <button nz-button nzType="primary" [nzLoading]="isUpdatingMembership" (click)="saveMembershipChanges()" 
                 class="bg-[#7954AA] border-none hover:bg-[#6b4299] rounded-sm px-6">
           Save Changes

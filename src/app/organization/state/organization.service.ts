@@ -938,6 +938,51 @@ export class OrganizationService {
     }
   }
 
+  async removeMemberFromOrganization(userId: string, orgId: string): Promise<boolean> {
+    try {
+      this.store.setLoading(true);
+
+      // 1. Delete all memberships for this user in this organization (global and team-level)
+      const { error: deleteError } = await this.supabaseService.client
+        .from('memberships')
+        .delete()
+        .eq('user_id', userId)
+        .eq('org_id', orgId);
+
+      if (deleteError) throw deleteError;
+
+      // 2. Anonymize notes in all boards belonging to this organization
+      // First find all boards for this org
+      const { data: boards, error: boardsError } = await this.supabaseService.client
+        .from('retro_boards')
+        .select('id')
+        .eq('org_id', orgId);
+
+      if (boardsError) throw boardsError;
+
+      if (boards && boards.length > 0) {
+        const boardIds = boards.map(b => b.id);
+        const { error: anonymizeError } = await this.supabaseService.client
+          .from('retro_items')
+          .update({ user_id: null })
+          .eq('user_id', userId)
+          .in('board_id', boardIds);
+        
+        if (anonymizeError) throw anonymizeError;
+      }
+
+      // 3. Refresh local state
+      await this.loadOrganizationsFromSupabase();
+      
+      return true;
+    } catch (err) {
+      console.error('[OrganizationService] removeMemberFromOrganization failed:', err);
+      return false;
+    } finally {
+      this.store.setLoading(false);
+    }
+  }
+
   addTeamMemberDirect(teamId: string, organizationId: string, name: string, email: string, role: 'team_lead' | 'senior' | 'developer' | 'designer' | 'qa' | 'member'): void {
     const memberId = this.generateId();
     

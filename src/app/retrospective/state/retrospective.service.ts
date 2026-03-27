@@ -332,8 +332,9 @@ export class RetrospectiveService {
         const author = this.projectQuery.getValue().users.find(u => u.id === item.user_id);
         const profile = item.profiles;
         
-        const fallbackName = profile?.full_name || author?.name || 'User';
-        const fallbackAvatar = profile?.avatar_url || author?.avatarUrl || '';
+        const isExMember = !item.user_id;
+        const fallbackName = isExMember ? 'Ex. member' : (profile?.full_name || author?.name || 'User');
+        const fallbackAvatar = isExMember ? '' : (profile?.avatar_url || author?.avatarUrl || '');
 
         return {
           id: item.id,
