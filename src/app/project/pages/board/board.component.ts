@@ -8,7 +8,7 @@ import { GoogleAnalyticsService } from '@trungk18/core/services/google-analytics
     standalone: false
 })
 export class BoardComponent {
-  breadcrumbs: string[] = ['Projects', 'Angular Jira Clone', 'Kanban Board'];
+  breadcrumbs: string[] = ['Projects', 'Retrofy', 'Retrospective Board'];
 
   constructor(private _googleAnalytics: GoogleAnalyticsService) {}
 
