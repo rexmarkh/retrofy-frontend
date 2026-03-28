@@ -42,6 +42,7 @@ import { environment } from '../../../../environments/environment';
 export class StickyNoteComponent implements OnInit, OnDestroy {
   @Input() note!: StickyNote;
   @Input() currentUserId: string = '';
+  @Input() facilitatorId: string = '';
   @Input() currentPhase: RetroPhase = RetroPhase.BRAINSTORMING;
   @Output() noteChange = new EventEmitter<StickyNote>();
   @Output() noteDelete = new EventEmitter<string>();
@@ -207,6 +208,27 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
     return this.currentPhase === RetroPhase.DISCUSSION || 
            this.currentPhase === RetroPhase.ACTION_ITEMS ||
            this.currentPhase === RetroPhase.COMPLETED;
+  }
+
+  canMarkAsCompleted(): boolean {
+    // Only the facilitator can mark as completed in this implementation
+    // Future: check for organization admin/owner roles if needed
+    const isDiscussionPhase = this.currentPhase === RetroPhase.DISCUSSION;
+    if (!isDiscussionPhase) return false;
+
+    return this.facilitatorId === this.currentUserId;
+  }
+
+  toggleCompleted() {
+    if (!this.canMarkAsCompleted()) return;
+    
+    // We update through the regular note change flow
+    const updatedNote = {
+      ...this.note,
+      isCompleted: !this.note.isCompleted,
+      updatedAt: new Date().toISOString()
+    };
+    this.noteChange.emit(updatedNote);
   }
 
   shouldShowAnonymous(): boolean {

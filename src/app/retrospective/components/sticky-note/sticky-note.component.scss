@@ -334,3 +334,47 @@
 .modal-vote-badge .vote-icon {
   font-size: 12px;
 }
+
+/* Completion Toggle Button */
+.completion-toggle-btn {
+  color: #9ca3af;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 3px 6px;
+  border-radius: 4px;
+  min-width: 30px;
+  height: 22px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    color: #10b981;
+    background-color: rgba(16, 185, 129, 0.08);
+    transform: scale(1.1);
+  }
+
+  &.completed {
+    color: #10b981;
+    background-color: rgba(16, 185, 129, 0.12);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+.completion-icon {
+  font-size: 15px !important;
+  transition: transform 0.2s ease;
+}
+
+.completion-toggle-btn.completed .completion-icon {
+  animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0.5); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}

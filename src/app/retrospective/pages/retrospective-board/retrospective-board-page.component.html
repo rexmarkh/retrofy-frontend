@@ -116,6 +116,7 @@
                 [column]="column"
                 [stickyNotes]="getStickyNotesForColumn(column.id)"
                 [currentUserId]="getCurrentUserId()"
+                [facilitatorId]="currentBoard.facilitatorId"
                 [currentPhase]="currentBoard.currentPhase"
                 [isLoading]="(isLoading$ | async) || false"
                 (noteAdd)="onNoteAdd($event)"

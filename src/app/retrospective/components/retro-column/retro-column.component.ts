@@ -46,6 +46,7 @@ export class RetroColumnComponent {
   @Input() column!: RetroColumn;
   @Input() stickyNotes: StickyNote[] = [];
   @Input() currentUserId: string = '';
+  @Input() facilitatorId: string = '';
   @Input() currentPhase!: RetroPhase;
   @Input() isLoading: boolean = false;
   

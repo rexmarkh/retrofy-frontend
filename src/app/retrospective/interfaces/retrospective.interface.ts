@@ -16,6 +16,7 @@ export interface StickyNote {
   voterIds: string[];
   tags?: string[];
   groupId?: string;
+  isCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
