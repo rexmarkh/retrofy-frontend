@@ -726,13 +726,11 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   }
 
   // AI Grouping functionality
-  performAIGrouping() {
-    if (!this.currentBoard) return;
+  async performAIGrouping() {
+    if (!this.currentBoard || !this.currentBoard.stickyNotes.length) return;
 
-    const notificationKey = `ai-grouping-${Date.now()}`;
-    
-    // Show loading notification
-    this.modal.info({
+    // Show loading modal
+    const loadingModal = this.modal.info({
       nzTitle: '🤖 AI Grouping in Progress',
       nzClassName: 'premium-modal',
       nzWrapClassName: 'premium-modal',
@@ -741,155 +739,115 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
           <div style="font-size: 56px; margin-bottom: 24px; display: inline-block; animation: pulse 2s ease-in-out infinite;">
             <span>🤖</span>
           </div>
-          <h4 style="font-weight: 800; font-size: 16px; color: #1e293b; margin-bottom: 8px;">Analyzing Notes...</h4>
-          <p style="color: #64748b; font-size: 14px; margin: 0;">Retrofy AI is clustering similar items and sorting them by team priority. This will only take a moment.</p>
+          <h4 style="font-weight: 800; font-size: 16px; color: #1e293b; margin-bottom: 8px;">Analyzing Notes with AI...</h4>
+          <p style="color: #64748b; font-size: 14px; margin: 0;">Retrofy AI is clustering similar items and identifying common themes using the latest flash-lite model.</p>
         </div>
       `,
-      nzOkText: 'Working...',
+      nzOkText: 'Please wait...',
       nzOkDisabled: true,
       nzClosable: false,
       nzMaskClosable: false
     });
 
-    // Simulate AI processing (in production, this would call an AI service)
-    setTimeout(() => {
-      const noteUpdates = this.analyzeAndGroupNotes();
+    try {
+      // 1. Get groupings and tags from AI
+      const aiResults = await this.retrospectiveService.aiGroupNotes(
+        this.currentBoard.id,
+        this.currentBoard.stickyNotes
+      );
+
+      // 2. Prepare batch updates with new tags, groups, and calculated positions
+      const noteUpdates: Array<{ id: string, updates: Partial<StickyNote> }> = [];
       
-      // Apply the grouping and sorting positions
-      noteUpdates.forEach(update => {
-        this.retrospectiveService.updateStickyNote(update.noteId, {
-          tags: update.tags,
-          groupId: update.groupId,
-          position: update.position
+      // Group notes by column to recalculate positions within columns
+      const notesByColumn: { [columnId: string]: any[] } = {};
+      
+      this.currentBoard.stickyNotes.forEach(note => {
+        const aiInfo = aiResults.find(r => r.id === note.id);
+        const updatedNote = {
+          ...note,
+          tags: aiInfo?.tags || note.tags || [],
+          groupId: aiInfo?.groupId || note.groupId || null
+        };
+        
+        if (!notesByColumn[note.columnId]) {
+          notesByColumn[note.columnId] = [];
+        }
+        notesByColumn[note.columnId].push(updatedNote);
+      });
+
+      // Recalculate positions within each column
+      Object.entries(notesByColumn).forEach(([columnId, notes]) => {
+        // Group notes by groupId
+        const groups: { [groupId: string]: any[] } = {};
+        notes.forEach(note => {
+          const gid = note.groupId || 'ungrouped';
+          if (!groups[gid]) {
+            groups[gid] = [];
+          }
+          groups[gid].push(note);
+        });
+
+        // Sort groups by importance (max votes or alphabetically)
+        const sortedGroupIds = Object.keys(groups).sort((idA, idB) => {
+          const maxVotesA = Math.max(...groups[idA].map(n => n.votes || 0));
+          const maxVotesB = Math.max(...groups[idB].map(n => n.votes || 0));
+          if (maxVotesA !== maxVotesB) return maxVotesB - maxVotesA;
+          return idA.localeCompare(idB);
+        });
+
+        // Flatten and assign cumulative positions
+        let currentY = 10;
+        sortedGroupIds.forEach(groupId => {
+          // Sort items within group by votes
+          const sortedInGroup = groups[groupId].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+          
+          sortedInGroup.forEach(note => {
+            noteUpdates.push({
+              id: note.id,
+              updates: {
+                tags: note.tags,
+                groupId: note.groupId,
+                position: { x: 0, y: currentY }
+              }
+            });
+            currentY += 120; // Standard spacing
+          });
         });
       });
+
+      // 3. Batch update notes in Supabase and State
+      await this.retrospectiveService.updateStickyNoteBatch(noteUpdates);
 
       // Close loading modal and show success
-      this.modal.closeAll();
+      loadingModal.destroy();
       
-      setTimeout(() => {
-        this.modal.success({
-          nzTitle: '✨ AI Grouping Complete!',
-          nzClassName: 'premium-modal',
-          nzWrapClassName: 'premium-modal',
-          nzContent: `
-            <div style="padding: 4px;">
-              <p style="margin-bottom: 16px; color: #475569; line-height: 1.6;">Successfully analyzed, grouped, and sorted <strong>${this.currentBoard?.stickyNotes.length} notes</strong> by category and priority.</p>
-              <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;">
-                <span style="font-size: 20px;">🛡️</span>
-                <p style="margin: 0; font-size: 13px; color: #64748b;">You can still manually group items or move them between columns if needed.</p>
-              </div>
+      this.modal.success({
+        nzTitle: '✨ AI Grouping Complete!',
+        nzClassName: 'premium-modal',
+        nzWrapClassName: 'premium-modal',
+        nzContent: `
+          <div style="padding: 4px;">
+            <p style="margin-bottom: 16px; color: #475569; line-height: 1.6;">Successfully analyzed and grouped <strong>${this.currentBoard?.stickyNotes.length} notes</strong> semantically.</p>
+            <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;">
+              <span style="font-size: 20px;">🛡️</span>
+              <p style="margin: 0; font-size: 13px; color: #64748b;">Common themes have been identified and tagged for easier discussion.</p>
             </div>
-          `,
-          nzOkText: 'Great!',
-          nzWidth: 500
-        });
-      }, 100);
-    }, 2500); // Simulate AI processing time
-  }
-
-  private analyzeAndGroupNotes(): Array<{ noteId: string; tags: string[]; groupId: string; position: { x: number, y: number } }> {
-    if (!this.currentBoard) return [];
-
-    const allUpdates: Array<{ noteId: string; tags: string[]; groupId: string; position: { x: number, y: number } }> = [];
-    
-    // Group notes by column first
-    const notesByColumn: { [columnId: string]: StickyNote[] } = {};
-    this.currentBoard.stickyNotes.forEach(note => {
-      if (!notesByColumn[note.columnId]) {
-        notesByColumn[note.columnId] = [];
-      }
-      notesByColumn[note.columnId].push(note);
-    });
-
-    // Analyze and sort each column separately
-    Object.entries(notesByColumn).forEach(([columnId, notes]) => {
-      // 1. Assign tags and temporary group IDs
-      const taggedNotes = notes.map(note => {
-        const analysis = this.analyzeNoteContent(note.content, columnId);
-        return {
-          ...note,
-          tempTags: analysis.tags,
-          tempGroupId: analysis.groupId
-        };
+          </div>
+        `,
+        nzOkText: 'Perfect!',
+        nzWidth: 500
       });
 
-      // 2. Group notes by primary tag
-      const groups: { [groupId: string]: any[] } = {};
-      taggedNotes.forEach(note => {
-        if (!groups[note.tempGroupId]) {
-          groups[note.tempGroupId] = [];
-        }
-        groups[note.tempGroupId].push(note);
+    } catch (error: any) {
+      console.error('AI Grouping failed:', error);
+      loadingModal.destroy();
+      this.modal.error({
+        nzTitle: 'AI Grouping Failed',
+        nzContent: `We couldn't group the notes automatically: ${error.message || 'Unknown error'}. Please try again later.`,
+        nzOkText: 'OK'
       });
-
-      // 3. Rank groups by highest individual vote count within group
-      const sortedGroupIds = Object.keys(groups).sort((idA, idB) => {
-        const maxVotesA = Math.max(...groups[idA].map(n => n.votes || 0));
-        const maxVotesB = Math.max(...groups[idB].map(n => n.votes || 0));
-        return maxVotesB - maxVotesA;
-      });
-
-      // 4. Flatten and assign positions
-      let currentY = 10;
-      const columnUpdates: any[] = [];
-      
-      sortedGroupIds.forEach(groupId => {
-        // Sort notes within group by votes
-        const sortedNotesInGroup = groups[groupId].sort((a, b) => (b.votes || 0) - (a.votes || 0));
-        
-        sortedNotesInGroup.forEach(note => {
-          columnUpdates.push({
-            noteId: note.id,
-            tags: note.tempTags,
-            groupId: note.tempGroupId,
-            position: { x: 0, y: currentY }
-          });
-          currentY += 120; // Standard spacing
-        });
-      });
-
-      allUpdates.push(...columnUpdates);
-    });
-
-    return allUpdates;
-  }
-
-  private analyzeNoteContent(content: string, columnId: string): { tags: string[], groupId: string } {
-    const keywords = {
-      'Communication': ['communication', 'talk', 'discuss', 'meeting', 'sync', 'share', 'update', 'inform'],
-      'Process': ['process', 'workflow', 'procedure', 'system', 'method', 'approach', 'way'],
-      'Technical': ['code', 'bug', 'technical', 'deploy', 'build', 'test', 'review', 'refactor', 'architecture'],
-      'Team': ['team', 'collaboration', 'together', 'help', 'support', 'pair', 'cooperation'],
-      'Documentation': ['document', 'docs', 'documentation', 'wiki', 'readme', 'guide', 'manual'],
-      'Time': ['time', 'deadline', 'schedule', 'late', 'early', 'duration', 'speed', 'fast', 'slow'],
-      'Quality': ['quality', 'improvement', 'better', 'improve', 'enhance', 'optimize', 'excellent'],
-      'Planning': ['plan', 'planning', 'estimate', 'forecast', 'strategy', 'goal', 'objective'],
-      'Tools': ['tool', 'platform', 'software', 'application', 'service', 'framework', 'library'],
-      'Blocker': ['blocker', 'blocked', 'issue', 'problem', 'obstacle', 'challenge', 'difficulty']
-    };
-
-    const matchedTags: string[] = [];
-    const lowerContent = content.toLowerCase();
-    
-    Object.entries(keywords).forEach(([category, words]) => {
-      const hasMatch = words.some(word => lowerContent.includes(word.toLowerCase()));
-      if (hasMatch) {
-        matchedTags.push(category);
-      }
-    });
-
-    if (matchedTags.length === 0) {
-      matchedTags.push('General');
     }
-
-    const primaryTag = matchedTags[0];
-    const groupId = `${columnId}-${primaryTag.toLowerCase().replace(/\s+/g, '-')}`;
-
-    return {
-      tags: matchedTags.slice(0, 3),
-      groupId: groupId
-    };
   }
 
   private getUniqueGroups(): string[] {

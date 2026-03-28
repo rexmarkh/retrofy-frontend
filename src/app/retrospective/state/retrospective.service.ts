@@ -785,6 +785,20 @@ export class RetrospectiveService {
     }
   }
 
+  async aiGroupNotes(boardId: string, notes: StickyNote[]): Promise<{ id: string; tags: string[]; groupId: string }[]> {
+    try {
+      const { data, error } = await this.supabaseService.client.functions.invoke('ai-group-notes', {
+        body: { boardId, notes }
+      });
+
+      if (error) throw error;
+      return data.results || [];
+    } catch (error) {
+      console.error('Error invoking ai-group-notes function:', error);
+      throw error;
+    }
+  }
+
   private createDemoBoard(): void {
     const user = this.authQuery.getValue();
     const currentState = this.store.getValue();

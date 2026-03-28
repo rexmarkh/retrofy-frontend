@@ -286,39 +286,71 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
     return tagColors[tag] || 'default';
   }
 
+  private getTagIndex(tag: string): number {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) {
+        hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+  }
+
   getTagBackgroundColor(tag: string): string {
+    const normalizedTag = tag.toUpperCase().trim();
+    
     const bgColors: { [key: string]: string } = {
-      'Communication': '#e0f2fe',
-      'Process': '#cffafe',
-      'Technical': '#ede9fe',
-      'Team': '#dcfce7',
-      'Documentation': '#dbeafe',
-      'Time': '#fed7aa',
-      'Quality': '#ecfccb',
-      'Planning': '#fce7f3',
-      'Tools': '#fee2e2',
-      'Blocker': '#fecaca',
-      'General': '#f3f4f6'
+      'COMMUNICATION': '#e0f2fe',
+      'PROCESS': '#cffafe',
+      'TECHNICAL': '#ede9fe',
+      'TEAM': '#dcfce7',
+      'TEAMWORK': '#dcfce7',
+      'DOCUMENTATION': '#dbeafe',
+      'TIME': '#fed7aa',
+      'QUALITY': '#ecfccb',
+      'PLANNING': '#fce7f3',
+      'TOOLS': '#fee2e2',
+      'BLOCKER': '#fecaca',
+      'GENERAL': '#fef9c3',
+      'GENERAL FEEDBACK': '#fef9c3',
+      'TESTING': '#e0f2fe',
+      'SCENARIOS': '#ede9fe',
     };
     
-    return bgColors[tag] || '#f3f4f6';
+    if (bgColors[normalizedTag]) {
+      return bgColors[normalizedTag];
+    }
+
+    // Fallback dynamic palette (premium soft background colors)
+    const fallbackBgs = ['#e0f2fe', '#cffafe', '#ede9fe', '#dcfce7', '#dbeafe', '#fed7aa', '#ecfccb', '#fce7f3', '#fee2e2', '#fef9c3'];
+    return fallbackBgs[this.getTagIndex(normalizedTag) % fallbackBgs.length];
   }
 
   getTagTextColor(tag: string): string {
+    const normalizedTag = tag.toUpperCase().trim();
+    
     const textColors: { [key: string]: string } = {
-      'Communication': '#0369a1',
-      'Process': '#0891b2',
-      'Technical': '#7954AA',
-      'Team': '#15803d',
-      'Documentation': '#1e40af',
-      'Time': '#c2410c',
-      'Quality': '#4d7c0f',
-      'Planning': '#be185d',
-      'Tools': '#b91c1c',
-      'Blocker': '#dc2626',
-      'General': '#6b7280'
+      'COMMUNICATION': '#0369a1',
+      'PROCESS': '#0891b2',
+      'TECHNICAL': '#7954AA',
+      'TEAM': '#15803d',
+      'TEAMWORK': '#15803d',
+      'DOCUMENTATION': '#1e40af',
+      'TIME': '#c2410c',
+      'QUALITY': '#4d7c0f',
+      'PLANNING': '#be185d',
+      'TOOLS': '#b91c1c',
+      'BLOCKER': '#dc2626',
+      'GENERAL': '#854d0e',
+      'GENERAL FEEDBACK': '#854d0e',
+      'TESTING': '#0369a1',
+      'SCENARIOS': '#7954AA',
     };
     
-    return textColors[tag] || '#6b7280';
+    if (textColors[normalizedTag]) {
+      return textColors[normalizedTag];
+    }
+
+    // Fallback dynamic palette (premium dark text colors)
+    const fallbackTexts = ['#0369a1', '#0891b2', '#7954AA', '#15803d', '#1e40af', '#c2410c', '#4d7c0f', '#be185d', '#b91c1c', '#854d0e'];
+    return fallbackTexts[this.getTagIndex(normalizedTag) % fallbackTexts.length];
   }
 }
