@@ -16,6 +16,7 @@ export interface StickyNote {
   voterIds: string[];
   tags?: string[];
   groupId?: string;
+  isCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,6 +62,5 @@ export enum RetroPhase {
   GROUPING = 'grouping', 
   VOTING = 'voting',
   DISCUSSION = 'discussion',
-  ACTION_ITEMS = 'action-items',
   COMPLETED = 'completed'
 }

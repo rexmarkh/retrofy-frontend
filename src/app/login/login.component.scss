@@ -647,114 +647,142 @@
 }
 
 // Responsive Design
+@media (max-width: 1200px) {
+  .login-card-container {
+    max-width: 900px;
+  }
+}
+
 @media (max-width: 1024px) {
+  :host {
+    height: auto;
+    min-height: 100vh;
+  }
+
   .login-card-container {
     flex-direction: column;
-    max-width: 500px;
+    max-width: 550px;
+    margin: 40px auto;
     min-height: auto;
+    overflow: visible;
   }
 
   .login-left-panel {
-    padding: 40px 32px;
-
+    padding: 60px 40px;
+    
     .branding-content {
       max-width: 100%;
+      text-align: center;
+
+      .logo-wrapper {
+        display: flex;
+        justify-content: center;
+      }
 
       .brand-title {
         font-size: 32px;
       }
 
       .brand-subtitle {
-        font-size: 16px;
-        margin-bottom: 32px;
+        margin-bottom: 40px;
       }
 
-      .feature-highlights {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 12px;
-
-        .feature-item {
-          flex: 1;
-          min-width: 140px;
-          padding: 12px 16px;
-
-          .feature-icon {
-            width: 36px;
-            height: 36px;
-          }
-
-          span {
-            font-size: 14px;
-          }
-        }
+      .illustration-wrapper {
+        height: 300px;
+        transform: scale(0.9);
       }
     }
   }
 
   .login-right-panel {
-    padding: 40px 32px;
+    padding: 60px 40px;
   }
 }
 
 @media (max-width: 768px) {
   .login-card-container {
-    border-radius: 16px;
-    margin: 16px;
+    max-width: 100%;
+    margin: 20px;
+    border-radius: 20px;
   }
 
   .login-left-panel {
-    padding: 32px 24px;
+    padding: 40px 24px;
 
     .branding-content {
-      .logo-wrapper {
-        margin-bottom: 24px;
-
-        .brand-logo {
-          height: 40px;
-        }
-      }
-
+      text-align: center;
+      
       .brand-title {
         font-size: 28px;
-        margin-bottom: 12px;
+        br { display: none; }
       }
 
-      .brand-subtitle {
-        font-size: 15px;
-        margin-bottom: 24px;
-      }
-
-      .feature-highlights {
-        .feature-item {
-          min-width: 100%;
-
-          &:hover {
-            transform: none;
-          }
-        }
+      .illustration-wrapper {
+        height: 260px;
+        transform: scale(0.8);
       }
     }
   }
 
   .login-right-panel {
-    padding: 32px 24px;
-
+    padding: 40px 24px;
+    
     .form-header {
-      margin-bottom: 24px;
+      text-align: center;
+    }
+  }
+}
 
-      .form-title {
-        font-size: 26px;
+@media (max-width: 640px) {
+  .login-left-panel .illustration-wrapper {
+    display: none !important;
+  }
+  
+  .login-left-panel .branding-content .brand-subtitle {
+     margin-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .min-h-screen {
+    padding: 0 !important;
+  }
+
+  .login-card-container {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .login-left-panel {
+    padding: 40px 20px;
+    
+    .branding-content {
+      .brand-title {
+        font-size: 24px;
       }
 
-      .form-subtitle {
+      .brand-subtitle {
         font-size: 14px;
+        margin-bottom: 30px;
+      }
+
+      .illustration-wrapper {
+        display: none !important; // Hide complex illustration on very small screens to save space
+      }
+      
+      .logo-wrapper {
+        margin-bottom: 24px;
       }
     }
   }
 
-  .social-login {
-    grid-template-columns: repeat(2, 1fr);
+  .login-right-panel {
+    padding: 40px 20px;
+  }
+
+  .social-login .social-button {
+    padding: 10px 16px;
   }
 }
 

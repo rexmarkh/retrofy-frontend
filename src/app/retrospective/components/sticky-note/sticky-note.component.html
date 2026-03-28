@@ -151,6 +151,28 @@
             class="vote-icon"
           ></span>
         </button>
+
+        <!-- Completion Indicator (Discussion Phase Only + Not in Action Items) -->
+        <button 
+          *ngIf="currentPhase === 'discussion' && note.columnId !== 'action-items'"
+          nz-button 
+          nzType="text" 
+          nzSize="small"
+          [disabled]="!canMarkAsCompleted()"
+          (click)="toggleCompleted(); $event.stopPropagation()"
+          class="completion-toggle-btn"
+          [class.completed]="note.isCompleted"
+          nz-tooltip
+          [nzTooltipTitle]="note.isCompleted ? 'Discussion completed' : 'Mark as complete'"
+          nzTooltipPlacement="top"
+        >
+          <span 
+            nz-icon 
+            [nzType]="note.isCompleted ? 'check-circle' : 'check'" 
+            [nzTheme]="note.isCompleted ? 'fill' : 'outline'"
+            class="completion-icon"
+          ></span>
+        </button>
       </div>
     </div>
   </nz-card>

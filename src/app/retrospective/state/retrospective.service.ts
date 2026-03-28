@@ -113,7 +113,7 @@ export class RetrospectiveService {
       case 'voting': return RetroPhase.VOTING;
       case 'discussion': return RetroPhase.DISCUSSION;
       case 'action points':
-      case 'action-items': return RetroPhase.ACTION_ITEMS;
+      case 'action-items': return RetroPhase.DISCUSSION; // Map legacy phase to Discussion
       case 'completed': return RetroPhase.COMPLETED;
       default: return RetroPhase.BRAINSTORMING;
     }
@@ -234,7 +234,6 @@ export class RetrospectiveService {
       case RetroPhase.GROUPING: return 'Grouping';
       case RetroPhase.VOTING: return 'Voting';
       case RetroPhase.DISCUSSION: return 'Discussion';
-      case RetroPhase.ACTION_ITEMS: return 'Action Items';
       case RetroPhase.COMPLETED: return 'Completed';
       default: return 'Brainstorming';
     }
@@ -351,6 +350,7 @@ export class RetrospectiveService {
           voterIds: item.voter_ids || [],
           tags: item.tags || [],
           groupId: item.group_id || null,
+          isCompleted: !!item.is_completed,
           createdAt: item.created_at || new Date().toISOString(),
           updatedAt: item.updated_at || new Date().toISOString()
         };
@@ -461,6 +461,7 @@ export class RetrospectiveService {
            voterIds: newItem.voter_ids || [],
            tags: newItem.tags || [],
            groupId: newItem.group_id || null,
+           isCompleted: !!newItem.is_completed,
            createdAt: newItem.created_at,
            updatedAt: newItem.updated_at
         };
@@ -500,13 +501,9 @@ export class RetrospectiveService {
             stickyNotes: state.currentBoard!.stickyNotes.map(note =>
               note.id === updatedItem.id 
                 ? { 
-                    ...note, 
-                    content: updatedItem.content, 
-                    columnId: this.mapCategoryToColumnId(updatedItem.category),
-                    votes: updatedItem.votes || 0,
-                    tags: updatedItem.tags || note.tags,
-                    groupId: updatedItem.group_id !== undefined ? updatedItem.group_id : note.groupId,
-                    updatedAt: updatedItem.updated_at,
+                    ...note,
+                    ...updatedItem,
+                    isCompleted: updatedItem.is_completed !== undefined ? !!updatedItem.is_completed : note.isCompleted,
                     noteNumber: updatedItem.sequence_number || note.noteNumber,
                     position: updatedItem.position_x !== undefined ? { x: updatedItem.position_x, y: updatedItem.position_y } : note.position
                   }
@@ -557,7 +554,8 @@ export class RetrospectiveService {
       is_anonymous: isAnonymous,
       color_code: color, // If applicable, might be text hex
       tags: [],
-      group_id: null
+      group_id: null,
+      is_completed: false
     };
 
     try {
@@ -584,6 +582,7 @@ export class RetrospectiveService {
         voterIds: [],
         tags: [],
         groupId: null,
+        isCompleted: false,
         createdAt: data.created_at,
         updatedAt: data.updated_at
       };
@@ -660,6 +659,7 @@ export class RetrospectiveService {
       if (noteUpdates.voterIds !== undefined) dbUpdates.voter_ids = noteUpdates.voterIds;
       if (noteUpdates.tags !== undefined) dbUpdates.tags = noteUpdates.tags;
       if (noteUpdates.groupId !== undefined) dbUpdates.group_id = noteUpdates.groupId;
+      if (noteUpdates.isCompleted !== undefined) dbUpdates.is_completed = noteUpdates.isCompleted;
       if (noteUpdates.position !== undefined) {
         dbUpdates.position_x = noteUpdates.position.x;
         dbUpdates.position_y = noteUpdates.position.y;
@@ -785,6 +785,20 @@ export class RetrospectiveService {
     }
   }
 
+  async aiGroupNotes(boardId: string, notes: StickyNote[]): Promise<{ id: string; tags: string[]; groupId: string }[]> {
+    try {
+      const { data, error } = await this.supabaseService.client.functions.invoke('ai-group-notes', {
+        body: { boardId, notes }
+      });
+
+      if (error) throw error;
+      return data.results || [];
+    } catch (error) {
+      console.error('Error invoking ai-group-notes function:', error);
+      throw error;
+    }
+  }
+
   private createDemoBoard(): void {
     const user = this.authQuery.getValue();
     const currentState = this.store.getValue();
@@ -835,6 +849,7 @@ export class RetrospectiveService {
           position: { x: 10, y: 10 },
           votes: 3,
           voterIds: ['user-1', 'user-2', 'user-3'],
+          isCompleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -851,6 +866,7 @@ export class RetrospectiveService {
           position: { x: 10, y: 10 },
           votes: 1,
           voterIds: ['user-1'],
+          isCompleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }

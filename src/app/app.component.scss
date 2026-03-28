@@ -8,6 +8,13 @@
   display: flex;
   flex-direction: column;
 
+  @media (max-width: 1024px) {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
   > nz-spin {
     @apply flex;
     flex-grow: 1;
@@ -42,6 +49,9 @@ board-dnd {
 //ng-zorro override
 body {
   overflow: hidden;
+  @media (max-width: 1024px) {
+    overflow: auto !important;
+  }
 }
 
 body,

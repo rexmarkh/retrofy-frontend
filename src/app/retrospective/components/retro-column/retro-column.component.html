@@ -97,6 +97,7 @@
             *ngFor="let note of stickyNotes; trackBy: trackByNoteId"
             [note]="note" 
             [currentUserId]="currentUserId"
+            [facilitatorId]="facilitatorId"
             [currentPhase]="currentPhase"
             (noteChange)="onNoteChange($event)"
             (noteDelete)="onNoteDelete($event)"
