@@ -113,7 +113,7 @@ export class RetrospectiveService {
       case 'voting': return RetroPhase.VOTING;
       case 'discussion': return RetroPhase.DISCUSSION;
       case 'action points':
-      case 'action-items': return RetroPhase.ACTION_ITEMS;
+      case 'action-items': return RetroPhase.DISCUSSION; // Map legacy phase to Discussion
       case 'completed': return RetroPhase.COMPLETED;
       default: return RetroPhase.BRAINSTORMING;
     }
@@ -234,7 +234,6 @@ export class RetrospectiveService {
       case RetroPhase.GROUPING: return 'Grouping';
       case RetroPhase.VOTING: return 'Voting';
       case RetroPhase.DISCUSSION: return 'Discussion';
-      case RetroPhase.ACTION_ITEMS: return 'Action Items';
       case RetroPhase.COMPLETED: return 'Completed';
       default: return 'Brainstorming';
     }

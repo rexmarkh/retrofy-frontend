@@ -62,6 +62,5 @@ export enum RetroPhase {
   GROUPING = 'grouping', 
   VOTING = 'voting',
   DISCUSSION = 'discussion',
-  ACTION_ITEMS = 'action-items',
   COMPLETED = 'completed'
 }

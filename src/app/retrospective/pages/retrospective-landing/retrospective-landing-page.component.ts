@@ -509,7 +509,6 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'cyan',
       [RetroPhase.VOTING]: 'purple',
       [RetroPhase.DISCUSSION]: 'orange',
-      [RetroPhase.ACTION_ITEMS]: 'green',
       [RetroPhase.COMPLETED]: 'default'
     };
     return colors[phase] || 'default';
@@ -521,7 +520,6 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'Grouping',
       [RetroPhase.VOTING]: 'Voting',
       [RetroPhase.DISCUSSION]: 'Discussion',
-      [RetroPhase.ACTION_ITEMS]: 'Action Items',
       [RetroPhase.COMPLETED]: 'Completed'
     };
     return labels[phase] || 'Unknown';
@@ -542,7 +540,6 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'Organizing similar ideas into groups',
       [RetroPhase.VOTING]: 'Team is voting on the most important items',
       [RetroPhase.DISCUSSION]: 'Discussing key insights and next steps',
-      [RetroPhase.ACTION_ITEMS]: 'Creating action items for improvement',
       [RetroPhase.COMPLETED]: 'Retrospective has been completed'
     };
     return descriptions[phase] || 'Status unknown';

@@ -217,7 +217,7 @@ export class RetroColumnComponent {
     }
 
     if (this.column.id === 'action-items') {
-      return this.currentPhase === RetroPhase.DISCUSSION || this.currentPhase === RetroPhase.ACTION_ITEMS;
+      return this.currentPhase === RetroPhase.DISCUSSION;
     }
     // Other notes can only be added during brainstorming phase
     return this.currentPhase === RetroPhase.BRAINSTORMING;
@@ -225,7 +225,7 @@ export class RetroColumnComponent {
 
   getAddNoteDisabledMessage(): string {
     if (this.column.id === 'action-items') {
-      if (this.currentPhase !== RetroPhase.DISCUSSION && this.currentPhase !== RetroPhase.ACTION_ITEMS) {
+      if (this.currentPhase !== RetroPhase.DISCUSSION) {
         return 'Action items can only be created during Discussion or Action Items phase';
       }
     }
@@ -236,8 +236,6 @@ export class RetroColumnComponent {
       return 'Notes cannot be added during voting phase';
     } else if (this.currentPhase === RetroPhase.DISCUSSION) {
       return 'Notes cannot be added during discussion phase';
-    } else if (this.currentPhase === RetroPhase.ACTION_ITEMS) {
-      return 'Notes cannot be added during action items phase';
     } else if (this.currentPhase === RetroPhase.COMPLETED) {
       return 'Retrospective is completed - no changes allowed';
     }

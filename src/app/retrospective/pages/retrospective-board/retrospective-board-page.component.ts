@@ -96,7 +96,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     { value: RetroPhase.GROUPING, label: 'Grouping', icon: 'group' },
     { value: RetroPhase.VOTING, label: 'Voting', icon: 'like' },
     { value: RetroPhase.DISCUSSION, label: 'Discussion', icon: 'message' },
-    { value: RetroPhase.ACTION_ITEMS, label: 'Action Items', icon: 'check-circle' },
     { value: RetroPhase.COMPLETED, label: 'Completed', icon: 'check' }
   ];
 
@@ -204,7 +203,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     const sortingPhases = [
       RetroPhase.VOTING,
       RetroPhase.DISCUSSION,
-      RetroPhase.ACTION_ITEMS,
       RetroPhase.COMPLETED
     ];
 
@@ -256,7 +254,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 1,
       [RetroPhase.VOTING]: 2,
       [RetroPhase.DISCUSSION]: 3,
-      [RetroPhase.ACTION_ITEMS]: 4,
       [RetroPhase.COMPLETED]: 4
     };
     
@@ -269,7 +266,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'cyan',
       [RetroPhase.VOTING]: 'purple',
       [RetroPhase.DISCUSSION]: 'orange',
-      [RetroPhase.ACTION_ITEMS]: 'green',
       [RetroPhase.COMPLETED]: 'default'
     };
     return colors[phase] || 'default';
@@ -281,7 +277,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'Grouping',
       [RetroPhase.VOTING]: 'Voting', 
       [RetroPhase.DISCUSSION]: 'Discussion',
-      [RetroPhase.ACTION_ITEMS]: 'Action Items',
       [RetroPhase.COMPLETED]: 'Completed'
     };
     return labels[phase] || 'Unknown';
@@ -293,7 +288,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'group',
       [RetroPhase.VOTING]: 'like',
       [RetroPhase.DISCUSSION]: 'message',
-      [RetroPhase.ACTION_ITEMS]: 'check-circle',
       [RetroPhase.COMPLETED]: 'check'
     };
     return icons[phase] || 'question';
@@ -304,8 +298,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.BRAINSTORMING]: 'Add sticky notes with your thoughts about what went well, what could be improved, and action items for the next sprint.',
       [RetroPhase.GROUPING]: 'Group similar ideas together by dragging notes close to each other. This helps identify common themes.',
       [RetroPhase.VOTING]: 'Vote on the most important items by clicking the like button. Focus on what matters most to the team.',
-      [RetroPhase.DISCUSSION]: 'Discuss the highest-voted items. Share perspectives and dive deeper into the key topics.',
-      [RetroPhase.ACTION_ITEMS]: 'Define concrete action items based on your discussion. Assign owners and set deadlines.',
+      [RetroPhase.DISCUSSION]: 'Discuss the highest-voted items. Share perspectives and dive deeper into the key topics. Define concrete action items, assign owners, and set deadlines.',
       [RetroPhase.COMPLETED]: 'Retrospective completed! Review the action items and plan for the next retrospective.'
     };
     return instructions[phase] || '';
@@ -325,7 +318,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       [RetroPhase.GROUPING]: 'Organize similar notes',
       [RetroPhase.VOTING]: 'Vote on key topics',
       [RetroPhase.DISCUSSION]: 'Discuss & collaborate',
-      [RetroPhase.ACTION_ITEMS]: 'Create action plan',
       [RetroPhase.COMPLETED]: 'Review & complete'
     };
     return descriptions[phase] || '';
@@ -349,7 +341,6 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
       RetroPhase.GROUPING,
       RetroPhase.VOTING,
       RetroPhase.DISCUSSION,
-      RetroPhase.ACTION_ITEMS,
       RetroPhase.COMPLETED
     ];
     
@@ -524,18 +515,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
             <li>Disable all note modifications</li>
             <li>Reveal author information</li>
             <li>Show voting results</li>
-            <li>Focus on discussing high-priority items</li>
-          </ul>
-        </div>
-      `,
-      [RetroPhase.ACTION_ITEMS]: `
-        <div style="margin-bottom: 12px;">
-          <strong>Switching to Action Items phase will:</strong>
-          <ul style="margin-top: 8px; padding-left: 20px; list-style-type: disc;">
-            <li>Disable all note modifications</li>
-            <li>Show all author information</li>
-            <li>Focus on creating action plans</li>
-            <li>Prepare for retrospective completion</li>
+            <li>Focus on discussing high-priority items and creating action plans</li>
           </ul>
         </div>
       `,

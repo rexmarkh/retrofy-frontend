@@ -206,7 +206,6 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
     // 3. Regular notes: Others revealed during Discussion Phase and beyond
     return this.currentPhase === RetroPhase.DISCUSSION || 
-           this.currentPhase === RetroPhase.ACTION_ITEMS ||
            this.currentPhase === RetroPhase.COMPLETED;
   }
 
@@ -240,8 +239,6 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
       return 'Notes cannot be moved during voting phase';
     } else if (this.currentPhase === RetroPhase.DISCUSSION) {
       return 'Notes cannot be moved during discussion phase';
-    } else if (this.currentPhase === RetroPhase.ACTION_ITEMS) {
-      return 'Notes cannot be moved during action items phase';
     } else if (this.currentPhase === RetroPhase.COMPLETED) {
       return 'Retrospective is completed - no changes allowed';
     }
