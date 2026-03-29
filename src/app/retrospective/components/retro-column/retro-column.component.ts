@@ -49,6 +49,7 @@ export class RetroColumnComponent {
   @Input() facilitatorId: string = '';
   @Input() currentPhase!: RetroPhase;
   @Input() isLoading: boolean = false;
+  @Input() teamAbbreviation: string = 'NT';
   
   @Output() noteAdd = new EventEmitter<{ columnId: string, content: string, color: StickyNoteColor, isAnonymous: boolean }>();
   @Output() noteChange = new EventEmitter<StickyNote>();

@@ -26,6 +26,7 @@ import { RetrospectiveQuery } from '../../state/retrospective.query';
 import { AuthQuery } from '../../../project/auth/auth.query';
 import { ProjectQuery } from '../../../project/state/project/project.query';
 import { OrganizationService } from '../../../organization/state/organization.service';
+import { OrganizationQuery } from '../../../organization/state/organization.query';
 import { Permission } from '../../../core/constants/permissions';
 import { RetrospectiveBoard, StickyNote, StickyNoteColor, RetroPhase, RetroColumn } from '../../interfaces/retrospective.interface';
 import { RetroColumnComponent } from '../../components/retro-column/retro-column.component';
@@ -84,6 +85,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   selectedPhase: RetroPhase = RetroPhase.BRAINSTORMING;
   settingsTitle = '';
   settingsDescription = '';
+  teamAbbreviation = 'NT';
   readonly Permission = Permission;
 
   isLoading$ = this.retrospectiveQuery.isLoading$;
@@ -107,6 +109,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     public authQuery: AuthQuery,
     private projectQuery: ProjectQuery,
     private organizationService: OrganizationService,
+    private organizationQuery: OrganizationQuery,
     private modal: NzModalService
   ) {}
 
@@ -139,6 +142,8 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
           this.settingsTitle = board.title;
           this.settingsDescription = board.description;
           
+          this.updateTeamAbbreviation(board.teamId);
+          
           // Initialize column data arrays for drag & drop
           this.initializeColumnArrays();
         }
@@ -149,6 +154,41 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
     this.retrospectiveService.unsubscribeFromBoard();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private updateTeamAbbreviation(teamId?: string) {
+    if (!teamId) {
+      this.teamAbbreviation = 'NT';
+      return;
+    }
+
+    const team = this.organizationQuery.getValue().teams.find(t => t.id === teamId);
+    if (team) {
+      this.teamAbbreviation = this.generateAbbreviation(team.name);
+    } else {
+      this.teamAbbreviation = 'NT';
+    }
+  }
+
+  private generateAbbreviation(name: string): string {
+    if (!name) return 'NT';
+    
+    // Split by spaces, hyphens, or underscores
+    const words = name.split(/[\s\-_]+/);
+    
+    if (words.length >= 2) {
+      // Take first letter of first word and first letter of second word
+      // Example: "Digital Studies" -> "DS"
+      return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+    }
+    
+    // If only one word, take first two letters
+    // Example: "Engineering" -> "EN"
+    if (name.length >= 2) {
+      return name.slice(0, 2).toUpperCase();
+    }
+    
+    return name.toUpperCase() || 'NT';
   }
 
   goBack() {

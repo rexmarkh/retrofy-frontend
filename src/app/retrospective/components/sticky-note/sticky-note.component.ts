@@ -44,6 +44,7 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   @Input() currentUserId: string = '';
   @Input() facilitatorId: string = '';
   @Input() currentPhase: RetroPhase = RetroPhase.BRAINSTORMING;
+  @Input() teamAbbreviation: string = 'NT';
   @Output() noteChange = new EventEmitter<StickyNote>();
   @Output() noteDelete = new EventEmitter<string>();
   @Output() noteVote = new EventEmitter<string>();
@@ -86,7 +87,7 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   showFullNote() {
     if (this.noteModalContent) {
       this.modal.create({
-        nzTitle: `Note NT-${this.note.noteNumber}`,
+        nzTitle: `Note ${this.teamAbbreviation}-${this.note.noteNumber}`,
         nzContent: this.noteModalContent,
         nzFooter: null,
         nzClassName: 'premium-modal',
