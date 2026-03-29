@@ -86,6 +86,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   settingsTitle = '';
   settingsDescription = '';
   teamAbbreviation = 'NT';
+  currentUserRole: string | null = null;
   readonly Permission = Permission;
 
   isLoading$ = this.retrospectiveQuery.isLoading$;
@@ -143,6 +144,7 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
           this.settingsDescription = board.description;
           
           this.updateTeamAbbreviation(board.teamId);
+          this.currentUserRole = this.organizationService.getCurrentUserRole();
           
           // Initialize column data arrays for drag & drop
           this.initializeColumnArrays();

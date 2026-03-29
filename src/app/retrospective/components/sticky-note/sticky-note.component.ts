@@ -45,6 +45,7 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   @Input() facilitatorId: string = '';
   @Input() currentPhase: RetroPhase = RetroPhase.BRAINSTORMING;
   @Input() teamAbbreviation: string = 'NT';
+  @Input() currentUserRole: string | null = null;
   @Output() noteChange = new EventEmitter<StickyNote>();
   @Output() noteDelete = new EventEmitter<string>();
   @Output() noteVote = new EventEmitter<string>();
@@ -157,15 +158,21 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
   // Permission methods
   canEdit(): boolean {
-    // Edit is only allowed during brainstorming phase and for the note author
+    // Edit is only allowed for the note author during brainstorming phase
     return this.currentPhase === RetroPhase.BRAINSTORMING && 
            this.note.authorId === this.currentUserId;
   }
 
   canDelete(): boolean {
-    // Delete is allowed during brainstorming phase for the note author
-    return this.currentPhase === RetroPhase.BRAINSTORMING && 
-           this.note.authorId === this.currentUserId;
+    // Delete is allowed for:
+    // 1. The note author during brainstorming phase
+    // 2. Organization Admins or Owners at any time (moderation)
+    const isAuthor = this.note.authorId === this.currentUserId;
+    const isAdminOrOwner = this.currentUserRole === 'admin' || this.currentUserRole === 'owner';
+    
+    if (isAdminOrOwner) return true;
+    
+    return this.currentPhase === RetroPhase.BRAINSTORMING && isAuthor;
   }
 
   canChangeColor(): boolean {

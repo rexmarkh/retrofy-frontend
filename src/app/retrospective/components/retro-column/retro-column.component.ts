@@ -50,6 +50,7 @@ export class RetroColumnComponent {
   @Input() currentPhase!: RetroPhase;
   @Input() isLoading: boolean = false;
   @Input() teamAbbreviation: string = 'NT';
+  @Input() currentUserRole: string | null = null;
   
   @Output() noteAdd = new EventEmitter<{ columnId: string, content: string, color: StickyNoteColor, isAnonymous: boolean }>();
   @Output() noteChange = new EventEmitter<StickyNote>();
