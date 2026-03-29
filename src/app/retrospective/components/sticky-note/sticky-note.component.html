@@ -89,7 +89,7 @@
       <!-- Left: Note ID + Tags -->
       <div class="footer-left">
         <!-- Note ID -->
-        <span class="note-id">NT-{{ note.noteNumber }}</span>
+        <span class="note-id">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
         
         <!-- Tags (if present) -->
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
@@ -186,7 +186,7 @@
     
     <div class="modal-note-footer">
       <div class="footer-left">
-        <span class="note-id">NT-{{ note.noteNumber }}</span>
+        <span class="note-id">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
           <span *ngFor="let tag of note.tags" 
                 class="note-tag" 

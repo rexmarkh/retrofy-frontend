@@ -118,6 +118,8 @@
                 [currentUserId]="getCurrentUserId()"
                 [facilitatorId]="currentBoard.facilitatorId"
                 [currentPhase]="currentBoard.currentPhase"
+                [teamAbbreviation]="teamAbbreviation"
+                [currentUserRole]="currentUserRole"
                 [isLoading]="(isLoading$ | async) || false"
                 (noteAdd)="onNoteAdd($event)"
                 (noteChange)="onNoteChange($event)"
