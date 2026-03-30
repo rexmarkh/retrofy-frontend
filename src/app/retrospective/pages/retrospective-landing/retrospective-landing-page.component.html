@@ -161,117 +161,192 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left Column: Boards -->
       <div class="lg:col-span-2">
-        <!-- Boards Section Header -->
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-2">
-            <span nz-icon nzType="appstore" nzTheme="outline" class="text-[#7954AA] text-xl"></span>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight m-0">Your Boards</h2>
+        <!-- Active Boards Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-2 mb-6">
+            <span nz-icon nzType="rocket" nzTheme="outline" class="text-green-500 text-xl"></span>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight m-0">Active Boards</h2>
+            <nz-tag *ngIf="getActiveBoards().length > 0" class="ml-2 bg-green-50 text-green-600 border-green-100 font-bold px-3 py-0.5 rounded-full text-[11px]">
+               {{ getActiveBoards().length }}
+            </nz-tag>
           </div>
 
-          <!-- Active / Completed Tabs -->
-          <div class="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
-            <button
-              (click)="activeTab = 'active'"
-              class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
-              [style.background]="activeTab === 'active' ? 'white' : 'transparent'"
-              [style.color]="activeTab === 'active' ? '#7954AA' : '#6b7280'"
-              [style.box-shadow]="activeTab === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
-            >Active</button>
-            <button
-              (click)="activeTab = 'completed'"
-              class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"
-              [style.background]="activeTab === 'completed' ? 'white' : 'transparent'"
-              [style.color]="activeTab === 'completed' ? '#7954AA' : '#6b7280'"
-              [style.box-shadow]="activeTab === 'completed' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
-            >Completed</button>
+          <div *ngIf="getActiveBoards().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div
+              *ngFor="let board of getActiveBoards(); trackBy: trackByBoardId"
+              class="board-card bg-white rounded-xl cursor-pointer h-full flex flex-col relative"
+              style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
+              (click)="openBoard(board.id)"
+            >
+              <!-- Actions (Edit / Delete) -->
+              <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()" *ngIf="hasPermission(Permission.MANAGE_RETROS)">
+                <button nz-button nzType="text" nzSize="small" (click)="editBoard(board)" class="text-gray-300 hover:text-[#7954AA] p-1 w-8 h-8 rounded-full hover:bg-gray-100">
+                  <span nz-icon nzType="edit" nzTheme="outline"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small" (click)="deleteBoard(board.id)" class="text-gray-300 hover:text-red-500 p-1 w-8 h-8 rounded-full hover:bg-gray-100">
+                  <span nz-icon nzType="delete" nzTheme="outline"></span>
+                </button>
+              </div>
+
+              <!-- Card Body -->
+              <div class="p-5 flex flex-col flex-grow">
+                <div class="flex items-start justify-between mb-4">
+                  <!-- Phase Badge -->
+                  <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold" [ngClass]="getPhaseClass(board.currentPhase)">
+                    <div class="w-1.5 h-1.5 rounded-full" [style.background-color]="getPhaseColor(board.currentPhase) === 'blue' ? '#3b82f6' : (getPhaseColor(board.currentPhase) === 'cyan' ? '#06b6d4' : (getPhaseColor(board.currentPhase) === 'purple' ? '#7954AA' : '#10b981'))"></div>
+                    {{ getPhaseLabel(board.currentPhase) }}
+                  </div>
+                </div>
+
+                <!-- Title -->
+                <div class="mb-1">
+                  <h3 class="text-[16px] font-bold text-gray-900 leading-tight m-0 pr-24">{{ board.title }}</h3>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-5 flex-grow">
+                  <p class="text-[13px] text-gray-500 line-clamp-2 m-0 leading-relaxed pr-8" [nz-tooltip]="(board.description?.length || 0) > 80 ? board.description : ''">
+                    {{ board.description || 'No description provided' }}
+                  </p>
+                </div>
+
+                <!-- Metrics -->
+                <div class="flex items-center gap-6">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
+                    <div class="flex items-center gap-1.5">
+                      <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7954AA] text-base"></span>
+                      <span class="font-bold text-gray-900 text-sm">{{ getStickyNotesCount(board.id) }}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
+                    <div class="flex items-center gap-1.5">
+                      <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-base"></span>
+                      <span class="font-bold text-gray-900 text-sm">{{ board.participants.length }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between rounded-b-xl">
+                <div class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                  <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                  Updated {{ getTimeAgo(board.updatedAt) }}
+                </div>
+                <button
+                  nz-button
+                  class="text-white border-none text-xs font-semibold rounded-sm px-4 h-8"
+                  style="background: #7954AA;"
+                  (click)="openBoard(board.id); $event.stopPropagation()"
+                >
+                  Join Session
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State for Active -->
+          <div *ngIf="getActiveBoards().length === 0" class="flex flex-col items-center justify-center py-12 bg-white rounded-xl border border-gray-100">
+            <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <span nz-icon nzType="rocket" class="text-2xl text-gray-300"></span>
+            </div>
+            <h3 class="text-base font-bold text-gray-900 mb-1">No active boards</h3>
+            <p class="text-sm text-gray-400 mb-4">All retrospectives are completed or none have been started.</p>
+            <button *ngIf="hasPermission(Permission.MANAGE_RETROS)" nz-button nzType="primary" class="bg-[#7954AA] border-none" (click)="showCreateBoardModal()">Create Board</button>
           </div>
         </div>
 
-        <!-- Boards Grid -->
-        <div *ngIf="getFilteredBoards().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div
-            *ngFor="let board of getFilteredBoards(); trackBy: trackByBoardId"
-            class="board-card bg-white rounded-xl cursor-pointer h-full flex flex-col relative"
-            style="border: 1px solid #edf2f7; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);"
-            (click)="openBoard(board.id)"
-          >
-            <!-- Actions (Edit / Delete) -->
-            <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()" *ngIf="hasPermission(Permission.MANAGE_RETROS)">
-              <button nz-button nzType="text" nzSize="small" (click)="editBoard(board)" class="text-gray-300 hover:text-[#7954AA] p-1 w-8 h-8 rounded-full hover:bg-gray-100">
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-              </button>
-              <button nz-button nzType="text" nzSize="small" (click)="deleteBoard(board.id)" class="text-gray-300 hover:text-red-500 p-1 w-8 h-8 rounded-full hover:bg-gray-100">
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
-              </button>
-            </div>
+        <nz-divider class="my-10 bg-gray-200 h-[1px] border-none"></nz-divider>
 
-            <!-- Card Body -->
-            <div class="p-5 flex flex-col flex-grow">
-              <div class="flex items-start justify-between mb-4">
-                <!-- Phase Badge -->
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold" [ngClass]="getPhaseClass(board.currentPhase)">
-                  <div class="w-1.5 h-1.5 rounded-full" [style.background-color]="getPhaseColor(board.currentPhase) === 'blue' ? '#3b82f6' : (getPhaseColor(board.currentPhase) === 'cyan' ? '#06b6d4' : (getPhaseColor(board.currentPhase) === 'purple' ? '#7954AA' : '#10b981'))"></div>
-                  {{ getPhaseLabel(board.currentPhase) }}
+        <!-- Completed Boards Section -->
+        <div>
+          <div class="flex items-center gap-2 mb-6">
+            <!-- <span nz-icon nzType="check-circle" nzTheme="outline" class="text-green-500 text-xl"></span> -->
+            <h2 class="text-xl font-bold text-gray-900 leading-tight m-0">Completed Boards</h2>
+            <nz-tag *ngIf="getCompletedBoards().length > 0" class="ml-2 bg-gray-100 text-gray-500 border-gray-200 font-bold px-3 py-0.5 rounded-full text-[11px]">
+               {{ getCompletedBoards().length }}
+            </nz-tag>
+          </div>
+
+          <div *ngIf="getCompletedBoards().length > 0" class="flex flex-col gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div
+                *ngFor="let board of getVisibleCompletedBoards(); trackBy: trackByBoardId"
+                class="board-card bg-white rounded-xl cursor-pointer h-full flex flex-col relative opacity-90 hover:opacity-100"
+                style="border: 1px solid #edf2f7;"
+                (click)="openBoard(board.id)"
+              >
+                <!-- Actions -->
+                <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 4px; z-index: 10;" (click)="$event.stopPropagation()" *ngIf="hasPermission(Permission.MANAGE_RETROS)">
+                  <button nz-button nzType="text" nzSize="small" (click)="deleteBoard(board.id)" class="text-gray-300 hover:text-red-500 p-1 w-8 h-8 rounded-full hover:bg-gray-100">
+                    <span nz-icon nzType="delete" nzTheme="outline"></span>
+                  </button>
                 </div>
-              </div>
 
-              <!-- Title -->
-              <div class="mb-1">
-                <h3 class="text-[16px] font-bold text-gray-900 leading-tight m-0 pr-24">{{ board.title }}</h3>
-              </div>
+                <!-- Card Body -->
+                <div class="p-5 flex flex-col flex-grow">
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-600 border border-green-100">
+                      <span nz-icon nzType="check" class="text-[10px]"></span>
+                      Completed
+                    </div>
+                  </div>
 
-              <!-- Description -->
-              <div class="mb-5 flex-grow">
-                <p class="text-[13px] text-gray-500 line-clamp-2 m-0 leading-relaxed pr-8" [nz-tooltip]="(board.description?.length || 0) > 80 ? board.description : ''">
-                  {{ board.description || 'No description provided' }}
-                </p>
-              </div>
+                  <div class="mb-1">
+                    <h3 class="text-[16px] font-bold text-gray-700 leading-tight m-0 pr-12">{{ board.title }}</h3>
+                  </div>
 
-              <!-- Metrics -->
-              <div class="flex items-center gap-6">
-                <div class="flex flex-col gap-1">
-                  <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
-                  <div class="flex items-center gap-1.5">
-                    <span nz-icon nzType="file-text" nzTheme="outline" class="text-[#7954AA] text-base"></span>
-                    <span class="font-bold text-gray-900 text-sm">{{ getStickyNotesCount(board.id) }}</span>
+                  <div class="mb-5 flex-grow">
+                    <p class="text-[12px] text-gray-400 line-clamp-2 m-0 leading-relaxed italic">
+                      {{ board.description || 'No description' }}
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-6 opacity-60">
+                    <div class="flex flex-col gap-1">
+                      <span class="text-[10px] font-bold text-gray-400 tracking-wider">NOTES</span>
+                      <span class="font-bold text-gray-700 text-sm">{{ getStickyNotesCount(board.id) }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
+                      <span class="font-bold text-gray-700 text-sm">{{ board.participants.length }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <span class="text-[10px] font-bold text-gray-400 tracking-wider">DATE</span>
+                      <span class="font-bold text-gray-700 text-sm">{{ formatDate(board.updatedAt) }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="flex flex-col gap-1">
-                  <span class="text-[10px] font-bold text-gray-400 tracking-wider">PARTICIPANTS</span>
-                  <div class="flex items-center gap-1.5">
-                    <span nz-icon nzType="team" nzTheme="outline" class="text-[#7954AA] text-base"></span>
-                    <span class="font-bold text-gray-900 text-sm">{{ board.participants.length }}</span>
+
+                <div class="px-5 py-3 border-t border-dotted border-gray-100 bg-[#fbfbfb] flex items-center justify-between rounded-b-xl">
+                  <div class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                    Completed {{ getTimeAgo(board.updatedAt) }}
                   </div>
+                  <button nz-button nzType="link" class="text-[#7954AA] p-0 h-auto font-bold text-xs" (click)="openBoard(board.id); $event.stopPropagation()">View Summary</button>
                 </div>
               </div>
             </div>
 
-            <!-- Footer -->
-            <div class="px-5 py-3 border-t border-gray-100 bg-[#fafafa] flex items-center justify-between rounded-b-xl">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
-                Updated {{ getTimeAgo(board.updatedAt) }}
-              </div>
+            <!-- Load More Button -->
+            <div *ngIf="getCompletedBoards().length > completedBoardsLimit" class="flex justify-center mt-2">
               <button
                 nz-button
-                class="text-white border-none text-xs font-semibold rounded-sm px-4 h-8"
-                style="background: #7954AA;"
-                (click)="openBoard(board.id); $event.stopPropagation()"
+                nzType="default"
+                (click)="loadMoreCompletedBoards()"
+                class="flex items-center gap-2 px-8 h-10 font-bold text-[#7954AA] border-[#BA9BDE] hover:bg-purple-50 rounded-lg transition-all"
               >
-                {{ board.currentPhase === 'completed' ? 'View Report' : 'Join Session' }}
+                <span>Load more</span>
+                <span nz-icon nzType="down" nzTheme="outline" class="text-[10px]"></span>
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Empty State -->
-        <div *ngIf="getFilteredBoards().length === 0" class="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-gray-100">
-          <div class="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mb-5">
-            <span nz-icon nzType="appstore-add" class="text-3xl text-[#7954AA]"></span>
+          <div *ngIf="getCompletedBoards().length === 0" class="py-12 text-center bg-gray-50 bg-opacity-50 rounded-xl border border-dashed border-gray-200">
+            <p class="text-gray-400 text-sm m-0 italic">No completed retrospectives in the library yet.</p>
           </div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">No boards yet</h3>
-          <p class="text-gray-500 mb-6">Create your first board to start a retrospective.</p>
-          <button *ngIf="hasPermission(Permission.MANAGE_RETROS)" nz-button nzType="primary" class="bg-[#7954AA] border-none" (click)="showCreateBoardModal()">Create Board</button>
         </div>
       </div>
 

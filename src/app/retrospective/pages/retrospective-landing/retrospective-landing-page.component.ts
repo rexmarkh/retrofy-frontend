@@ -89,7 +89,6 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
     distinctUntilChanged()
   );
   dataReady$ = this.isLoading$.pipe(map(loading => !loading));
-  activeTab: 'active' | 'completed' = 'active';
   teamMembers: import('../../../organization/interfaces/organization.interface').TeamMember[] = [];
   currentTeam$ = this.organizationQuery.currentTeam$;
   memberContributionStats: Map<string, number> = new Map();
@@ -109,6 +108,7 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   editingBoard: RetrospectiveBoard | null = null;
   editBoardTitle = '';
   editBoardDescription = '';
+  completedBoardsLimit = 4;
 
   readonly Permission = Permission;
 
@@ -395,18 +395,21 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
   }
 
   getActiveBoards(): RetrospectiveBoard[] {
-    return this.boards.filter(board => board.isActive && board.currentPhase !== 'completed');
+    return this.boards.filter(board => board.currentPhase !== RetroPhase.COMPLETED);
   }
 
   getCompletedBoards(): RetrospectiveBoard[] {
-    return this.boards.filter(board => !board.isActive || board.currentPhase === 'completed');
+    return this.boards
+      .filter(board => board.currentPhase === RetroPhase.COMPLETED)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }
 
-  getFilteredBoards(): RetrospectiveBoard[] {
-    if (this.activeTab === 'completed') {
-      return this.getCompletedBoards();
-    }
-    return this.getActiveBoards();
+  getVisibleCompletedBoards(): RetrospectiveBoard[] {
+    return this.getCompletedBoards().slice(0, this.completedBoardsLimit);
+  }
+
+  loadMoreCompletedBoards() {
+    this.completedBoardsLimit += 4;
   }
 
   getTeamMembers(): (import('../../../organization/interfaces/organization.interface').TeamMember & { contributionRate: number, color: string, role: string })[] {
