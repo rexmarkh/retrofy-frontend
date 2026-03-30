@@ -4,18 +4,59 @@
 
 .columns-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 0.5rem;
+  /* grid-template-columns set dynamically in HTML */
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.5rem;
   padding-bottom: 16px;
+  background: #f1f5f9;
 }
 
 .column-item {
   height: 100%;
-  min-width: 320px;
+  min-width: 250px;
+  transition: opacity 0.2s ease;
+}
+
+.resizer-handle {
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  transition: background 0.2s;
+
+  &:hover, &:active {
+    background: rgba(121, 84, 170, 0.1);
+    
+    .resizer-line {
+      background: #7954AA;
+      height: 100%;
+      width: 2px;
+    }
+  }
+
+  .resizer-line {
+    width: 1px;
+    height: 40px;
+    background: #cbd5e1;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+}
+
+:host-context(body.resizing-active) {
+  cursor: col-resize !important;
+  user-select: none !important;
+
+  .column-item {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 }
 
 .cdk-drop-list-group {

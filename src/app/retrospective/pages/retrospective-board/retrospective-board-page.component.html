@@ -108,26 +108,37 @@
           <div class="h-full">
             <!-- Columns Grid -->
             <div 
-              class="columns-grid h-full gap-6"
+              class="columns-grid h-full"
+              [style.grid-template-columns]="getGridTemplateColumns()"
               cdkDropListGroup
             >
-              <app-retro-column
-                *ngFor="let column of currentBoard.columns; trackBy: trackByColumnId"
-                [column]="column"
-                [stickyNotes]="getStickyNotesForColumn(column.id)"
-                [currentUserId]="getCurrentUserId()"
-                [facilitatorId]="currentBoard.facilitatorId"
-                [currentPhase]="currentBoard.currentPhase"
-                [teamAbbreviation]="teamAbbreviation"
-                [currentUserRole]="currentUserRole"
-                [isLoading]="(isLoading$ | async) || false"
-                (noteAdd)="onNoteAdd($event)"
-                (noteChange)="onNoteChange($event)"
-                (noteDelete)="onNoteDelete($event)"
-                (noteVote)="onNoteVote($event)"
-                (noteDrop)="onNoteDrop($event)"
-                class="column-item"
-              ></app-retro-column>
+              <ng-container *ngFor="let column of currentBoard.columns; let i = index; trackBy: trackByColumnId">
+                <app-retro-column
+                  [column]="column"
+                  [stickyNotes]="getStickyNotesForColumn(column.id)"
+                  [currentUserId]="getCurrentUserId()"
+                  [facilitatorId]="currentBoard.facilitatorId"
+                  [currentPhase]="currentBoard.currentPhase"
+                  [teamAbbreviation]="teamAbbreviation"
+                  [currentUserRole]="currentUserRole"
+                  [isLoading]="(isLoading$ | async) || false"
+                  (noteAdd)="onNoteAdd($event)"
+                  (noteChange)="onNoteChange($event)"
+                  (noteDelete)="onNoteDelete($event)"
+                  (noteVote)="onNoteVote($event)"
+                  (noteDrop)="onNoteDrop($event)"
+                  class="column-item"
+                ></app-retro-column>
+                
+                <!-- Resizer Handle -->
+                <div 
+                  *ngIf="i < currentBoard.columns.length - 1" 
+                  class="resizer-handle"
+                  (mousedown)="onResizeStart($event, i)"
+                >
+                  <div class="resizer-line"></div>
+                </div>
+              </ng-container>
             </div>
           </div>
         </nz-content>
