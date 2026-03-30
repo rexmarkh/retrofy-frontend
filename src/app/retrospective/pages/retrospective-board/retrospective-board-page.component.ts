@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -88,6 +88,13 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
   teamAbbreviation = 'NT';
   currentUserRole: string | null = null;
   readonly Permission = Permission;
+  
+  // Resize configuration
+  columnWidths: number[] = [1, 1, 1]; // Three columns
+  isResizing = false;
+  resizerIndex = -1;
+  startX = 0;
+  startWidths: number[] = [];
 
   isLoading$ = this.retrospectiveQuery.isLoading$;
   
@@ -148,8 +155,67 @@ export class RetrospectiveBoardPageComponent implements OnInit, OnDestroy {
           
           // Initialize column data arrays for drag & drop
           this.initializeColumnArrays();
+          
+          // Reset widths if columns count changes
+          if (board.columns.length !== this.columnWidths.length) {
+            this.columnWidths = new Array(board.columns.length).fill(1);
+          }
         }
       });
+  }
+
+  // --- Resize Functionality ---
+  
+  getGridTemplateColumns(): string {
+    return this.columnWidths.map(w => `${w}fr`).join(' 6px ');
+  }
+
+  onResizeStart(event: MouseEvent, index: number): void {
+    this.isResizing = true;
+    this.resizerIndex = index;
+    this.startX = event.clientX;
+    this.startWidths = [...this.columnWidths];
+    
+    // Add class to body to prevent text selection and show resizing cursor
+    document.body.classList.add('resizing-active');
+    event.preventDefault();
+  }
+
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    if (!this.isResizing) return;
+
+    const deltaX = event.clientX - this.startX;
+    const containerWidth = document.querySelector('.columns-grid')?.clientWidth || 1000;
+    
+    // Convert pixel delta to 'fr' delta
+    // Total 'fr' units is always this.columnWidths.length (assuming initial 1fr each)
+    const totalFr = this.columnWidths.length;
+    const frDelta = (deltaX / containerWidth) * totalFr;
+
+    // Adjust the two columns adjacent to the resizer
+    const leftIndex = this.resizerIndex;
+    const rightIndex = this.resizerIndex + 1;
+
+    const newLeftFr = this.startWidths[leftIndex] + frDelta;
+    const newRightFr = this.startWidths[rightIndex] - frDelta;
+
+    // Set minimum width (e.g., 0.5fr)
+    const minFr = 0.5;
+    if (newLeftFr > minFr && newRightFr > minFr) {
+      this.columnWidths[leftIndex] = newLeftFr;
+      this.columnWidths[rightIndex] = newRightFr;
+      this.columnWidths = [...this.columnWidths]; // Trigger change detection
+    }
+  }
+
+  @HostListener('window:mouseup')
+  onMouseUp(): void {
+    if (this.isResizing) {
+      this.isResizing = false;
+      this.resizerIndex = -1;
+      document.body.classList.remove('resizing-active');
+    }
   }
 
   ngOnDestroy() {
