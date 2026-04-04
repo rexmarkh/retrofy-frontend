@@ -1140,4 +1140,18 @@ export class RetrospectiveService {
       return [];
     }
   }
+
+  async generateActionItem(noteContent: string): Promise<string> {
+    try {
+      const { data, error } = await this.supabaseService.client.functions.invoke('generate-action-item', {
+        body: { noteContent }
+      });
+
+      if (error) throw error;
+      return data.actionItem || '';
+    } catch (error) {
+      console.error('Error generating AI action item:', error);
+      throw error;
+    }
+  }
 }

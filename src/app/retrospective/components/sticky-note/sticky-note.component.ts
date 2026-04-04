@@ -16,6 +16,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { StickyNote, StickyNoteColor, RetroPhase } from '../../interfaces/retrospective.interface';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 import { environment } from '../../../../environments/environment';
+import { RetrospectiveService } from '../../state/retrospective.service';
 
 @Component({
   selector: 'app-sticky-note',
@@ -60,10 +61,12 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   @ViewChild('contentElement') contentElement?: ElementRef;
   @ViewChild('noteModalContent') noteModalContent?: TemplateRef<any>;
   isTruncated = false;
+  isGeneratingActionItem = false;
 
   constructor(
     private modal: NzModalService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private retrospectiveService: RetrospectiveService
   ) {}
 
   ngOnInit() {
@@ -264,6 +267,36 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
     
     // Emit event to parent to open edit modal
     this.noteEdit.emit(this.note);
+  }
+
+  canGenerateActionItem(): boolean {
+    const isNotCompleted = this.currentPhase !== RetroPhase.COMPLETED;
+    const isNotActionItemColumn = this.note.columnId !== 'action-items';
+    const isFacilitator = this.facilitatorId === this.currentUserId;
+    const isAdminOrOwner = this.currentUserRole === 'admin' || this.currentUserRole === 'owner';
+    return isNotCompleted && isNotActionItemColumn && (isFacilitator || isAdminOrOwner);
+  }
+
+  async handleGenerateActionItem() {
+    if (this.isGeneratingActionItem || !this.canGenerateActionItem()) return;
+
+    this.isGeneratingActionItem = true;
+    try {
+      const actionItemContent = await this.retrospectiveService.generateActionItem(this.note.content);
+      if (actionItemContent) {
+        await this.retrospectiveService.addStickyNote(
+          'action-items',
+          actionItemContent,
+          this.note.color,
+          false // Action items shouldn't be anonymous
+        );
+      }
+    } catch (error) {
+      console.error('Failed to generate action item:', error);
+    } finally {
+      this.isGeneratingActionItem = false;
+      this.cdr.detectChanges();
+    }
   }
 
   changeColor(color: StickyNoteColor) {

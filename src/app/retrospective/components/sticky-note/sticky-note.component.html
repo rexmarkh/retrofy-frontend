@@ -11,7 +11,7 @@
     class="h-full"
   >
     <!-- Action Buttons - Top Right -->
-    <div class="absolute top-2 right-2 action-buttons z-20" *ngIf="canEdit() || canDelete()">
+    <div class="absolute top-2 right-2 action-buttons z-20" *ngIf="canEdit() || canDelete() || canGenerateActionItem()">
       <button 
         nz-button 
         nzType="text" 
@@ -33,7 +33,13 @@
             <span>Edit note</span>
           </li>
 
-          <li nz-menu-divider *ngIf="canEdit() && canDelete()"></li>
+          <!-- Generate Action Item Option -->
+          <li nz-menu-item *ngIf="canGenerateActionItem()" (click)="handleGenerateActionItem()">
+            <span nz-icon [nzType]="isGeneratingActionItem ? 'loading' : 'thunderbolt'" nzTheme="outline"></span>
+            <span>{{ isGeneratingActionItem ? 'Generating...' : 'Generate Action Item' }}</span>
+          </li>
+
+          <li nz-menu-divider *ngIf="(canEdit() || canGenerateActionItem()) && canDelete()"></li>
 
           <!-- Delete Option -->
           <li nz-menu-item *ngIf="canDelete()" nzDanger (click)="confirmDelete()">
