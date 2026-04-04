@@ -182,7 +182,13 @@ export class RetrospectiveLandingPageComponent implements OnInit, OnDestroy {
       .subscribe(team => {
         console.log('[RetroLanding] currentTeam$ emitted:', team?.id, team?.name);
         if (team) {
+          // Explicitly clear current board before loading data for a new team
+          this.retrospectiveService.clearCurrentBoard();
           this.retrospectiveService.loadBoardsFromSupabase(undefined, team.id);
+        } else {
+          // If no team is selected, also clear boards and current board
+          this.retrospectiveService.clearBoards();
+          this.retrospectiveService.clearCurrentBoard();
         }
       });
 

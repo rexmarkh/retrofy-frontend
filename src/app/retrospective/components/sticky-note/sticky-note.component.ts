@@ -165,18 +165,23 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
   // Permission methods
   canEdit(): boolean {
-    // Edit is allowed if:
-    // 1. In Brainstorming phase AND is author
-    // 2. IS an Admin/Owner AND note is in 'action-items' column (allows correcting AI or manual action items)
     const isAuthor = this.note.authorId === this.currentUserId;
     const isAdminOrOwner = this.currentUserRole === 'admin' || this.currentUserRole === 'owner';
     const isActionItem = this.note.columnId === 'action-items';
 
+    // 1. Author can edit in brainstorming phase
     if (this.currentPhase === RetroPhase.BRAINSTORMING && isAuthor) {
       return true;
     }
 
-    if (isAdminOrOwner && isActionItem) {
+    // 2. Admin/Owner can edit action items in ANY phase (except completed)
+    if (isAdminOrOwner && isActionItem && this.currentPhase !== RetroPhase.COMPLETED) {
+      return true;
+    }
+
+    // 3. Facilitator is treated as Admin/Owner for action item editing
+    const isFacilitator = this.facilitatorId === this.currentUserId;
+    if (isFacilitator && isActionItem && this.currentPhase !== RetroPhase.COMPLETED) {
       return true;
     }
 

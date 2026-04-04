@@ -19,6 +19,10 @@ export class RetrospectiveService {
 
   async loadBoardsFromSupabase(orgId?: string, teamId?: string) {
     console.log('[RetrospectiveService] loadBoardsFromSupabase called | orgId:', orgId, '| teamId:', teamId);
+    
+    // Clear current board when loading a different team/org's boards
+    this.clearCurrentBoard();
+    
     this.store.setLoading(true);
     try {
       // Build query to fetch boards with their items' creation times
@@ -105,6 +109,13 @@ export class RetrospectiveService {
       boards: []
     }));
     this.store.setLoading(false);
+  }
+
+  clearCurrentBoard() {
+    this.store.update(state => ({
+      ...state,
+      currentBoard: null
+    }));
   }
 
   private mapPhaseFromDb(stage: string): RetroPhase {
