@@ -29,7 +29,7 @@ export class OrganizationService {
 
     if (!currentOrgId || !currentUserId) return false;
 
-    // 1. Check Organization-level Role
+    // 1. Check Organization-level Role (Top Priority)
     const member = state.organizationMembers.find(
       m => m.organizationId === currentOrgId && m.userId === currentUserId
     );
@@ -38,19 +38,19 @@ export class OrganizationService {
       // Owners have all permissions
       if (member.role === OrganizationRole.OWNER) return true;
       
-      // Global Admins have all permissions (isGlobal is true for memberships with null team_id)
+      // Global Admins have all permissions
       if (member.role === OrganizationRole.ADMIN && member.isGlobal) {
         const permissions = ROLE_PERMISSIONS[OrganizationRole.ADMIN];
         if (permissions?.includes(permission)) return true;
       }
     }
 
-    // 2. Check Team-level Role contextually
+    // 2. Check Team-level Role contextually (If not already granted by Org role)
     if (teamId) {
       const team = state.teams.find(t => t.id === teamId);
       const teamRole = team?.currentUserRole;
       if (teamRole) {
-        const permissions = ROLE_PERMISSIONS[teamRole as OrganizationRole];
+        const permissions = ROLE_PERMISSIONS[teamRole as OrganizationRole] || ROLE_PERMISSIONS[OrganizationRole.MEMBER];
         if (permissions?.includes(permission)) return true;
       }
     }

@@ -40,40 +40,95 @@
 /* Action Buttons */
 .action-buttons {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  left: auto;
+  top: 6px;
+  right: 6px;
   opacity: 0;
-  transition: opacity 0.2s ease;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 6px;
-  padding: 2px;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 20;
 }
 
-.action-button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  display: flex;
+.action-menu-btn {
+  width: 28px;
+  height: 28px;
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px !important;
+  color: #64748b !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
-  border-radius: 4px;
+
+  &:hover {
+    background: #fff !important;
+    color: #7954AA !important;
+    border-color: rgba(121, 84, 170, 0.2) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+
+  span {
+    font-size: 18px;
+  }
 }
 
-.action-button:hover {
-  opacity: 1;
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+.premium-dropdown {
+  border-radius: 10px !important;
+  padding: 6px !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  min-width: 160px;
+
+  li {
+    border-radius: 6px !important;
+    margin-bottom: 2px;
+    font-weight: 500;
+    font-size: 13px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &.ant-dropdown-menu-item-danger {
+      color: #ef4444;
+      
+      &:hover {
+        background-color: #ef4444 !important;
+        
+        .delete-icon, .delete-text {
+          color: #ffffff !important;
+        }
+      }
+    }
+    
+    &.ant-dropdown-menu-item-divider {
+      background-color: rgba(0, 0, 0, 0.05) !important;
+      height: 1px !important;
+      margin: 4px 0 !important;
+      padding: 0 !important;
+    }
+    
+    .anticon {
+      font-size: 14px;
+    }
+  }
 }
 
-.action-button-delete:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+.delete-icon {
   color: #ef4444;
+  transition: color 0.1s ease;
+}
+
+.delete-text {
+  color: #ef4444;
+  font-weight: 500;
+  transition: color 0.1s ease;
 }
 
 /* Content Area */

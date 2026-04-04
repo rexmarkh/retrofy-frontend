@@ -8,6 +8,8 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -30,6 +32,8 @@ import { environment } from '../../../../environments/environment';
     NzPopoverModule,
     NzTagModule,
     NzToolTipModule,
+    NzDropDownModule,
+    NzMenuModule,
     DragDropModule,
     JiraControlModule
   ],

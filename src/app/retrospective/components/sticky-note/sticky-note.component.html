@@ -11,67 +11,37 @@
     class="h-full"
   >
     <!-- Action Buttons - Top Right -->
-    <div class="absolute top-2 right-2 flex items-center gap-1 action-buttons z-10">
-      <!-- Color Picker -->
-      <nz-popover 
-        *ngIf="canEdit()"
-        nzTitle="Change Color" 
+    <div class="absolute top-2 right-2 action-buttons z-20" *ngIf="canEdit() || canDelete()">
+      <button 
+        nz-button 
+        nzType="text" 
+        nzSize="small"
+        class="action-menu-btn"
+        nz-dropdown
+        [nzDropdownMenu]="menu"
         nzTrigger="click"
+        (click)="$event.stopPropagation()"
       >
-        <button 
-          nz-button 
-          nzType="text" 
-          nzSize="small"
-          nz-popover
-          nz-tooltip
-          nzTooltipTitle="Change color"
-          class="action-button"
-        >
-          <span nz-icon nzType="bg-colors" nzTheme="outline"></span>
-        </button>
-        <ng-template #nzPopoverContent>
-          <div class="grid grid-cols-3 gap-2 p-2">
-            <div 
-              *ngFor="let color of colorOptions"
-              class="w-7 h-7 rounded cursor-pointer border-2 hover:scale-110 transition-transform"
-              [style.background-color]="getColorValue(color)"
-              [class.border-gray-800]="note.color === color"
-              [class.border-gray-300]="note.color !== color"
-              (click)="changeColor(color)"
-            ></div>
-          </div>
-        </ng-template>
-      </nz-popover>
-
-      <!-- Edit Icon -->
-      <button 
-        *ngIf="canEdit()"
-        nz-button 
-        nzType="text" 
-        nzSize="small"
-        (click)="startEditing()"
-        nz-tooltip
-        nzTooltipTitle="Edit note"
-        nzTooltipPlacement="bottom"
-        class="action-button"
-      >
-        <span nz-icon nzType="edit" nzTheme="outline"></span>
+        <span nz-icon nzType="more" nzTheme="outline"></span>
       </button>
 
-      <!-- Delete Icon -->
-      <button 
-        *ngIf="canDelete()"
-        nz-button 
-        nzType="text" 
-        nzSize="small"
-        (click)="confirmDelete()"
-        nz-tooltip
-        nzTooltipTitle="Delete note"
-        nzTooltipPlacement="bottom"
-        class="action-button action-button-delete"
-      >
-        <span nz-icon nzType="delete" nzTheme="outline"></span>
-      </button>
+      <nz-dropdown-menu #menu="nzDropdownMenu">
+        <ul nz-menu class="premium-dropdown">
+          <!-- Edit Option -->
+          <li nz-menu-item *ngIf="canEdit()" (click)="startEditing()">
+            <span nz-icon nzType="edit" nzTheme="outline"></span>
+            <span>Edit note</span>
+          </li>
+
+          <li nz-menu-divider *ngIf="canEdit() && canDelete()"></li>
+
+          <!-- Delete Option -->
+          <li nz-menu-item *ngIf="canDelete()" nzDanger (click)="confirmDelete()">
+            <span nz-icon nzType="delete" nzTheme="outline" class="delete-icon"></span>
+            <span class="delete-text">Delete note</span>
+          </li>
+        </ul>
+      </nz-dropdown-menu>
     </div>
 
     <!-- Note Content - Takes most space -->
