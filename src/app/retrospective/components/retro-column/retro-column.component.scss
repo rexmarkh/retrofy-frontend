@@ -76,7 +76,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 8px 18px;
   background: transparent;
   user-select: none;
   position: relative;
@@ -445,7 +445,7 @@
 
 ::ng-deep .ant-card-head {
   padding: 0 16px;
-  min-height: 64px;
+  min-height: 48px;
   background: linear-gradient(135deg, rgba(var(--column-rgb), 0.08) 0%, rgba(var(--column-rgb), 0.04) 100%) !important;
   border-bottom: 1px solid rgba(var(--column-rgb), 0.15) !important;
   transition: background 0.2s ease;
@@ -456,7 +456,7 @@
 }
 
 ::ng-deep .ant-card-head-title {
-  padding: 16px 0;
+  padding: 12px 0;
 }
 
 // Modal footer buttons

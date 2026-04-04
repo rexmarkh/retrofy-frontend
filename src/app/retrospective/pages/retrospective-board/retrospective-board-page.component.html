@@ -4,8 +4,8 @@
       <!-- Loading Skeleton (Header & Columns) -->
       <ng-container *ngIf="(isLoading$ | async) && !currentBoard">
         <nz-layout class="h-full">
-          <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
-            <div class="flex items-center justify-between mb-4">
+          <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-2">
+            <div class="flex items-center justify-between mb-2">
               <div class="flex flex-col gap-2">
                 <nz-skeleton-element nzType="input" [nzActive]="true" style="width: 250px; height: 32px;"></nz-skeleton-element>
                 <nz-skeleton-element nzType="input" [nzActive]="true" style="width: 400px; height: 16px;"></nz-skeleton-element>
@@ -40,9 +40,9 @@
 
       <!-- Actual Board -->
       <nz-layout class="h-full" *ngIf="currentBoard">
-        <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-4">
+        <nz-header class="bg-white border-b border-gray-200 px-6 h-auto py-2">
           <!-- Top Row: Title & Actions -->
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-4">
               <div>
                 <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ currentBoard.title }}</h1>
@@ -84,7 +84,7 @@
           </div>
 
           <!-- Phase Navigation -->
-          <div class="phase-navigation flex items-center justify-center px-4 w-full">
+          <div class="phase-navigation flex items-center justify-center px-4 w-full py-0">
             <button 
               nz-button 
               nzType="text" 
