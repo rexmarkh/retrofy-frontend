@@ -238,12 +238,15 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   }
 
   canMarkAsCompleted(): boolean {
-    // Only the facilitator can mark as completed in this implementation
-    // Future: check for organization admin/owner roles if needed
+    // 1. Must be in Discussion phase
     const isDiscussionPhase = this.currentPhase === RetroPhase.DISCUSSION;
     if (!isDiscussionPhase) return false;
 
-    return this.facilitatorId === this.currentUserId;
+    // 2. Allowed for Facilitator, Admin, or Owner
+    const isFacilitator = this.facilitatorId === this.currentUserId;
+    const isAdminOrOwner = this.currentUserRole === 'admin' || this.currentUserRole === 'owner';
+
+    return isFacilitator || isAdminOrOwner;
   }
 
   toggleCompleted() {
