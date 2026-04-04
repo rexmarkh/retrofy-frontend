@@ -11,76 +11,64 @@
     class="h-full"
   >
     <!-- Action Buttons - Top Right -->
-    <div class="absolute top-2 right-2 flex items-center gap-1 action-buttons z-10">
-      <!-- Color Picker -->
-      <nz-popover 
-        *ngIf="canEdit()"
-        nzTitle="Change Color" 
+    <div class="absolute top-2 right-2 action-buttons z-20" *ngIf="canEdit() || canDelete() || canGenerateActionItem()">
+      <button 
+        nz-button 
+        nzType="text" 
+        nzSize="small"
+        class="action-menu-btn"
+        nz-dropdown
+        [nzDropdownMenu]="menu"
         nzTrigger="click"
+        (click)="$event.stopPropagation()"
       >
-        <button 
-          nz-button 
-          nzType="text" 
-          nzSize="small"
-          nz-popover
-          nz-tooltip
-          nzTooltipTitle="Change color"
-          class="action-button"
-        >
-          <span nz-icon nzType="bg-colors" nzTheme="outline"></span>
-        </button>
-        <ng-template #nzPopoverContent>
-          <div class="grid grid-cols-3 gap-2 p-2">
-            <div 
-              *ngFor="let color of colorOptions"
-              class="w-7 h-7 rounded cursor-pointer border-2 hover:scale-110 transition-transform"
-              [style.background-color]="getColorValue(color)"
-              [class.border-gray-800]="note.color === color"
-              [class.border-gray-300]="note.color !== color"
-              (click)="changeColor(color)"
-            ></div>
-          </div>
-        </ng-template>
-      </nz-popover>
-
-      <!-- Edit Icon -->
-      <button 
-        *ngIf="canEdit()"
-        nz-button 
-        nzType="text" 
-        nzSize="small"
-        (click)="startEditing()"
-        nz-tooltip
-        nzTooltipTitle="Edit note"
-        nzTooltipPlacement="bottom"
-        class="action-button"
-      >
-        <span nz-icon nzType="edit" nzTheme="outline"></span>
+        <span nz-icon nzType="more" nzTheme="outline"></span>
       </button>
 
-      <!-- Delete Icon -->
-      <button 
-        *ngIf="canDelete()"
-        nz-button 
-        nzType="text" 
-        nzSize="small"
-        (click)="confirmDelete()"
-        nz-tooltip
-        nzTooltipTitle="Delete note"
-        nzTooltipPlacement="bottom"
-        class="action-button action-button-delete"
-      >
-        <span nz-icon nzType="delete" nzTheme="outline"></span>
-      </button>
+      <nz-dropdown-menu #menu="nzDropdownMenu">
+        <ul nz-menu class="premium-dropdown">
+          <!-- Edit Option -->
+          <li nz-menu-item *ngIf="canEdit()" (click)="startEditing()">
+            <span nz-icon nzType="edit" nzTheme="outline"></span>
+            <span>Edit note</span>
+          </li>
+
+          <!-- Suggest Action Item Option -->
+          <li nz-menu-item *ngIf="canGenerateActionItem()" (click)="handleGenerateActionItem()">
+            <span nz-icon [nzType]="isGeneratingActionItem ? 'loading' : 'thunderbolt'" nzTheme="outline"></span>
+            <span>{{ isGeneratingActionItem ? 'Suggesting...' : 'Suggest action item' }}</span>
+          </li>
+
+          <li nz-menu-divider *ngIf="(canEdit() || canGenerateActionItem()) && canDelete()"></li>
+
+          <!-- Delete Option -->
+          <li nz-menu-item *ngIf="canDelete()" nzDanger (click)="confirmDelete()">
+            <span nz-icon nzType="delete" nzTheme="outline" class="delete-icon"></span>
+            <span class="delete-text">Delete note</span>
+          </li>
+        </ul>
+      </nz-dropdown-menu>
     </div>
 
     <!-- Note Content - Takes most space -->
     <div class="note-content-wrapper">
-      <div class="note-content" #contentElement>
-        {{ note.content }}
+      <div 
+        class="note-content" 
+        #contentElement
+        [class.optimistic-content]="note.isOptimistic"
+      >
+        {{ getDisplayContent() }}
       </div>
       <div *ngIf="isTruncated" (click)="showFullNote()" class="show-more-link">
         Show more
+      </div>
+      
+      <!-- Suggesting Overlay -->
+      <div class="suggesting-overlay" *ngIf="isGeneratingActionItem">
+        <div class="suggesting-loader">
+          <span nz-icon nzType="loading" nzTheme="outline"></span>
+          <span>Suggesting action item...</span>
+        </div>
       </div>
     </div>
 
@@ -89,8 +77,7 @@
       <!-- Left: Note ID + Tags -->
       <div class="footer-left">
         <!-- Note ID -->
-        <span class="note-id">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
-        
+        <span class="note-id" *ngIf="!note.isOptimistic">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
         <!-- Tags (if present) -->
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
           <span 
@@ -101,6 +88,12 @@
           >
             {{ tag }}
           </span>
+        </div>
+
+        <!-- Source Reference Tag -->
+        <div *ngIf="getSourceReference()" class="source-ref-badge" nz-tooltip [nzTooltipTitle]="'Referenced from ' + getSourceReference()">
+          <span nz-icon nzType="link" nzTheme="outline" class="mr-1"></span>
+          <span>REF: {{ getSourceReference() }}</span>
         </div>
       </div>
 
@@ -181,12 +174,12 @@
 <ng-template #noteModalContent>
   <div class="premium-note-modal-content">
     <div class="modal-note-body">
-      {{ note.content }}
+      {{ getDisplayContent() }}
     </div>
     
     <div class="modal-note-footer">
       <div class="footer-left">
-        <span class="note-id">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
+        <span class="note-id" *ngIf="!note.isOptimistic">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
           <span *ngFor="let tag of note.tags" 
                 class="note-tag" 

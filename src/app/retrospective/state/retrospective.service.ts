@@ -8,6 +8,7 @@ import { ProjectQuery } from '../../project/state/project/project.query';
 @Injectable({ providedIn: 'root' })
 export class RetrospectiveService {
   private retroItemsChannel: RealtimeChannel | null = null;
+  private retroBoardChannel: RealtimeChannel | null = null;
 
   constructor(
     private store: RetrospectiveStore,
@@ -248,33 +249,32 @@ export class RetrospectiveService {
       const existingBoard = currentState.boards.find(b => b.id === boardId);
       let board = existingBoard ? { ...existingBoard } : null;
 
-      // If board isn't in store (e.g., direct navigation), fetch it
-      if (!board) {
-        const { data: boardData, error: boardError } = await this.supabaseService.client
-          .from('retro_boards')
-          .select('*')
-          .eq('id', boardId)
-          .single();
+      // If board isn't in store (e.g., direct navigation) or to ensure fresh data, fetch it
+      const { data: boardData, error: boardError } = await this.supabaseService.client
+        .from('retro_boards')
+        .select('*')
+        .eq('id', boardId)
+        .single();
 
-        if (boardError) throw boardError;
-        if (boardData) {
-          board = {
-            id: boardData.id,
-            title: boardData.title,
-            description: boardData.description || '',
-            facilitatorId: boardData.created_by || '',
-            participants: boardData.participants || [boardData.created_by || ''],
-            columns: [],
-            stickyNotes: [],
-            aiSummary: boardData.ai_summary || {},
-            isActive: boardData.status === 'active',
-            currentPhase: this.mapPhaseFromDb(boardData.current_stage),
-            orgId: boardData.org_id,
-            teamId: boardData.team_id,
-            createdAt: boardData.created_at || new Date().toISOString(),
-            updatedAt: boardData.created_at || new Date().toISOString()
-          };
-        }
+      if (boardError) throw boardError;
+      if (boardData) {
+        console.log(`[RetrospectiveService] Loaded board ${boardId} from DB. current_stage: ${boardData.current_stage}`);
+        board = {
+          id: boardData.id,
+          title: boardData.title,
+          description: boardData.description || '',
+          facilitatorId: boardData.created_by || '',
+          participants: boardData.participants || [boardData.created_by || ''],
+          columns: [],
+          stickyNotes: [],
+          aiSummary: boardData.ai_summary || {},
+          isActive: boardData.status === 'active',
+          currentPhase: this.mapPhaseFromDb(boardData.current_stage),
+          orgId: boardData.org_id,
+          teamId: boardData.team_id,
+          createdAt: boardData.created_at || new Date().toISOString(),
+          updatedAt: boardData.created_at || new Date().toISOString()
+        };
       }
 
       if (!board) return;
@@ -305,9 +305,6 @@ export class RetrospectiveService {
           }
         ];
       }
-      
-      // Update store with board metadata early so the layout can render
-      this.store.update({ currentBoard: board });
 
       // Fetch items from retro_items and join with profiles
       const { data: itemsData, error: itemsError } = await this.supabaseService.client
@@ -425,8 +422,27 @@ export class RetrospectiveService {
       }
     )
     .subscribe((status) => {
-      console.log('Realtime subscription status:', status);
+      console.log('Realtime Items subscription status:', status);
     });
+
+    // Also subscribe to changes on the board itself (for phase updates, title changes, etc.)
+    this.retroBoardChannel = this.supabaseService.client
+      .channel(`retro_board_meta_${boardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'retro_boards',
+          filter: `id=eq.${boardId}`
+        },
+        (payload) => {
+          this.handleBoardUpdateEvent(payload);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime Board Meta subscription status:', status);
+      });
   }
 
   unsubscribeFromBoard() {
@@ -434,6 +450,38 @@ export class RetrospectiveService {
       this.supabaseService.client.removeChannel(this.retroItemsChannel);
       this.retroItemsChannel = null;
     }
+    if (this.retroBoardChannel) {
+      this.supabaseService.client.removeChannel(this.retroBoardChannel);
+      this.retroBoardChannel = null;
+    }
+  }
+
+  private handleBoardUpdateEvent(payload: any) {
+    const updatedBoard = payload.new;
+    console.log('[RetrospectiveService] Realtime board update received:', updatedBoard);
+    
+    this.store.update(state => {
+      if (!state.currentBoard || state.currentBoard.id !== updatedBoard.id) return state;
+      
+      const updates: Partial<RetrospectiveBoard> = {
+        title: updatedBoard.title,
+        description: updatedBoard.description,
+        currentPhase: this.mapPhaseFromDb(updatedBoard.current_stage),
+        isActive: updatedBoard.status === 'active',
+        participants: updatedBoard.participants || state.currentBoard.participants,
+        updatedAt: updatedBoard.updated_at
+      };
+
+      const finalBoard = { ...state.currentBoard, ...updates };
+      
+      return {
+        ...state,
+        currentBoard: finalBoard,
+        boards: state.boards.map(board => 
+          board.id === finalBoard.id ? finalBoard : board
+        )
+      };
+    });
   }
 
   private handleRealtimeEvent(payload: any) {
@@ -566,56 +614,55 @@ export class RetrospectiveService {
         .single();
 
       if (error) throw error;
-      
-      const newNote: StickyNote = {
-        id: data.id,
-        noteNumber: data.sequence_number || nextNoteNumber,
-        content: data.content,
-        authorId: data.user_id || '',
-        authorName: user.name,
-        authorAvatar: user.avatarUrl,
-        isAnonymous: isAnonymous,
-        columnId: this.mapCategoryToColumnId(data.category),
-        color,
-        position: { x: 0, y: 0 },
-        votes: data.votes || 0,
-        voterIds: [],
-        tags: [],
-        groupId: null,
-        isCompleted: false,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      };
-
-      console.log('Created new note:', newNote);
-
-      this.store.update(state => {
-        // Prevent duplicate if realtime event already added it
-        if (state.currentBoard?.stickyNotes.some(n => n.id === newNote.id)) {
-          console.log('Note already exists in store, skipping optimistic update');
-          return state;
-        }
-
-        const updatedBoard = {
-          ...state.currentBoard!,
-          stickyNotes: [...state.currentBoard!.stickyNotes, newNote],
-          notesCount: state.currentBoard!.stickyNotes.length + 1,
-          updatedAt: new Date().toISOString()
-        };
-
-        return {
-          ...state,
-          currentBoard: updatedBoard,
-          boards: state.boards.map(board => 
-            board.id === updatedBoard.id ? updatedBoard : board
-          )
-        };
-      });
-
-      console.log('Store updated successfully');
+      return data;
     } catch (error) {
       console.error('Error adding sticky note to Supabase:', error);
+      throw error;
     }
+  }
+
+  addOptimisticNote(columnId: string, content: string, color: StickyNoteColor): string {
+    const tempId = `optimistic-${Math.random().toString(36).substr(2, 9)}`;
+    const user = this.authQuery.getValue();
+    
+    const optimisticNote: StickyNote = {
+      id: tempId,
+      noteNumber: 0,
+      content,
+      authorId: user?.id || '',
+      authorName: user?.name || 'System',
+      authorAvatar: user?.avatarUrl,
+      isAnonymous: false,
+      columnId,
+      color,
+      position: { x: 0, y: 0 },
+      votes: 0,
+      voterIds: [],
+      isOptimistic: true,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    this.store.update(state => ({
+      ...state,
+      currentBoard: {
+        ...state.currentBoard!,
+        stickyNotes: [optimisticNote, ...state.currentBoard!.stickyNotes]
+      }
+    }));
+
+    return tempId;
+  }
+
+  removeOptimisticNote(tempId: string) {
+    this.store.update(state => ({
+      ...state,
+      currentBoard: {
+        ...state.currentBoard!,
+        stickyNotes: state.currentBoard!.stickyNotes.filter(n => n.id !== tempId)
+      }
+    }));
   }
 
   async updateStickyNote(noteId: string, updates: Partial<StickyNote>): Promise<void> {
@@ -744,12 +791,13 @@ export class RetrospectiveService {
     if (!currentState.currentBoard) return;
 
     const updates: Partial<RetrospectiveBoard> = { currentPhase: phase };
-
+    
     // If moving to completed, also save the current participants list
     if (phase === RetroPhase.COMPLETED) {
       updates.participants = currentState.currentBoard.participants || [];
     }
 
+    // Await the database update
     await this.updateBoardSupabase(currentState.currentBoard.id, updates);
   }
 
@@ -1089,6 +1137,20 @@ export class RetrospectiveService {
     } catch (error) {
       console.error('Error fetching user activity history:', error);
       return [];
+    }
+  }
+
+  async generateActionItem(noteContent: string): Promise<string> {
+    try {
+      const { data, error } = await this.supabaseService.client.functions.invoke('generate-action-item', {
+        body: { noteContent }
+      });
+
+      if (error) throw error;
+      return data.actionItem || '';
+    } catch (error) {
+      console.error('Error generating AI action item:', error);
+      throw error;
     }
   }
 }

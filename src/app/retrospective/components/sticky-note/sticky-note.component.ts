@@ -8,12 +8,15 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { StickyNote, StickyNoteColor, RetroPhase } from '../../interfaces/retrospective.interface';
 import { JiraControlModule } from '../../../jira-control/jira-control.module';
 import { environment } from '../../../../environments/environment';
+import { RetrospectiveService } from '../../state/retrospective.service';
 
 @Component({
   selector: 'app-sticky-note',
@@ -30,6 +33,8 @@ import { environment } from '../../../../environments/environment';
     NzPopoverModule,
     NzTagModule,
     NzToolTipModule,
+    NzDropDownModule,
+    NzMenuModule,
     DragDropModule,
     JiraControlModule
   ],
@@ -56,10 +61,12 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
   @ViewChild('contentElement') contentElement?: ElementRef;
   @ViewChild('noteModalContent') noteModalContent?: TemplateRef<any>;
   isTruncated = false;
+  isGeneratingActionItem = false;
 
   constructor(
     private modal: NzModalService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private retrospectiveService: RetrospectiveService
   ) {}
 
   ngOnInit() {
@@ -158,9 +165,22 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
 
   // Permission methods
   canEdit(): boolean {
-    // Edit is only allowed for the note author during brainstorming phase
-    return this.currentPhase === RetroPhase.BRAINSTORMING && 
-           this.note.authorId === this.currentUserId;
+    // Edit is allowed if:
+    // 1. In Brainstorming phase AND is author
+    // 2. IS an Admin/Owner AND note is in 'action-items' column (allows correcting AI or manual action items)
+    const isAuthor = this.note.authorId === this.currentUserId;
+    const isAdminOrOwner = this.currentUserRole === 'admin' || this.currentUserRole === 'owner';
+    const isActionItem = this.note.columnId === 'action-items';
+
+    if (this.currentPhase === RetroPhase.BRAINSTORMING && isAuthor) {
+      return true;
+    }
+
+    if (isAdminOrOwner && isActionItem) {
+      return true;
+    }
+
+    return false;
   }
 
   canDelete(): boolean {
@@ -260,6 +280,73 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
     
     // Emit event to parent to open edit modal
     this.noteEdit.emit(this.note);
+  }
+
+  canGenerateActionItem(): boolean {
+    const isDiscussionPhase = this.currentPhase === RetroPhase.DISCUSSION;
+    const isNotActionItemColumn = this.note.columnId !== 'action-items';
+    const isFacilitator = this.facilitatorId === this.currentUserId;
+    const isAdminOrOwner = this.currentUserRole === 'admin' || this.currentUserRole === 'owner';
+    return isDiscussionPhase && isNotActionItemColumn && (isFacilitator || isAdminOrOwner);
+  }
+
+  getSourceReference(): string | null {
+    if (!this.note.content) return null;
+    const match = this.note.content.match(/\[Ref:\s*([^\]]+)\]/);
+    return match ? match[1] : null;
+  }
+
+  getDisplayContent(): string {
+    if (!this.note.content) return '';
+    // Strip only the [Ref: ...] part from the display
+    return this.note.content.replace(/\n*\[Ref:\s*[^\]]+\]/, '').trim();
+  }
+
+  async handleGenerateActionItem() {
+    if (this.isGeneratingActionItem || !this.canGenerateActionItem()) return;
+
+    this.isGeneratingActionItem = true;
+    const sourceNoteId = `${this.teamAbbreviation}-${this.note.noteNumber}`;
+    let tempId: string | null = null;
+    
+    try {
+      // 1. Show optimistic placeholder in Action Items column
+      const placeholderContent = `AI is suggesting an action item for [Ref: ${sourceNoteId}]...`;
+      tempId = this.retrospectiveService.addOptimisticNote(
+        'action-items',
+        placeholderContent,
+        this.note.color
+      );
+
+      // 2. Call AI service
+      const actionItemContent = await this.retrospectiveService.generateActionItem(this.note.content);
+      
+      // 3. Remove placeholder
+      if (tempId) {
+        this.retrospectiveService.removeOptimisticNote(tempId);
+        tempId = null;
+      }
+
+      if (actionItemContent) {
+        // 4. Add final action item with reference
+        const finalContent = `${actionItemContent}\n\n[Ref: ${sourceNoteId}]`;
+        await this.retrospectiveService.addStickyNote(
+          'action-items',
+          finalContent,
+          this.note.color,
+          false
+        );
+      }
+    } catch (error) {
+      console.error('Failed to suggest action item:', error);
+      // Clean up placeholder on error
+      if (tempId) {
+        this.retrospectiveService.removeOptimisticNote(tempId);
+      }
+    } finally {
+      this.isGeneratingActionItem = false;
+      this.cdr.detectChanges();
+    }
   }
 
   changeColor(color: StickyNoteColor) {
