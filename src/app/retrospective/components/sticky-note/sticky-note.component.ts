@@ -281,18 +281,43 @@ export class StickyNoteComponent implements OnInit, OnDestroy {
     if (this.isGeneratingActionItem || !this.canGenerateActionItem()) return;
 
     this.isGeneratingActionItem = true;
+    const sourceNoteId = `${this.teamAbbreviation}-${this.note.noteNumber}`;
+    let tempId: string | null = null;
+    
     try {
+      // 1. Show optimistic placeholder in Action Items column
+      const placeholderContent = `AI is suggesting an action item for [Ref: ${sourceNoteId}]...`;
+      tempId = this.retrospectiveService.addOptimisticNote(
+        'action-items',
+        placeholderContent,
+        this.note.color
+      );
+
+      // 2. Call AI service
       const actionItemContent = await this.retrospectiveService.generateActionItem(this.note.content);
+      
+      // 3. Remove placeholder
+      if (tempId) {
+        this.retrospectiveService.removeOptimisticNote(tempId);
+        tempId = null;
+      }
+
       if (actionItemContent) {
+        // 4. Add final action item with reference
+        const finalContent = `${actionItemContent}\n\n[Ref: ${sourceNoteId}]`;
         await this.retrospectiveService.addStickyNote(
           'action-items',
-          actionItemContent,
+          finalContent,
           this.note.color,
-          false // Action items shouldn't be anonymous
+          false
         );
       }
     } catch (error) {
-      console.error('Failed to generate action item:', error);
+      console.error('Failed to suggest action item:', error);
+      // Clean up placeholder on error
+      if (tempId) {
+        this.retrospectiveService.removeOptimisticNote(tempId);
+      }
     } finally {
       this.isGeneratingActionItem = false;
       this.cdr.detectChanges();

@@ -33,10 +33,10 @@
             <span>Edit note</span>
           </li>
 
-          <!-- Generate Action Item Option -->
+          <!-- Suggest Action Item Option -->
           <li nz-menu-item *ngIf="canGenerateActionItem()" (click)="handleGenerateActionItem()">
             <span nz-icon [nzType]="isGeneratingActionItem ? 'loading' : 'thunderbolt'" nzTheme="outline"></span>
-            <span>{{ isGeneratingActionItem ? 'Generating...' : 'Generate Action Item' }}</span>
+            <span>{{ isGeneratingActionItem ? 'Suggesting...' : 'Suggest action item' }}</span>
           </li>
 
           <li nz-menu-divider *ngIf="(canEdit() || canGenerateActionItem()) && canDelete()"></li>
@@ -52,11 +52,23 @@
 
     <!-- Note Content - Takes most space -->
     <div class="note-content-wrapper">
-      <div class="note-content" #contentElement>
+      <div 
+        class="note-content" 
+        #contentElement
+        [class.optimistic-content]="note.isOptimistic"
+      >
         {{ note.content }}
       </div>
       <div *ngIf="isTruncated" (click)="showFullNote()" class="show-more-link">
         Show more
+      </div>
+      
+      <!-- Suggesting Overlay -->
+      <div class="suggesting-overlay" *ngIf="isGeneratingActionItem">
+        <div class="suggesting-loader">
+          <span nz-icon nzType="loading" nzTheme="outline"></span>
+          <span>Suggesting...</span>
+        </div>
       </div>
     </div>
 
@@ -65,7 +77,7 @@
       <!-- Left: Note ID + Tags -->
       <div class="footer-left">
         <!-- Note ID -->
-        <span class="note-id">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
+        <span class="note-id" *ngIf="!note.isOptimistic">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
         
         <!-- Tags (if present) -->
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
@@ -162,7 +174,7 @@
     
     <div class="modal-note-footer">
       <div class="footer-left">
-        <span class="note-id">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
+        <span class="note-id" *ngIf="!note.isOptimistic">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
           <span *ngFor="let tag of note.tags" 
                 class="note-tag" 

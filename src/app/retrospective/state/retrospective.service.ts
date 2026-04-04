@@ -614,56 +614,55 @@ export class RetrospectiveService {
         .single();
 
       if (error) throw error;
-      
-      const newNote: StickyNote = {
-        id: data.id,
-        noteNumber: data.sequence_number || nextNoteNumber,
-        content: data.content,
-        authorId: data.user_id || '',
-        authorName: user.name,
-        authorAvatar: user.avatarUrl,
-        isAnonymous: isAnonymous,
-        columnId: this.mapCategoryToColumnId(data.category),
-        color,
-        position: { x: 0, y: 0 },
-        votes: data.votes || 0,
-        voterIds: [],
-        tags: [],
-        groupId: null,
-        isCompleted: false,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      };
-
-      console.log('Created new note:', newNote);
-
-      this.store.update(state => {
-        // Prevent duplicate if realtime event already added it
-        if (state.currentBoard?.stickyNotes.some(n => n.id === newNote.id)) {
-          console.log('Note already exists in store, skipping optimistic update');
-          return state;
-        }
-
-        const updatedBoard = {
-          ...state.currentBoard!,
-          stickyNotes: [...state.currentBoard!.stickyNotes, newNote],
-          notesCount: state.currentBoard!.stickyNotes.length + 1,
-          updatedAt: new Date().toISOString()
-        };
-
-        return {
-          ...state,
-          currentBoard: updatedBoard,
-          boards: state.boards.map(board => 
-            board.id === updatedBoard.id ? updatedBoard : board
-          )
-        };
-      });
-
-      console.log('Store updated successfully');
+      return data;
     } catch (error) {
       console.error('Error adding sticky note to Supabase:', error);
+      throw error;
     }
+  }
+
+  addOptimisticNote(columnId: string, content: string, color: StickyNoteColor): string {
+    const tempId = `optimistic-${Math.random().toString(36).substr(2, 9)}`;
+    const user = this.authQuery.getValue();
+    
+    const optimisticNote: StickyNote = {
+      id: tempId,
+      noteNumber: 0,
+      content,
+      authorId: user?.id || '',
+      authorName: user?.name || 'System',
+      authorAvatar: user?.avatarUrl,
+      isAnonymous: false,
+      columnId,
+      color,
+      position: { x: 0, y: 0 },
+      votes: 0,
+      voterIds: [],
+      isOptimistic: true,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    this.store.update(state => ({
+      ...state,
+      currentBoard: {
+        ...state.currentBoard!,
+        stickyNotes: [optimisticNote, ...state.currentBoard!.stickyNotes]
+      }
+    }));
+
+    return tempId;
+  }
+
+  removeOptimisticNote(tempId: string) {
+    this.store.update(state => ({
+      ...state,
+      currentBoard: {
+        ...state.currentBoard!,
+        stickyNotes: state.currentBoard!.stickyNotes.filter(n => n.id !== tempId)
+      }
+    }));
   }
 
   async updateStickyNote(noteId: string, updates: Partial<StickyNote>): Promise<void> {
