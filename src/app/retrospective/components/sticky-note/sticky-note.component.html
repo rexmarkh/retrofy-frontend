@@ -57,7 +57,7 @@
         #contentElement
         [class.optimistic-content]="note.isOptimistic"
       >
-        {{ note.content }}
+        {{ getDisplayContent() }}
       </div>
       <div *ngIf="isTruncated" (click)="showFullNote()" class="show-more-link">
         Show more
@@ -78,7 +78,6 @@
       <div class="footer-left">
         <!-- Note ID -->
         <span class="note-id" *ngIf="!note.isOptimistic">{{ teamAbbreviation }}-{{ note.noteNumber }}</span>
-        
         <!-- Tags (if present) -->
         <div *ngIf="note.tags && note.tags.length > 0" class="note-tags-inline">
           <span 
@@ -89,6 +88,12 @@
           >
             {{ tag }}
           </span>
+        </div>
+
+        <!-- Source Reference Tag -->
+        <div *ngIf="getSourceReference()" class="source-ref-badge" nz-tooltip [nzTooltipTitle]="'Referenced from ' + teamAbbreviation + '-' + getSourceReference()">
+          <span nz-icon nzType="link" nzTheme="outline" class="mr-1"></span>
+          <span>REF: {{ teamAbbreviation }}-{{ getSourceReference() }}</span>
         </div>
       </div>
 
@@ -169,7 +174,7 @@
 <ng-template #noteModalContent>
   <div class="premium-note-modal-content">
     <div class="modal-note-body">
-      {{ note.content }}
+      {{ getDisplayContent() }}
     </div>
     
     <div class="modal-note-footer">
