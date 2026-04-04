@@ -91,9 +91,9 @@
         </div>
 
         <!-- Source Reference Tag -->
-        <div *ngIf="getSourceReference()" class="source-ref-badge" nz-tooltip [nzTooltipTitle]="'Referenced from ' + teamAbbreviation + '-' + getSourceReference()">
+        <div *ngIf="getSourceReference()" class="source-ref-badge" nz-tooltip [nzTooltipTitle]="'Referenced from ' + getSourceReference()">
           <span nz-icon nzType="link" nzTheme="outline" class="mr-1"></span>
-          <span>REF: {{ teamAbbreviation }}-{{ getSourceReference() }}</span>
+          <span>REF: {{ getSourceReference() }}</span>
         </div>
       </div>
 
